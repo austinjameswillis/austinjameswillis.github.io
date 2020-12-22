@@ -1,0 +1,3155 @@
+<!DOCTYPE html>
+<html>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.0/angular.min.js"></script>
+<!-- CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+
+<!-- jQuery and JS bundle w/ Popper.js -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+
+<!-- The core Firebase JS SDK is always required and must be listed first -->
+<script src="https://www.gstatic.com/firebasejs/8.2.0/firebase-app.js"></script>
+
+<!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+<script src="https://www.gstatic.com/firebasejs/8.2.0/firebase-analytics.js"></script>
+
+<script>
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  var firebaseConfig = {
+    apiKey: "AIzaSyCEOXhKNwELzK0G-NHx8RPwx5Bl5dSgLNI",
+    authDomain: "star-wars-dice-roller-d5120.firebaseapp.com",
+    projectId: "star-wars-dice-roller-d5120",
+    storageBucket: "star-wars-dice-roller-d5120.appspot.com",
+    messagingSenderId: "969856043023",
+    appId: "1:969856043023:web:ef814488c5c7ac47023b7a",
+    measurementId: "G-5MSYYY61D1"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  firebase.analytics();
+</script>
+
+<!-- AngularFire -->
+<script src="https://cdn.firebase.com/libs/angularfire/2.3.0/angularfire.min.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.2.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.2.0/firebase-database.js"></script>
+
+<script src ="dice.js"></script>
+<body>
+
+<div ng-app="myApp" ng-controller="myCtrl" class="container">
+
+<p>
+	<table class="table table-bordered w-auto">
+		<tr>
+			<td>
+				<button ng-click='num_dice.num_ab_dice = num_dice.num_ab_dice + 1; num_dice.$save();'>
+					Add
+				</button>
+			</td>
+			<td rowspan=2>
+				<img src="./dice_images/green.png">
+			</td>
+			<td>
+				<button ng-click='num_dice.num_prof_dice = num_dice.num_prof_dice + 1; num_dice.$save();'>
+					Add
+				</button>
+			</td>
+			<td rowspan=2>
+				<img src="./dice_images/yellow.png">
+			</td>
+			<td>
+				<button ng-click='num_dice.num_boost_dice = num_dice.num_boost_dice + 1; num_dice.$save();'>
+					Add
+				</button>
+			</td>
+			<td rowspan=2>
+				<img src="./dice_images/blue.png">
+			</td>
+			<td>
+				<button ng-click='num_dice.num_force_dice = num_dice.num_force_dice + 1; num_dice.$save();'>
+					Add
+				</button>
+			</td>
+			<td rowspan=2>
+				<img src="./dice_images/white.png">
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<button ng-click='num_dice.num_ab_dice = decreaseAboveZero(num_dice.num_ab_dice, 1); num_dice.$save();'>
+					Remove
+				</button><br>
+			</td>
+			<td>
+				<button ng-click='num_dice.num_prof_dice = decreaseAboveZero(num_dice.num_prof_dice, 1); '>
+					Remove
+				</button>
+			</td>
+			<td>
+				<button ng-click='num_dice.num_boost_dice = decreaseAboveZero(num_dice.num_boost_dice, 1); num_dice.$save();'>
+					Remove
+				</button>
+			</td>
+			<td>
+				<button ng-click='num_dice.num_force_dice = decreaseAboveZero(num_dice.num_force_dice, 1); num_dice.$save();'>
+					Remove
+				</button>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<button ng-click='num_dice.num_diff_dice = num_dice.num_diff_dice + 1; num_dice.$save();'>
+					Add
+				</button>
+			</td>
+			<td rowspan=2>
+				<img src="./dice_images/purple.png">
+			</td>
+			<td>
+				<button ng-click='num_dice.num_chal_dice = num_dice.num_chal_dice + 1; num_dice.$save();'>
+					Add
+				</button>
+			</td>
+			<td rowspan=2>
+				<img src="./dice_images/red.png">
+			</td>
+			<td>
+				<button ng-click='num_dice.num_setback_dice = num_dice.num_setback_dice + 1; num_dice.$save();'>
+					Add
+				</button>
+			</td>
+			<td rowspan=2>
+				<img src="./dice_images/black.png">
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<button ng-click='num_dice.num_diff_dice = decreaseAboveZero(num_dice.num_diff_dice, 1); num_dice.$save();'>
+					Remove
+				</button><br>
+			</td>
+			<td>
+				<button ng-click='num_dice.num_chal_dice = decreaseAboveZero(num_dice.num_chal_dice, 1); num_dice.$save();'>
+					Remove
+				</button><br>
+			</td>
+			<td>
+				<button ng-click='num_dice.num_setback_dice = decreaseAboveZero(num_dice.num_setback_dice, 1); num_dice.$save();'>
+					Remove
+				</button><br>
+			</td>
+			<td>
+				<button ng-click='rollNewDiePool()'>
+					Roll Dice
+				</button>
+			</td>
+		</tr>
+	</table>
+	
+	<img ng-repeat='x in [].constructor(num_dice.num_ab_dice) track by $index' src="./dice_images/green.png" width=80>
+	<img ng-repeat='x in [].constructor(num_dice.num_prof_dice) track by $index' src="./dice_images/yellow.png" width=80>
+	<img ng-repeat='x in [].constructor(num_dice.num_boost_dice) track by $index' src="./dice_images/blue.png" width=80>
+	<img ng-repeat='x in [].constructor(num_dice.num_diff_dice) track by $index' src="./dice_images/purple.png" width=80>
+	<img ng-repeat='x in [].constructor(num_dice.num_chal_dice) track by $index' src="./dice_images/red.png" width=80>
+	<img ng-repeat='x in [].constructor(num_dice.num_setback_dice) track by $index' src="./dice_images/black.png" width=80>
+	<img ng-repeat='x in [].constructor(num_dice.num_force_dice) track by $index' src="./dice_images/white.png" width=80><br><br>
+	<img ng-repeat='die_image in die_pool.image_urls track by $index' ng-src='{{die_image}}' width=80><br><br>
+	<img ng-repeat='x in [].constructor(die_pool.succ) track by $index' src="./dice_images/success.png" width=60>
+	<img ng-repeat='x in [].constructor(die_pool.fail) track by $index' src="./dice_images/failure.png" width=60>
+	<img ng-repeat='x in [].constructor(die_pool.adv) track by $index' src="./dice_images/advantage.png" width=60>
+	<img ng-repeat='x in [].constructor(die_pool.threat) track by $index' src="./dice_images/threat.png" width=60>
+	<img ng-repeat='x in [].constructor(die_pool.triumph) track by $index' src="./dice_images/triumph.png" width=60>
+	<img ng-repeat='x in [].constructor(die_pool.despair) track by $index' src="./dice_images/despair.png" width=60>
+	<img ng-repeat='x in [].constructor(die_pool.light_side_points) track by $index' src="./dice_images/lightside.png" width=60>
+	<img ng-repeat='x in [].constructor(die_pool.dark_side_points) track by $index' src="./dice_images/darkside.png" width=60>
+	<br>
+</p>
+
+<p>
+	<table class="table table-borderless table-responsive">
+		<td class="align-middle">
+			<button ng-click='passOneDay()'>Pass One Day</button>
+		</td>
+		<td class="align-middle">
+			<button ng-click='resetCombat()'>Reset Combat</button>
+		</td>
+		<td class="align-middle">
+			<div class="custom-control custom-switch">
+			  <input type="checkbox" class="custom-control-input" id="in_combat_switch" ng-model='general_info.in_combat' ng-change='general_info.$save()'>
+			  <label class="custom-control-label" for="in_combat_switch">In Combat</label>
+			</div>
+		</td>
+		<td class="align-middle">
+			<button ng-click="rollInitiative()">
+				Roll Initiative
+			</button>
+		</td>
+		<td class="align-middle">
+			<button ng-click="nextTurn()">
+				Next Turn
+			</button>
+		</td class="align-middle">
+		<td>
+			<img ng-repeat='slot in getInitiativeOrder() track by $index' ng-src='{{slot.image}}' height=50>
+		</td>
+	</table>
+</p>
+
+<p>
+	<table class="table">
+		<tr>
+			<thead>
+				<th>Character Taking Action</th>
+				<th>Wounds</th>
+				<th>Strain</th>
+			<thead>
+		</tr>
+		<td>
+			<select ng-model="action_taker" ng-options='character as character.name for character in getPotentialTurnTakers(show_turn_taken_chars)'>
+			</select>
+			<div class="custom-control custom-switch">
+				<input type="checkbox" class="custom-control-input" id="show_turn_taken_chars_switch" ng-model='show_turn_taken_chars'>
+				<label class="custom-control-label" for="show_turn_taken_chars_switch">Show Characters Who Have Already Gone</label>
+			</div>
+		</td>
+		<td ng-class="{'table-danger': action_taker.wounds > action_taker.wound_threshold}">
+			{{action_taker.wounds}} / {{action_taker.wound_threshold}}
+		</td>
+		<td ng-class="{'table-warning': action_taker.strain > action_taker.strain_threshold}">
+			{{action_taker.strain}} / {{action_taker.strain_threshold}}
+		</td>
+	</table>
+</p>
+
+<p>
+	<div class='row'>
+		<div class='col'>
+			<table class='table'>
+				<thead>
+					<tr>
+						<th class='text-center'>
+							{{action_tracker.adv_spent}}/{{die_pool.adv}} <img src="./dice_images/advantage.png" width=25>
+						</th>
+						<th class='text-center'>
+							{{action_tracker.triumph_spent}}/{{die_pool.triumph}} <img src="./dice_images/triumph.png" width=25>
+						</th>
+						<th>
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr ng-if='action_tracker.roll_made'>
+						<td>
+							<button ng-click='healStrain(action_taker, true)' ng-disabled='!canHealStrain(true) || action_taker.strain <= 0' class='btn-block pb-1'>
+								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/advantage.png" width=20>
+							</button>
+						</td>
+						<td>
+							<button ng-click='healStrain(action_taker, false)' ng-disabled='!canHealStrain(false) || action_taker.strain <= 0' class='btn-block pb-1'>
+								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
+							</button>
+						</td>
+						<td class='align-middle'>
+							Heal 1 Strain
+						</td>
+					</tr>
+					<tr ng-if='action_tracker.roll_made && attack_target.target_type === "character"'>
+						<td>
+							<button ng-click='setbackTarget(attack_target, true)' ng-disabled='!canSetbackTarget(true)' class='btn-block pb-1'>
+								<img ng-repeat='x in [].constructor(2) track by $index' src="./dice_images/advantage.png" width=20>
+							</button>
+						</td>
+						<td>
+							<button ng-click='setbackTarget(attack_target, false)' ng-disabled='!canSetbackTarget(false)' class='btn-block pb-1'>
+								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
+							</button>
+						</td>
+						<td class='align-middle'>
+							Setback Target
+						</td>
+						<tr ng-if='action_tracker.roll_made'>
+							<td>
+								<button ng-click='boostAlly(any_boost_target, true)' ng-disabled='!canBoostAlly(true)' class='btn-block pb-1'>
+									<img ng-repeat='x in [].constructor(2) track by $index' src="./dice_images/advantage.png" width=20>
+								</button>
+							</td>
+							<td>
+								<button ng-click='boostAlly(any_boost_target, false)' ng-disabled='!canBoostAlly(false)' class='btn-block pb-1'>
+									<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
+								</button>
+							</td>
+							<td>
+								Boost Any Ally
+								<select ng-model='any_boost_target' ng-options='character as character.name for character in getAllies(action_taker, true)'>
+							</td>
+						</tr>
+				</tbody>
+			</table>
+		</div>
+		<div class='col'>
+			<table class='table'>
+				<thead>
+					<th class='text-center'>
+						{{action_tracker.threat_spent}}/{{die_pool.threat}} <img src="./dice_images/threat.png" width=25>
+					</th>
+					<th class='text-center'>
+						{{action_tracker.despair_spent}}/{{die_pool.despair}} <img src="./dice_images/despair.png" width=25>
+					</th>
+					<th>
+					</th>
+				</thead>
+				<tbody>
+					<tr ng-if='action_tracker.roll_made'>
+						<td>
+							<button ng-click='inflictStrain(action_taker, true)' ng-disabled='!canInflictStrain(true)' class='btn-block pb-1'>
+								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/threat.png" width=20>
+							</button>
+						</td>
+						<td>
+							<button ng-click='inflictStrain(action_taker, false)' ng-disabled='!canInflictStrain(false)' class='btn-block pb-1'>
+								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/despair.png" width=20>
+							</button>
+						</td>
+						<td>
+							Inflict 1 Strain
+						</td>
+					</tr>
+					<tr ng-if='action_tracker.roll_made && attack_target.target_type === "character"'>
+						<td>
+							<button ng-click='boostTarget(attack_target, true)' ng-disabled='!canBoostTarget(true)' class='btn-block pb-1'>
+								<img ng-repeat='x in [].constructor(2) track by $index' src="./dice_images/threat.png" width=20>
+							</button>
+						</td>
+						<td>
+							<button ng-click='boostTarget(attack_target, false)' ng-disabled='!canBoostTarget(false)' class='btn-block pb-1'>
+								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/despair.png" width=20>
+							</button>
+						</td>
+						<td>
+							Boost Target
+						</td>
+					</tr>
+					<tr ng-if='action_tracker.roll_made'>
+						<td>
+							<button ng-click='setbackAlly(any_setback_target, true)' ng-disabled='!canSetbackAlly(true)' class='btn-block pb-1'>
+								<img ng-repeat='x in [].constructor(2) track by $index' src="./dice_images/threat.png" width=20>
+							</button>
+						</td>
+						<td>
+							<button ng-click='setbackAlly(any_setback_target, false)' ng-disabled='!canSetbackAlly(false)' class='btn-block pb-1'>
+								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/despair.png" width=20>
+							</button>
+						</td>
+						<td>
+							Setback Any Ally
+							<select ng-model='any_setback_target' ng-options='character as character.name for character in getAllies(action_taker, true)'>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div class='col' ng-if='action_tracker.force_roll_made && action_taker.force_rating > 0'>
+			<table class='table'>
+				<thead>
+					<th class='text-center'>
+						{{force_powers.fp_spent}}/{{getAvailableForcePoints(action_taker)}} 
+						<img ng-src='{{getFPImage(action_taker.lightside_user, false)}}' width=25>
+						 ({{getNonMatchingForcePoints(action_taker) - force_powers.fp_converted}}
+						<img ng-src='{{getFPImage(action_taker.lightside_user, true)}}' width=25>
+						 unconverted)
+					</th>
+				</thead>
+				<tbody>
+					<td>
+						<!-- Basic Force Power Stuff (Converting, etc.) -->
+						<div class="container">
+							<div class='row'>
+								<div class='col'>
+									<div class='custom-control custom-switch'>
+										<input type="checkbox" class="custom-control-input" id="lightside_switch" ng-model='action_taker.lightside_user'>
+										<label class="custom-control-label" for="lightside_switch">Lightside User</label>
+									</div>
+								</div>
+								<div class='col'>
+									<button ng-click='convertForcePoint(action_taker)' ng-disabled='getNonMatchingForcePoints(action_taker) - force_powers.fp_converted <= 0' class='py-1'>
+										Convert 
+										<img ng-src='{{getFPImage(action_taker.lightside_user, true)}}' width=25>
+									</button>
+								</div>
+							</div>
+						</div>
+						<!-- Move Basic Power -->
+						<div ng-if='move_power.using_move' class='container'>
+							<div class='row mt-2' ng-if='move_power.using_move_basic'>
+								<div class='col'>
+									Move object of Silhouette {{move_power.strength}} or less within {{getRangeString(move_power.range)}} somewhere else within {{getRangeString(move_power.range)}}.
+								</div>
+							</div>
+							<div class='row mt-2' ng-if='move_power.using_move_hurl'>
+								<div class='col'>
+									<div>
+										Hurl object of silhouette {{move_power.hurl_object_silhouette}} from within {{getRangeString(move_power.range)}} at {{attack_target.name}} (at max range {{getRangeString(move_power.range)}}).
+									</div>
+									<div>
+										Need to:
+										<ul>
+											<li ng-class="{'text-success': move_power.move_basic_activated}">Activate Power</li>
+											<li ng-class="{'text-success': move_power.strength >= move_power.hurl_object_silhouette}">Increase silhouette to {{move_power.hurl_object_silhouette}}+ (currently {{move_power.strength}})</li>
+										</ul>
+									</div>
+									<div class='text-danger' ng-if='die_pool.succ <= 0'>
+										Roll failed due to failed Discipline check.
+									</div>
+								</div>
+								
+							</div>
+							<div class='row mt-2'>
+								<div class='col'>
+									<button ng-click='useMoveBasic(action_taker, attack_target)' ng-disabled='!move_power.move_basic_activated || (move_power.using_move_hurl && move_power.strength < move_power.hurl_object_silhouette)' class='btn-block'>Use Move Power</button>
+								</div>
+								<div class='col'>
+									<button ng-click='failMoveBasic(action_taker, attack_target)' class='btn-block'>Fail Move Power</button>
+								</div>
+							</div>
+							<div class='row mt-2'>
+								<div class='col'>
+									<button class='btn-block py-1' ng-click='activateMoveBasic()' ng-disabled='!canSpendFP(action_taker, 1) || move_power.move_basic_activated'>
+										<img ng-src='{{getFPImage(action_taker.lightside_user, false)}}' width=25>
+										 Activate Power
+									</button>
+								</div>
+							</div>
+							<div class='row mt-2' ng-if='action_taker.force_powers.move.strength'>
+								<div class='col'>
+									<button class='btn-block py-1' ng-click='strengthMove(action_taker)', ng-disabled='!canSpendFP(action_taker, 1) || !move_power.move_basic_activated'>
+										<img ng-src='{{getFPImage(action_taker.lightside_user, false)}}' width=25>
+										Increase Object Silhouette to {{move_power.strength + action_taker.force_powers.move.strength}}
+									</button>
+								</div>
+							</div>
+							<div class='row mt-2' ng-if='action_taker.force_powers.move.range'>
+								<div class='col'>
+									<button class='btn-block py-1' ng-click='rangeMove(action_taker)', ng-disabled='!canSpendFP(action_taker, 1) || !move_power.move_basic_activated || move_power.range + action_taker.force_powers.move.range > 4'>
+										<img ng-src='{{getFPImage(action_taker.lightside_user, false)}}' width=25>
+										Increase Range to {{getRangeString(move_power.range + action_taker.force_powers.move.range)}}.
+									</button>
+								</div>
+							</div>
+						</div>
+					</td>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</p>
+
+<p>
+	<div class="row">
+		<!-- Character Actions -->
+		<div class="col-md-6">
+			<div class='container' ng-if='general_info.in_combat'>
+				<div class='row'>
+					<div class='col text-center bg-light m-1 p-1 rounded'>
+						<span>
+							{{action_tracker.actions_taken}}/{{action_tracker.actions_available}} Actions
+						</span>
+					</div>
+					<div class='col text-center bg-light m-1 p-1 rounded'>
+						{{action_tracker.maneuvers_taken}}/{{action_tracker.maneuvers_available}} Maneuvers
+					</div>
+				</div>
+				<div class='row mt-2'>
+					<div class='col'>
+						<button ng-click='convertActionToManeuver(action_taker)' ng-disabled='action_tracker.actions_available <= 0 || action_tracker.maneuvers_available >= 2' class='btn-block'>Convert Action to Maneuver</button>
+					</div>
+					<div class='col'>
+						<button ng-click='strainForManeuver(action_taker)' ng-disabled='action_taker.strain > action_taker.strain_threshold - 2 || action_tracker.maneuvers_available >= 2' class='btn-block'>Strain for Maneuver</button>
+					</div>
+				</div>
+			</div>
+			<div class='container mt-3'>
+				<div class='row'>
+					<div class='col'>
+						<h5>General Actions</h3>
+					</div>
+				</div>
+				<div class='row'>
+					<div class='col'>
+						<span>Take Action: </span>
+						<select ng-model="action_take_skill" ng-options="skill_key as info.name for (skill_key, info) in skill_info">
+						</select>
+						<button ng-click='matchActionDice(action_taker, action_take_skill)'>Match Dice</button>
+						<button ng-click='takeAction(action_taker, action_take_skill)' ng-disabled='!canTakeAction(action_taker)'>Roll Dice</button>
+					</div>
+				</div>
+			</div>
+			<div ng-if='general_info.in_combat' class='container mt-3'>
+				<div class='row'>
+					<div class='col'>
+						<h5>Combat Actions</h5>
+					</div>
+				</div>
+				<div class='row'>
+					<div class='col'>
+						<div class="custom-control custom-switch">
+							<input type="checkbox" class="custom-control-input" id="non_matching_targets_switch" ng-model='non_scale_matching_targets'>
+							<label class="custom-control-label" for="non_matching_targets_switch">Show Non-Scale Matching Targets</label>
+						</div>
+						<div class="custom-control custom-switch">
+							<input type="checkbox" class="custom-control-input" id="chars_in_other_vehicles_switch" ng-model='chars_in_other_vehicles'>
+							<label class="custom-control-label" for="chars_in_other_vehicles_switch">Show Characters in Other Vehicles</label>
+						</div>
+						<span>Attack </span>
+						<select ng-model="$parent.attack_target" ng-options='character as character.name for character in getPotentialTargetsToAttack(action_taker, (attack_weapon ? attack_weapon.damage_scale : ""), non_scale_matching_targets, chars_in_other_vehicles)'>
+						</select>
+						<span> with </span>
+						<!-- TODO: Have WeaponEntry's hold onto the actual name string for the weapon, and use that instead -->
+						<select ng-model="attack_weapon" ng-options='weapon as weapon.name for weapon in getPotentialWeaponsForAttack(action_taker)'>
+						</select>
+						<span ng-if='attack_target.target_type === "vehicle"'>
+							at Defense Zone 
+							<select ng-model="target_defense_zone">
+								<option value="fore">Fore</option>
+								<option value="aft">Aft</option>
+								<option value="port">Port</option>
+								<option value="starboard">Starboard</option>
+								<option value="most">Most</option>
+								<option value="least">Least</option>
+							</select>
+						</span>
+					</div>
+				</div>
+				<div class='row mt-2'>
+					<div class='col'>
+						<button ng-click='matchAttackDice(action_taker, attack_target, attack_weapon)' class='btn-block'>Match Dice</button>
+					</div>
+					<div class='col'>
+						<button ng-click='attackTarget(action_taker, attack_target, attack_weapon)' ng-disabled='!canTakeAction(action_taker)' class='btn-block'>Make Attack</button>
+					</div>
+				</div>
+			</div>
+			<div ng-if='action_taker.force_rating > 0' class='container mt-3'>
+				<div class='row'>
+					<div class='col'>
+						<h5>Force Powers</h5>
+					</div>
+				</div>
+				<!-- TODO: Disable This once a roll is made -->
+				<div class='row'>
+					<div class='col'>
+						<select ng-model="$parent.selected_force_power" ng-options='power as power.name for power in getPotentialForcePowers(action_taker)'>
+						</select>
+					</div>
+				</div>
+			</div>
+			<div ng-if='selected_force_power.name === "Move"' class='container mt-2'>
+				<div class='row'>
+					<div class='col'>
+						<button ng-click='forceMoveObject(action_taker)' ng-disabled='!canTakeAction(action_taker)'>
+							Move Object
+						</button>
+					</div>
+				</div>
+				<div ng-if='action_taker.force_powers.move.hurl && general_info.in_combat' class='row nt-2'>
+					<div class='col'>
+						Hurl object of Silhouette
+						<input type="number" ng-model="hurl_object_silhouette" style="width:50px;" min=0 max=10>
+						at 
+						<select ng-model="$parent.$parent.attack_target" ng-options='character as character.name for character in getPotentialTargetsToAttack(action_taker, "personal", false, false)'>
+						</select>
+						<button ng-click='forceMoveHurl(action_taker, $parent.$parent.attack_target, hurl_object_silhouette)' ng-disabled='!canTakeAction(action_taker)'>Hurl Object (Attack)</button>
+					</div>
+				</div>
+			</div>
+			<!-- General Maneuvers -->
+			<div>
+				<div class='container mt-3'>
+					<div class='row'>
+						<div class='col'>
+							<h5>General Maneuvers</h5>
+						</div>
+					</div>
+				</div>
+				<div ng-if='getAlliedOrganics(action_taker).length > 0' class='container' >
+					<div class='row'>
+						<div class='col'>
+							Apply Stimpack to 
+							<select ng-model="$parent.stim_pack_target" ng-options='character as character.name for character in getAlliedOrganics($parent.action_taker)'>
+							</select>
+							<button ng-click='applyStimpack(action_taker, stim_pack_target)' ng-disabled='stim_pack_target.wounds <= 0 || stim_pack_target.stim_packs_used >= 5 || !canTakeManeuver(action_taker)'>
+								Apply
+							</button>
+						</div>
+					</div>
+				</div>
+				<div ng-if='getAlliedDroids(action_taker).length > 0' class='container'>
+					<div class='row'>
+						<div class='col'>
+							Apply Repair Patch to 
+							<select ng-model="$parent.repair_patch_target" ng-options='character as character.name for character in getAlliedDroids($parent.action_taker)'>
+							</select>
+							<button ng-click='applyRepairPatch(action_taker, repair_patch_target)' ng-disabled='repair_patch_target.wounds <= 0 || repair_patch_target.stim_packs_used >= 5 || !canTakeManeuver(action_taker)'>
+								Apply
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- Combat Maneuvers -->
+			<div ng-if='general_info.in_combat'>
+				<div class='container mt-3'>
+					<div class='row'>
+						<div class='col'>
+							<h5>Combat Maneuvers</h5>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col'>
+							<button ng-click='move(action_taker, move_direction, move_towards_target)' ng-disabled='!canTakeManeuver(action_taker)'>
+								Move
+							</button>
+							<select ng-model="move_direction">
+								<option value="forward">Forward</option>
+								<option value="backward">Backward</option>
+								<option value="left">Left</option>
+								<option value="right">Right</option>
+								<option value="towards">Towards</option>
+								<option value="engage">Engage</option>
+							</select>
+							<select ng-model="$parent.move_towards_target" ng-options='character as character.name for character in getOtherCharacters($parent.action_taker)' ng-if='move_direction === "towards" || move_direction === "engage"'>
+							</select>
+						</div>
+					</div>
+					<div class='row mt-2'>
+						<div class='col'>
+							<button ng-click='aim(action_taker)' ng-disabled='action_taker.aims >= 2 || !canTakeManeuver(action_taker)' class='btn-block'>Aim</button>
+						</div>
+						<div class='col'>
+							<button ng-click='standUp(action_taker)' ng-disabled='!action_taker.prone || !canTakeManeuver(action_taker)' class='btn-block'>Stand Up</button>
+						</div>
+						<div class='col'>
+							<button ng-click='takeCover(action_taker)' ng-disabled='action_taker.cover_bonus > 0 || !canTakeManeuver(action_taker)' class='btn-block'>Take Cover</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- Combat Incidentals -->
+			<div ng-if='general_info.in_combat'>
+				<div class='container mt-3'>
+					<div class='row'>
+						<div class='col'>
+							<h5>Combat Incidentals</h5>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col'>
+							<button ng-click='goProne(action_taker)' ng-disabled='action_taker.prone'>Go Prone</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Logs -->
+		<div class="col-md-6">
+			<div>
+				<input type="text" ng-model="custom_log">
+				<button ng-click="addLogEntry(custom_log)">
+					Add Custom Log
+				</button>
+				<button ng-click="clearLogs()">
+					Clear Logs
+				</button>
+				<div class="custom-control custom-switch row">
+					<div class='col'>
+						<input type="checkbox" class="custom-control-input" id="reverse_logs_switch" ng-model='reverse_logs'>
+						<label class="custom-control-label" for="reverse_logs_switch">Reverse Logs</label>
+					</div>
+					<div class='col'>
+						<input type="checkbox" class="custom-control-input" id="hide_dice_logs_switch" ng-model='hide_dice_roll_logs'>
+						<label class="custom-control-label" for="hide_dice_logs_switch">Hide Dice Rolls in Logs</label>
+					</div>
+				</div>
+				<div class="overflow-auto" style="max-height: 500px">
+					<table class="table table-striped">
+						<tbody>
+							<tr ng-repeat='log in getLogs(reverse_logs)'>
+								<td>
+									<div ng-repeat='log_entry in getLogEntries(log, reverse_logs)'>
+										<div ng-if='log_entry.text'>
+											{{log_entry.text}}
+										</div>
+										<div ng-if='log_entry.dice_image_urls && !hide_dice_roll_logs'>
+											<img ng-repeat='die_image in log_entry.dice_image_urls track by $index' ng-src='{{die_image}}' width=40><br>
+											<img ng-repeat='x in [].constructor(log_entry.succ) track by $index' src="./dice_images/success.png" width=30>
+											<img ng-repeat='x in [].constructor(log_entry.fail) track by $index' src="./dice_images/failure.png" width=30>
+											<img ng-repeat='x in [].constructor(log_entry.adv) track by $index' src="./dice_images/advantage.png" width=30>
+											<img ng-repeat='x in [].constructor(log_entry.threat) track by $index' src="./dice_images/threat.png" width=30>
+											<img ng-repeat='x in [].constructor(log_entry.triumph) track by $index' src="./dice_images/triumph.png" width=30>
+											<img ng-repeat='x in [].constructor(log_entry.despair) track by $index' src="./dice_images/despair.png" width=30>
+											<img ng-repeat='x in [].constructor(log_entry.light_side_points) track by $index' src="./dice_images/lightside.png" width=30>
+											<img ng-repeat='x in [].constructor(log_entry.dark_side_points) track by $index' src="./dice_images/darkside.png" width=30>
+										</div>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</p>
+
+
+<h3>Characters</h3>
+<hr>
+
+<p>
+<b>Import Characters:</b>
+<input type="file" id="character-file-input" multiple/>
+<button ng-click="readCharacterFiles(read_char_copies)">
+	Add Character(s)
+</button>
+Num Copies: <input type="number" ng-model="read_char_copies" min=1>
+</p>
+
+<p>
+	<table class="table table-hover">
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Soak</th>
+				<th>Defense <span style="white-space: nowrap;">Melee / Ranged</span></th>
+				<th>Wounds</th>
+				<th>Strain</th>
+				<th>Ally / Enemy</th>
+				<th>Initiative Type</th>
+				<th>Vehicle</th>
+			</tr>
+		</thead>
+		
+		<tbody>		
+			<tr ng-repeat="character in characters_array">
+				<td>{{character.name}}</td>
+				<td>{{character.soak}}</td>
+				<td style="white-space: nowrap;">{{character.def_ranged}} / {{character.def_melee}}</td>
+				<td ng-class="{'table-danger': character.wounds > character.wound_threshold}" style="white-space: nowrap;">
+					<span>
+						<button ng-click="character.wounds = character.wounds - 1; characters_array.$save(character)">
+							-
+						</button>
+					</span>
+					<span>
+						{{character.wounds}} / {{character.wound_threshold}}
+					</span>
+					<span>
+						<button ng-click="character.wounds = character.wounds + 1; characters_array.$save(character)">
+							+
+						</button>
+					</span>
+				</td>
+				<td ng-class="{'table-warning': character.strain > character.strain_threshold}" style="white-space: nowrap;">
+					<span>
+						<button ng-click="character.strain = character.strain - 1; characters_array.$save(character)">
+							-
+						</button>
+					</span>
+					<span>
+						{{character.strain}} / {{character.strain_threshold}}
+					</span>
+					<span>
+						<button ng-click="character.strain = character.strain + 1; characters_array.$save(character);">
+							+
+						</button>
+					</span>
+				</td>
+				<td>
+					<input type="radio" ng-model="character.ally_or_enemy" value="ally" ng-change='characters_array.$save(character)'> Ally<br>
+					<input type="radio" ng-model="character.ally_or_enemy" value="enemy" ng-change='characters_array.$save(character)'> Enemy
+				</td>
+				<td>
+					<input type="radio" ng-model="character.initiative_type" value="cool" ng-change='characters_array.$save(character)'> Cool<br>
+					<input type="radio" ng-model="character.initiative_type" value="vigilance" ng-change='characters_array.$save(character)'> Vigilance<br>
+					<input type="radio" ng-model="character.initiative_type" value="custom" ng-change='characters_array.$save(character)'> Custom<br>
+					<input type="radio" ng-model="character.initiative_type" value="none" ng-change='characters_array.$save(character)'> None<br>
+					<img ng-repeat='die_image in character.initiative_roll.image_urls track by $index' ng-src='{{die_image}}' height=20><br>
+				</td>
+				<td>
+					<!-- <select ng-model="character.vehicle" ng-options='vehicle.$id as vehicle.name for vehicle in vehicles_array' ng-change='characters_array.$save(character)'>
+					<select> -->
+					<select ng-model="character.vehicle" ng-options='id as name for (id, name) in getPotentialVehicles()' ng-change='characters_array.$save(character)'>
+					<select>
+				</td>
+				<td>
+					<button ng-click="characters_array.$remove(character)">
+						Remove Character
+					</button>
+				</td>
+			</tr>
+	</tbody>
+	</table>
+</p>
+
+
+<h3>Vehicles</h3>
+<hr>
+
+<p>
+	<select ng-model="vehicle_info_to_copy">
+		<option ng-repeat="(key, vehicle_info) in vehicle_info" value="{{key}}">{{vehicle_info.name}}</option>
+	</select>
+	<button ng-click="copyVehicleFromInfo(vehicle_info_to_copy, vehicle_info_copies)">
+		Add Copies
+	</button>
+	Num Copies: <input type="number" ng-model="vehicle_info_copies" min=1>
+	<br>
+	<input type="file" id="custom-vehicle-file-input"/>
+	<button ng-click="readCustomVehicle()">
+		Read Custom Vehicle
+	</button>
+</p>
+
+<p>
+	<table class="table table-hover">
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Model</th>
+				<th>Silhouette</th>
+				<th>Speed</th>
+				<th>Handling</th>
+				<th>Armor</th>
+				<th>
+					Defense<br>
+					<span style="white-space: nowrap;">F / P / S / A</span>
+				</th>
+				<th>Hull Trauma</th>
+				<th>System Strain</th>
+				<th>Weapons</th>
+			</tr>
+		</thead>
+		
+		<tbody>		
+			<tr ng-repeat="vehicle in vehicles_array">
+				<td style="white-space: nowrap;">{{vehicle.name}}</td>
+				<td style="white-space: nowrap;">{{vehicle.model}}</td>
+				<td>{{vehicle.silhouette}}</td>
+				<td>{{vehicle.speed}}</td>
+				<td>{{vehicle.handling}}</td>
+				<td>{{vehicle.armor}}</td>
+				<td style="white-space: nowrap;">
+					{{vehicle.def_fore}} / {{vehicle.def_port}} / {{vehicle.def_starboard}} / {{vehicle.def_aft}}
+				</td>
+				<td ng-class="{'table-danger': vehicle.hull_trauma > vehicle.hull_trauma_threshold}" style="white-space: nowrap;">
+					<span>
+						<button ng-click="vehicle.hull_trauma = vehicle.hull_trauma - 1; vehicles_array.$save(vehicle);">
+							-
+						</button>
+					</span>
+					<span>
+						{{vehicle.hull_trauma}} / {{vehicle.hull_trauma_threshold}}
+					</span>
+					<span>
+						<button ng-click="vehicle.hull_trauma = vehicle.hull_trauma + 1; vehicles_array.$save(vehicle);">
+							+
+						</button>
+					</span>
+				</td>
+				<td ng-class="{'table-warning': vehicle.system_strain > vehicle.system_strain_threshold}" style="white-space: nowrap;">
+					<span>
+						<button ng-click="vehicle.system_strain = vehicle.system_strain - 1; vehicles_array.$save(vehicle);">
+							-
+						</button>
+					</span>
+					<span>
+						{{vehicle.system_strain}} / {{vehicle.system_strain_threshold}}
+					</span>
+					<span>
+						<button ng-click="vehicle.system_strain = vehicle.system_strain + 1; vehicles_array.$save(vehicle);">
+							+
+						</button>
+					</span>
+				</td>
+				<!-- TODO: Get rid of this? -->
+				<td>
+					<div ng-repeat="weapon in vehicle.weapons" style="white-space: nowrap;">
+						{{weapon.name}}
+					</div>
+				</td>
+				<td>
+					<button ng-click="vehicles_array.$remove(vehicle)">
+						Remove Vehicle
+					</button>
+				</td>
+			</tr>
+	</tbody>
+	</table>
+</p>
+
+
+<h3>Item Buying/Selling</h3>
+<hr>
+
+<p>
+	<table class="table table-dark w-auto">
+		<tr>
+			<th scope="col">Name:</th>
+			<td>
+				<input type="text" ng-model="new_item_name">
+			</td>
+		</tr>
+		<tr>
+			<th>Rarity:</th>
+			<td>
+				<input type="number" ng-model="new_item_rarity">
+			</td>
+		</tr>
+		<tr>
+			<th>Price:</th>
+			<td>
+				<input type="number" ng-model="new_item_price">
+			</td>
+		</tr>
+	</table>
+	<button ng-click="addNewItem(new_item_name, new_item_price, new_item_rarity)">
+		Add New Item
+	</button>
+</p>
+
+<p>
+	<button ng-click="makePurchases(buyer, purchase_skill, rarity_mod)">
+		Make Purchases
+	</button>
+	Buyer:
+	<select ng-model="buyer" ng-options='character as character.name for character in characters_array'>
+	</select>
+	Skill:
+	<select ng-model="purchase_skill">
+		<option ng-repeat="skill in ['NEG', 'SW']" value="{{skill}}">{{skill_info[skill].name}}</option>
+	</select>
+	Rarity Modifier:
+	<input type="number" ng-model="rarity_mod" min="-2" max="4">
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Price</th>
+				<th>Rarity</th>
+				<th>Buy / Sell</th>
+				<th>Dice Roll</th>
+				<th>Result</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tr ng-repeat="item in item_entries">
+			<td>
+				{{item.name}}
+			</td>
+			<td>
+				{{item.price}}
+			</td>
+			<td>
+				{{item.rarity}}
+			</td>
+			<td>
+				<input type="radio" ng-model="item.buy_sell" value="buy"> Buy<br>
+				<input type="radio" ng-model="item.buy_sell" value="sell"> Sell<br>		
+			</td>
+			<td>
+				<img ng-repeat='die_image in item.die_pool.image_urls track by $index' ng-src='{{die_image}}' height=25><br>
+				<img ng-repeat='x in [].constructor(item.die_pool.succ) track by $index' src="./dice_images/success.png" height=25>
+				<img ng-repeat='x in [].constructor(item.die_pool.fail) track by $index' src="./dice_images/failure.png" height=25>
+				<img ng-repeat='x in [].constructor(item.die_pool.adv) track by $index' src="./dice_images/advantage.png" height=25>
+				<img ng-repeat='x in [].constructor(item.die_pool.threat) track by $index' src="./dice_images/threat.png" height=25>
+				<img ng-repeat='x in [].constructor(item.die_pool.triumph) track by $index' src="./dice_images/triumph.png" height=25>
+				<img ng-repeat='x in [].constructor(item.die_pool.despair) track by $index' src="./dice_images/despair.png" height=25>
+			</td>
+			<td>
+				<div ng-if="item.roll_made">
+					<div ng-if="item.die_pool.succ <= 0">No transaction.</div>
+					<div ng-if="item.die_pool.succ > 0 && item.buy_sell == 'buy'">
+						Buy {{item.die_pool.succ}} at {{100 - (5 * (item.die_pool.adv - item.die_pool.threat))}}%.
+					</div>
+					<div ng-if="item.die_pool.succ > 0 && item.buy_sell == 'sell'">
+						Sell {{1 + item.die_pool.adv}} at {{getSellPercentage(item.die_pool.succ, item.die_pool.threat)}}%.
+					</div>
+				</div>
+			</td>
+			<td>
+				<button ng-click="item_entries.$remove(item)">
+					Remove Item
+				</button>
+			</td>
+		</tr>
+	</table>
+</p>
+
+<h3>Admin Stuff</h3>
+<hr>
+
+<p>
+<button ng-click="readSkillData()">
+	Update Skill Data
+</button>
+<input type="file" id="skill-data-input" />
+<br>
+
+<button ng-click="readWeaponData()">
+	Update Weapon Data
+</button>
+<input type="file" id="weapon-data-input" />
+<br>
+
+<button ng-click="readVehicleData()">
+	Update Vehicle Data
+</button>
+<input type="file" id="vehicle-info-file-input" multiple/>
+</p>
+
+{{debug}}
+
+</div>
+
+<script>
+
+adv_img = "<img src='./dice_images/advantage.png' width=20>"
+threat_img = "<img src='./dice_images/threat.png' width=20>"
+
+var app = angular.module('myApp', ["firebase"]);
+app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
+
+	$scope.always_true = true;
+
+	$scope.decreaseAboveZero = function(value, decrement) {
+		return Math.max(0, value - decrement);
+	}
+	
+	class ItemEntry {
+		constructor(name, price, rarity) {
+			this.name = name;
+			this.price = price;
+			this.rarity = rarity;
+			
+			this.buy_sell = "buy";
+			this.roll_made = false;
+			
+			this.die_pool = new DicePool(0, 0, 0, 0, 0, 0, 0);
+		}
+	}
+	
+	class WeaponEntry {
+		constructor(name, skill_key) {
+			this.name = name;
+			this.skill_key = skill_key;
+			
+			this.damage = 0;
+			this.damage_add = 0;
+			this.pierce = 0;
+			this.breach = 0;
+			
+			this.damage_scale = 'personal';
+		}
+	}
+	
+	class ArmorEntry {
+		constructor(cortosis) {
+			this.cortosis = true;
+		}
+	}
+	
+	class InitiativeSlot {
+		constructor(succ, adv) {
+			this.succ = succ;
+			this.adv = adv;
+		}
+	}
+	
+	class AllySlot extends InitiativeSlot {
+		constructor(succ, adv) {
+			super(succ, adv);
+			this.image = "./dice_images/pc.png";
+			this.type = 'ally';
+		}
+	}
+	
+	class EnemySlot extends InitiativeSlot {
+		constructor(succ, adv) {
+			super(succ, adv);
+			this.image = "./dice_images/npc.png";
+			this.type = 'enemy';
+		}
+	}
+	
+	class EndOfRoundSlot extends InitiativeSlot {
+		constructor() {
+			super(-1, 0);
+			this.image = "./dice_images/repeat.png";
+			this.type = 'end_of_round';
+		}
+	}
+	
+	$scope.rollNewDiePool = function() {
+		let die_pool = new DicePool(
+			$scope.num_dice.num_ab_dice,
+			$scope.num_dice.num_prof_dice,
+			$scope.num_dice.num_boost_dice,
+			$scope.num_dice.num_diff_dice,
+			$scope.num_dice.num_chal_dice,
+			$scope.num_dice.num_setback_dice,
+			$scope.num_dice.num_force_dice);
+		die_pool.roll();
+		$scope.dice_roller.die_pool = die_pool;
+		$scope.dice_roller.$save();
+		
+		$scope.addRollLogEntry(die_pool);
+	}
+	
+	$scope.getPotentialTurnTakers = function(show_turn_taken_chars) {
+		if ($scope.init_order_array.length <= 0) {
+			return [];
+		}
+		let taker_type = $scope.init_order_array[$scope.initSyncObject.initiative_turn].type;
+		let options = [];
+		for (var i = 0; i < $scope.characters_array.length; i++) {
+			let potential_taker = $scope.characters_array[i];
+			// TODO: Put $scope.general_info.in_combat in a parent if
+			if ($scope.general_info.in_combat && potential_taker.ally_or_enemy != taker_type) {
+				continue;
+			}
+			if ($scope.general_info.in_combat && !show_turn_taken_chars && potential_taker.turn_taken) {
+				continue;
+			}
+			if ($scope.general_info.in_combat && potential_taker.initiative_type === 'none') {
+				continue;
+			}
+			options.push(potential_taker);
+		}
+		return options;
+	}
+	
+	$scope.getOtherCharacters = function(character) {
+		if (!character) {
+			return [];
+		}
+		let other_characters = [];
+		for (let i = 0; i < $scope.characters_array.length; i++) {
+			let maybe_other_char = $scope.characters_array[i];
+			if (maybe_other_char != character) {
+				other_characters.push(maybe_other_char);
+			}
+		}
+		return other_characters;
+	}
+	
+	$scope.getAllies = function(character, include_self) {
+		if (!character) {
+			return [];
+		}
+		var potential_allies = [];
+		for (var i = 0; i < $scope.characters_array.length; i++) {
+			let maybe_ally = $scope.characters_array[i];
+			if (maybe_ally === character && !include_self) {
+				continue;
+			}
+			if (maybe_ally.ally_or_enemy != character.ally_or_enemy) {
+				continue;
+			}
+			potential_allies.push(maybe_ally);
+		}
+		return potential_allies;
+	}
+	
+	$scope.getAlliedOrganics = function(character) {
+		let all_allies = $scope.getAllies(character, true);
+		let all_organic_allies = [];
+		for (let i = 0; i < all_allies.length; i++) {
+			if (all_allies[i].species === 'DROID') {
+				continue;
+			}
+			all_organic_allies.push(all_allies[i]);
+		}
+		return all_organic_allies;
+	}
+	
+	$scope.getAlliedDroids = function(character) {
+		let all_allies = $scope.getAllies(character, true);
+		let all_droid_allies = [];
+		for (let i = 0; i < all_allies.length; i++) {
+			if (all_allies[i].species != 'DROID') {
+				continue;
+			}
+			all_droid_allies.push(all_allies[i]);
+		}
+		return all_droid_allies;
+	}
+	
+	//// Positive Dice Side Effects
+	$scope.hasRequiredAdvantageOrTriumph = function(num_adv_req, using_adv) {
+		if (using_adv) {
+			return $scope.die_pool.adv - $scope.action_tracker.adv_spent >= num_adv_req
+		}
+		// TODO: Make Triumph variable instead of always 1 (can use num_adv_req)
+		return $scope.die_pool.triumph - $scope.action_tracker.triumph_spent >= 1;
+	}
+	
+	$scope.spendRequiredAdvantageOrTriumph = function(num_adv_req, using_adv) {
+		let spent_log = num_adv_req + ' Advantage';
+		if (using_adv) {
+			$scope.action_tracker.adv_spent = $scope.action_tracker.adv_spent + num_adv_req;
+		} else {
+			// TODO: Make Triumph variable instead of always 1 (can use num_adv_req)
+			$scope.action_tracker.triumph_spent = $scope.action_tracker.triumph_spent + 1;
+			spent_log = '1 Triumph';
+		}
+		$scope.action_tracker.$save();
+		return spent_log;
+	}
+	
+	// Heal 1 Strain w/ 1 Adv (or 1 Triumph) (Repeatable)
+	$scope.canHealStrain = function(using_adv) {
+		return $scope.hasRequiredAdvantageOrTriumph(1, using_adv);
+	}
+	
+	$scope.healStrain = function(action_taker, using_adv) {	
+		let spent_log = $scope.spendRequiredAdvantageOrTriumph(1, using_adv);
+		
+		action_taker.strain = action_taker.strain - 1;
+		$scope.characters_array.$save(action_taker);
+		
+		// TODO: Make verbose?
+		$scope.addLogEntry(`${spent_log} spent to heal 1 strain (${action_taker.strain}/${action_taker.strain_threshold}).`);
+	}
+	
+	// Setback Target w/ 2 Adv (TODO: Or Triumph)
+	$scope.canSetbackTarget = function(using_adv) {
+		return !$scope.action_tracker.setback_target_used && $scope.hasRequiredAdvantageOrTriumph(2, using_adv);
+	}
+	
+	$scope.setbackTarget = function(target, using_adv) {		
+		$scope.action_tracker.setback_target_used = true;
+		let spent_log = $scope.spendRequiredAdvantageOrTriumph(2, using_adv);
+		
+		target.temp_setbacks = target.temp_setbacks + 1;
+		$scope.characters_array.$save(target);
+		
+		// TODO: Make verbose?
+		$scope.addLogEntry(`${spent_log} spent to setback ${target.name}.`);
+	}
+	
+	// Boost Any Ally w/ 2 Adv
+	$scope.canBoostAlly = function(using_adv) {
+		return !$scope.action_tracker.boost_any_used && $scope.hasRequiredAdvantageOrTriumph(2, using_adv);
+	}
+	
+	$scope.boostAlly = function(ally, using_adv) {
+		$scope.action_tracker.boost_any_used = true;
+		let spent_log = $scope.spendRequiredAdvantageOrTriumph(2, using_adv);
+		
+		ally.temp_boosts = ally.temp_boosts + 1;
+		$scope.characters_array.$save(ally);
+		
+		// TODO: Make Verbose?
+		$scope.addLogEntry(`${spent_log} spent to boost ${ally.name}.`);
+	}
+	
+	//// Negative Dice Side Effects
+	
+	$scope.hasRequiredThreatOrDespair = function(num_threat_req, using_threat) {
+		if (using_threat) {
+			return $scope.die_pool.threat - $scope.action_tracker.threat_spent >= num_threat_req
+		}
+		// TODO: Make despair variable instead of always 1 (can use num_threat_req(
+		return $scope.die_pool.despair - $scope.action_tracker.despair_spent >= 1;
+	}
+	
+	$scope.spendRequiredThreatOrDespair = function(num_threat_req, using_threat) {
+		let spent_log = num_threat_req + ' Threat';
+		if (using_threat) {
+			$scope.action_tracker.threat_spent = $scope.action_tracker.threat_spent + num_threat_req;
+		} else {
+			$scope.action_tracker.despair_spent = $scope.action_tracker.despair_spent + 1;
+			spent_log = '1 Despair';
+		}
+		$scope.action_tracker.$save();
+		return spent_log;
+	}
+	
+	// Inflict 1 Strain w/ 1 Threat or 1 Despair
+	$scope.canInflictStrain = function(using_threat) {
+		return $scope.hasRequiredThreatOrDespair(1, using_threat);
+	}
+	
+	$scope.inflictStrain = function(action_taker, using_threat) {	
+		let spent_log = $scope.spendRequiredThreatOrDespair(1, using_threat);
+		
+		action_taker.strain = action_taker.strain + 1;
+		$scope.characters_array.$save(action_taker);
+		
+		// TODO: Make verbose?
+		$scope.addLogEntry(`${spent_log} spent to inflict 1 strain (${action_taker.strain}/${action_taker.strain_threshold}).`);
+	}
+	
+	// Boost Target w/ 2 Threat or 1 Despair
+	$scope.canBoostTarget = function(using_threat) {
+		return !$scope.action_tracker.boost_target_used && $scope.hasRequiredThreatOrDespair(2, using_threat);
+	}
+	
+	$scope.boostTarget = function(target, using_threat) {
+		$scope.action_tracker.boost_target_used = true;
+		let spent_log = $scope.spendRequiredThreatOrDespair(2, using_threat);
+	
+		target.temp_boosts = target.temp_boosts + 1;
+		$scope.characters_array.$save(target);
+		
+		
+		// TODO: Make Verbose?
+		$scope.addLogEntry(`${spent_log} spent to boost ${target.name}.`);
+	}
+	
+	// Setback Any Ally w/ 2 Threat or 1 Despair
+	$scope.canSetbackAlly = function(using_threat) {
+		return !$scope.action_tracker.setback_any_used && $scope.hasRequiredThreatOrDespair(2, using_threat);
+	}
+	
+	$scope.setbackAlly = function(ally, using_threat) {
+		if (!ally) {
+			// TODO: Show an error message
+			return;
+		}
+		$scope.action_tracker.setback_any_used = true;
+		let spent_log = $scope.spendRequiredThreatOrDespair(2, using_threat);
+	
+		ally.temp_setbacks = ally.temp_setbacks + 1;
+		$scope.characters_array.$save(ally);
+		
+		// TODO: Make Verbose?
+		$scope.addLogEntry(`${spent_log} spent to setback ${ally.name}.`);
+	}
+	
+	$scope.convertActionToManeuver = function(action_taker) {
+		$scope.action_tracker.actions_available = $scope.action_tracker.actions_available - 1;
+		$scope.action_tracker.maneuvers_available = $scope.action_tracker.maneuvers_available + 1;
+		$scope.action_tracker.$save();
+		$scope.addLogEntry(`${action_taker.name} converts their action to a maneuver.`);
+	}
+	
+	$scope.strainForManeuver = function(action_taker) {
+		action_taker.strain = action_taker.strain + 2;
+		$scope.action_tracker.maneuvers_available = $scope.action_tracker.maneuvers_available + 1;
+		$scope.characters_array.$save(action_taker);
+		$scope.action_tracker.$save();
+		$scope.addLogEntry(`${action_taker.name} takes 2 strain for an extra maneuver.`);
+	}
+	
+	$scope.removeAims = function(character) {
+		if (character.aims > 0) {
+			character.aims = 0;
+			$scope.addLogEntry(`${character.name} has lost their aim.`);
+			$scope.characters_array.$save(character);
+		}
+	}
+	
+	$scope.leaveCover = function(character) {
+		if (character.cover_bonus > 0) {
+			character.cover_bonus = 0;
+			$scope.addLogEntry(`${character.name} leaves cover.`);
+			$scope.characters_array.$save(character);
+		}
+	}
+	
+	$scope.canTakeAction = function(character) {
+		if (!$scope.general_info.in_combat) {
+			return true;
+		}
+	
+		if ($scope.action_tracker.actions_taken >= $scope.action_tracker.actions_available) {
+			return false;
+		}
+		// TODO: Account for Staggered
+		return true;
+	}
+	
+	$scope.canTakeManeuver = function(character) {
+		if (!$scope.general_info.in_combat) {
+			return true;
+		}
+	
+		if ($scope.action_tracker.maneuvers_taken >= $scope.action_tracker.maneuvers_available) {
+			return false;
+		}
+		// TODO: Account for Immobilized
+		return true;
+	}
+	
+	$scope.incrementActionsTaken = function() {
+		if (!$scope.general_info.in_combat) {
+			return;
+		}
+		$scope.action_tracker.actions_taken = $scope.action_tracker.actions_taken + 1;
+		$scope.action_tracker.$save();
+	}
+	
+	$scope.matchActionDice = function(action_taker, skill_key) {
+		var skill_dice_needed = $scope.getSkillDice(action_taker, skill_key);
+		$scope.num_dice.num_ab_dice = skill_dice_needed[0];
+		$scope.num_dice.num_prof_dice = skill_dice_needed[1];
+		$scope.num_dice.num_boost_dice = action_taker.temp_boosts;
+		$scope.num_dice.num_setback_dice = action_taker.temp_setbacks;
+		$scope.num_dice.num_force_dice = 0;
+		// TODO: Add any setback removal to skill (separate icon/value in dice roller that removes the matching number of setbacks?)
+		
+		
+		$scope.num_dice.$save();
+	}
+	
+	$scope.takeAction = function(action_taker, skill_key) {
+		// Account for out-of-turn actions, etc.
+		$scope.incrementActionsTaken();
+		
+		$scope.removeAims(action_taker);
+		action_taker.temp_boosts = 0;
+		action_taker.temp_setbacks = 0;
+		$scope.rollNewDiePool();
+		$scope.dice_roller.$save().then(function(ref) {
+			var skill_info = $scope.skill_info[skill_key];
+			var log_message = `${action_taker.name} uses ${skill_info.name} `;
+			if ($scope.die_pool.succ <= 0) {
+				log_message = log_message + ' but fails.';
+				$scope.addLogEntry(log_message);
+				return;
+			}
+			log_message = log_message + ' and succeeds.';
+			$scope.addLogEntry(log_message);
+			
+			$scope.action_tracker.roll_made = true;
+			$scope.action_tracker.$save();
+		}, function(error) {
+			console.log("Error:", error);
+		});
+	}
+	
+	$scope.isMeleeSkill = function(skill_key) {
+		if (skill_key === 'BRAWL' || skill_key === 'MELEE' || skill_key === 'LTSABER') {
+			return true;
+		}
+		return false;
+	}
+	
+	$scope.isRangedSkill = function(skill_key) {
+		if (skill_key === 'RANGLT' || skill_key === 'RANGHVY' || skill_key === 'GUNN') {
+			return true;
+		}
+		return false;
+	}
+	
+	$scope.getPotentialTargetsToAttack = function(action_taker, damage_scale, show_non_scale_matching, chars_in_other_vehicles) {
+		if (!action_taker) {
+			return [];
+		}
+		// TODO: Include Vehicles that contain enemies
+		// Do this by collecting all the vehicles enemies are in, in a set or something so no dupes
+		// First have to make the vehicle that people can be in the actual vehicle using ng-option (instead of a string)
+		var enemy_chars = [];
+		var enemy_vehicles_set = new Set();
+		for (var i = 0; i < $scope.characters_array.length; i++) {
+			let potential_target = $scope.characters_array[i];
+			if (potential_target === action_taker) {
+				continue;
+			}
+			if (potential_target.initiative_type === 'none') {
+				continue;
+			}
+			// TODO: Have a checkbox that allows for including allies (?)
+			if (potential_target.ally_or_enemy === action_taker.ally_or_enemy) {
+				continue;
+			}
+			if (potential_target.wounds > potential_target.wound_threshold || potential_target.strain > potential_target.strain_threshold) {
+				continue;
+			}
+			
+			if (potential_target.vehicle) {
+				enemy_vehicles_set.add($scope.vehicles_array.$getRecord(potential_target.vehicle));
+			}
+			if (potential_target.vehicle) {
+				if (!chars_in_other_vehicles && potential_target.vehicle != action_taker.vehicle) {
+					continue;
+				}
+			}
+			enemy_chars.push(potential_target);
+		}
+		let enemy_vehicles_list = Array.from(enemy_vehicles_set);
+		let non_disabled_enemy_vehicles = [];
+		for (let i = 0; i < enemy_vehicles_list.length; i++) {
+			let potential_enemy_vehicle = enemy_vehicles_list[i];
+			if (potential_enemy_vehicle.hull_trauma > potential_enemy_vehicle.hull_trauma_threshold || potential_enemy_vehicle.system_strain > potential_enemy_vehicle > potential_enemy_vehicle.system_strain) {
+				continue;
+			}
+			non_disabled_enemy_vehicles.push(potential_enemy_vehicle);
+		}
+		let targets = [];
+		if (show_non_scale_matching || !damage_scale) {
+			targets = enemy_chars.concat(non_disabled_enemy_vehicles);
+		} else {
+			if (damage_scale === 'personal') {
+				targets = enemy_chars;
+			} else { // if (damage_scale === 'planetary') {
+				targets = non_disabled_enemy_vehicles;
+			}
+		}
+		
+		return targets;
+	}
+	
+	$scope.getPotentialWeaponsForAttack = function(action_taker) {
+		// TODO: Can remove this and in other places?
+		if (!action_taker) {
+			return [];
+		}
+		var personal_weapons = [];
+		if (action_taker.weapons) {
+			personal_weapons = action_taker.weapons.slice();
+		}
+		// TODO: What if their heands are full?
+		// TODO: What if they have no arms?
+		personal_weapons.push(action_taker.left_fist);
+		
+		// TODO: Add weapons for the vehicle the character is in
+		// First have to make Characters hold onto the actual vehicles rather than strings
+		var vehicle_weapons = [];
+		if (action_taker.vehicle) {
+			let vehicle = $scope.vehicles_array.$getRecord(action_taker.vehicle);
+			vehicle_weapons = vehicle.weapons;
+		}
+		return personal_weapons.concat(vehicle_weapons);
+	}
+	
+	$scope.matchAttackDice = function(action_taker, target, weapon) {
+		// Skill Dice
+		let skill_key = weapon.skill_key;
+		let skill_dice_needed = $scope.getSkillDice(action_taker, skill_key);
+		$scope.num_dice.num_ab_dice = skill_dice_needed[0];
+		$scope.num_dice.num_prof_dice = skill_dice_needed[1];
+		
+		var num_boost_dice = 0;
+		// Aim
+		num_boost_dice = action_taker.aims;
+		// Temp Boosts
+		num_boost_dice = num_boost_dice + action_taker.temp_boosts;
+		
+		var num_setback_dice = 0;
+		num_setback_dice = num_setback_dice + action_taker.temp_setbacks;
+		if (target.target_type === 'character') {
+			if ($scope.isMeleeSkill(skill_key)) {
+				num_setback_dice = num_setback_dice + target.def_melee;
+				if (target.prone) {
+					num_boost_dice = num_boost_dice + 1;
+				}
+			} else if ($scope.isRangedSkill(skill_key)) {
+				num_setback_dice = num_setback_dice + target.def_ranged;
+				if (target.prone) {
+					num_setback_dice = num_setback_dice + 1;
+				}
+				num_setback_dice = num_setback_dice + target.cover_bonus;
+			}
+		} else { // if (target.target_type === 'vehicle') {
+			// TODO: Make this a parameter instead?
+			switch ($scope.target_defense_zone) {
+				case 'fore':
+					num_setback_dice = target.def_fore;
+					break;
+				case 'aft':
+					num_setback_dice = target.def_aft;
+					break;
+				case 'port':
+					num_setback_dice = target.def_port;
+					break;
+				case 'starboard':
+					num_setback_dice = target.def_starboard;
+					break;
+				case 'least':
+					if (target.silhouette <= 4) {
+						num_setback_dice = Math.min(target.def_fore, target.def_aft);
+					} else {
+						num_setback_dice = Math.min(target.def_fore, target.def_aft, target.def_port, target.def_starboard);
+					}
+					break;
+				case 'most':
+				default:
+					num_setback_dice = Math.max(target.def_fore, target.def_aft, target.def_port, target.def_starboard);
+					break;
+			}
+		}
+		// TODO: Use silhouettes to set difficulty dice if planetary scale weapon
+		$scope.num_dice.num_boost_dice = num_boost_dice;
+		$scope.num_dice.num_setback_dice = num_setback_dice;
+		
+		$scope.num_dice.num_force_dice = 0;
+		
+		$scope.num_dice.$save();
+	}
+	
+	$scope.attackTarget = function(action_taker, target, weapon) {
+		$scope.incrementActionsTaken();
+	
+		action_taker.aims = 0;
+		action_taker.temp_boosts = 0;
+		action_taker.temp_setbacks = 0;
+	
+		$scope.rollNewDiePool();
+		$scope.dice_roller.$save().then(function(ref) {
+			// Save aim, temp_boost, etc. adjustments
+			$scope.characters_array.$save(action_taker);
+		
+			$scope.action_tracker.roll_made = true;
+			$scope.action_tracker.$save();
+		
+			var log_message = `${action_taker.name} attacks ${target.name} with their ${weapon.name} `;
+			if ($scope.die_pool.succ <= 0) {
+				log_message = log_message + ' but misses.';
+				$scope.addLogEntry(log_message);
+				return;
+			}
+			log_message = log_message + ' and hits.';
+			$scope.addLogEntry(log_message);
+			var damage = $scope.die_pool.succ;
+			var weapon_damage = weapon.damage;
+			var damage_add = weapon.damage_add;
+			if (damage_add >= 1) {
+				var char_brawn = action_taker.char_values["BR"];
+				damage = damage + char_brawn + damage_add;
+			} else {
+				damage = damage + weapon_damage;
+			}
+			if (action_taker.species === 'TRAND') {
+				damage = damage + 1;
+				// TODO: Set lower crit rating when that becomes relevant wherever it's relevant
+			}
+			var pierce = weapon.pierce;
+			var breach = weapon.breach;
+			var damage_type = weapon.damage_scale;
+			if (target.target_type === 'character') {
+				if (target.armor && target.armor.cortosis) {
+					pierce = 0;
+					breach = 0;
+				}
+				$scope.applyDamageToCharacterTarget(target, damage, pierce, breach, damage_type);
+			} else { // if (target.target_type === 'vehicle') {
+				$scope.applyDamageToVehicleTarget(target, damage, pierce, breach, damage_type);
+			}
+		}, function(error) {
+			console.log("Error:", error);
+		});
+	}
+	
+	$scope.applyDamageToCharacterTarget = function(character, damage, pierce, breach, damage_type) {	
+		var totalPierce = pierce + (breach * 10);
+		var soak_after_pierce = Math.max(0, character.soak - totalPierce);
+		var real_damage = damage;
+		if (damage_type === 'planetary') {
+			real_damage = damage * 10;
+		}
+		var wounds_taken = Math.max(0, real_damage - soak_after_pierce);
+		if (wounds_taken <= 0) {
+			$scope.addLogEntry('But the attack fails to go through their soak.');
+			return;
+		}
+		character.wounds = character.wounds + wounds_taken;
+		$scope.addLogEntry(`${character.name} takes ${wounds_taken} wounds (${character.wounds}/${character.wound_threshold}).`);
+		if (character.wounds > character.wound_threshold) {
+			$scope.addLogEntry(`${character.name} passes out.`);
+			// Move this to a 'go unconscious' function
+			character.prone = true;
+			character.aims = 0;
+		} else {
+			$scope.removeAims(character);
+		}
+		$scope.characters_array.$save(character);
+	}
+	
+	$scope.applyDamageToVehicleTarget = function(vehicle, damage, pierce, breach, damage_type) {
+		var totalBreach = (breach * 10) + pierce;
+		var real_armor = vehicle.armor * 10;
+		var real_damage = damage * 10;
+		if (damage_type === 'personal') {
+			real_damage = damage;
+		}
+		var armor_after_breach = Math.max(0, real_armor - totalBreach);
+		var damage_taken = Math.max(0, real_damage - armor_after_breach);
+		if (damage_taken <= 0) {
+			$scope.addLogEntry('But the attack fails to go through its armor.');
+			return;
+		}
+		var vehicle_damage = damage_taken / 10;
+		vehicle.hull_trauma = vehicle.hull_trauma + vehicle_damage;
+		$scope.addLogEntry(`(${vehicle.hull_trauma}/${vehicle.hull_trauma_threshold} hull trauma)`);
+		if (vehicle.hull_trauma > vehicle.hull_trauma_threshold) {
+			$scope.addLogEntry(`${vehicle.name} is disabled.`)
+		}
+		$scope.vehicles_array.$save(vehicle);
+	}
+	
+	// Force Powers
+	$scope.getMatchingForcePoints = function(action_taker) {
+		if (!action_taker) {
+			return 0;
+		}
+		if (action_taker.lightside_user) {
+			return $scope.die_pool.light_side_points;
+		}
+		return $scope.die_pool.dark_side_points;
+	}
+	
+	$scope.getNonMatchingForcePoints = function(action_taker) {
+		if (!action_taker) {
+			return 0;
+		}
+		if (action_taker.lightside_user) {
+			return $scope.die_pool.dark_side_points;
+		}
+		return $scope.die_pool.light_side_points;
+	}
+	
+	$scope.getAvailableForcePoints = function(action_taker) {
+		if (!action_taker) {
+			return 0;
+		}
+		return $scope.getMatchingForcePoints(action_taker) + $scope.force_powers.fp_converted;
+	}
+	
+	$scope.getRemainingForcePoints = function(action_taker) {
+		return $scope.getAvailableForcePoints(action_taker) - $scope.force_powers.fp_spent;
+	}
+	
+	$scope.convertForcePoint = function(action_taker) {
+		$scope.force_powers.fp_converted = $scope.force_powers.fp_converted + 1;
+		$scope.action_tracker.$save();
+		// TODO: Also flip a destiny
+		action_taker.strain = action_taker.strain + 1;
+		$scope.characters_array.$save(action_taker);
+		// TODO: Make very verbose
+		$scope.addLogEntry(`${action_taker.name} converted a force point for 1 strain (${action_taker.strain}/${action_taker.strain_threshold}).`);
+	}
+	
+	$scope.canSpendFP = function(action_taker, num_fp) {
+		return $scope.getRemainingForcePoints(action_taker) >= num_fp;
+	}
+	
+	$scope.getRangeString = function(range_int) {
+		switch (range_int) {
+			case 0:
+				return 'engaged';
+			case 1:
+				return 'short';
+			case 2:
+				return 'medium';
+			case 3:
+				return 'long';
+			default:
+				return 'extreme';
+		}
+	}
+	
+	$scope.getPotentialForcePowers = function(action_taker) {
+		let potential_powers = [];
+		if (action_taker.force_powers.move && action_taker.force_powers.move.unlocked) {
+			potential_powers.push(action_taker.force_powers.move);
+		}
+		return potential_powers;
+	}
+	
+	$scope.getFPImage = function(lightside_user, invert) {
+		if (lightside_user) {
+			if (invert) {
+				return './dice_images/darkside.png';
+			}
+			return './dice_images/lightside.png';
+		}
+		
+		if (invert) {
+			return './dice_images/lightside.png';
+		}
+		return './dice_images/darkside.png';
+	}
+	
+	$scope.makeForceRoll = function(action_taker) {
+		$scope.num_dice.num_ab_dice = 0;
+		$scope.num_dice.num_prof_dice = 0;
+		$scope.num_dice.num_boost_dice = 0;
+		$scope.num_dice.num_diff_dice = 0;
+		$scope.num_dice.num_chal_dice = 0;
+		$scope.num_dice.num_chal_dice = 0;
+		$scope.num_dice.num_force_dice = action_taker.force_rating;
+		$scope.num_dice.$save().then(function(ref) {
+			$scope.rollNewDiePool();
+		}, function(error) {
+			console.log("Error:", error);
+		});
+		
+		$scope.action_tracker.force_roll_made = true;
+		$scope.action_tracker.$save();
+	}
+	
+	//// Move
+	// Init the Power
+	$scope.forceMoveObject = function(action_taker) {
+		$scope.incrementActionsTaken();
+		
+		$scope.move_power.using_move = true;
+		$scope.move_power.using_move_basic = true;
+		$scope.move_power.$save().then(function(ref) {
+			$scope.makeForceRoll(action_taker);		
+		}, function(error) {
+			console.log("Error:", error);
+		});
+	}
+	
+	$scope.forceMoveHurl = function(action_taker, target, object_silhouette) {
+		$scope.incrementActionsTaken();
+	
+		// TODO: Refactor this. Sooooo much is just copy-pasted
+		// Skill Dice
+		let skill_key = 'DISC'; // Except this
+		let skill_dice_needed = $scope.getSkillDice(action_taker, skill_key);
+		$scope.num_dice.num_ab_dice = skill_dice_needed[0];
+		$scope.num_dice.num_prof_dice = skill_dice_needed[1];
+		
+		var num_boost_dice = 0;
+		// Aim
+		num_boost_dice = action_taker.aims;
+		// Temp Boosts
+		num_boost_dice = num_boost_dice + action_taker.temp_boosts;
+		
+		var num_setback_dice = 0;
+		num_setback_dice = num_setback_dice + action_taker.temp_setbacks;
+		if (target.target_type === 'character') {
+			if ($scope.isMeleeSkill(skill_key)) {
+				num_setback_dice = num_setback_dice + target.def_melee;
+				if (target.prone) {
+					num_boost_dice = num_boost_dice + 1;
+				}
+			} else if ($scope.isRangedSkill(skill_key)) {
+				num_setback_dice = num_setback_dice + target.def_ranged;
+				if (target.prone) {
+					num_setback_dice = num_setback_dice + 1;
+				}
+				num_setback_dice = num_setback_dice + target.cover_bonus;
+			}
+		} else { // if (target.target_type === 'vehicle') {
+			// TODO: Make this a parameter instead?
+			switch ($scope.target_defense_zone) {
+				case 'fore':
+					num_setback_dice = target.def_fore;
+					break;
+				case 'aft':
+					num_setback_dice = target.def_aft;
+					break;
+				case 'port':
+					num_setback_dice = target.def_port;
+					break;
+				case 'starboard':
+					num_setback_dice = target.def_starboard;
+					break;
+				case 'least':
+					if (target.silhouette <= 4) {
+						num_setback_dice = Math.min(target.def_fore, target.def_aft);
+					} else {
+						num_setback_dice = Math.min(target.def_fore, target.def_aft, target.def_port, target.def_starboard);
+					}
+					break;
+				case 'most':
+				default:
+					num_setback_dice = Math.max(target.def_fore, target.def_aft, target.def_port, target.def_starboard);
+					break;
+			}
+		}
+		// TODO: Use silhouettes to set difficulty dice if planetary scale weapon
+		$scope.num_dice.num_boost_dice = num_boost_dice;
+		$scope.num_dice.num_setback_dice = num_setback_dice;
+		
+		$scope.num_dice.num_diff_dice = object_silhouette;
+		$scope.num_dice.num_force_dice = action_taker.force_rating; // And this
+		
+		$scope.num_dice.$save().then(function(ref) {
+			$scope.rollNewDiePool();
+			
+			action_taker.aims = 0;
+			action_taker.temp_boosts = 0;
+			action_taker.temp_setbacks = 0;
+			$scope.characters_array.$save(action_taker);
+			
+			$scope.action_tracker.roll_made = true;
+			
+			// $scope.dice_roller() is what gets changed in $scope.rollNewDiePool()
+			$scope.dice_roller.$save().then(function(ref) {
+				if ($scope.die_pool.succ <= 0) {
+					$scope.addLogEntry(`${action_taker.name} failed to use their Move force power to hurl an object of silhouette ${object_silhouette} at ${target.name}.`);
+				} else {
+					$scope.move_power.using_move = true;
+					$scope.move_power.using_move_hurl = true;
+					$scope.move_power.hurl_object_silhouette = object_silhouette;
+					$scope.action_tracker.force_roll_made = true;
+				}
+				// Also saving the $scope.action_tracker.roll_made = true; above
+				$scope.action_tracker.$save();
+			}, function(error) {
+				console.log("Error:", error);
+			});
+			
+		}, function(error) {
+			console.log("Error:", error);
+		});
+	}
+	
+	$scope.useMoveBasic = function(action_taker, hurl_target) {
+		if ($scope.move_power.using_move_basic) {
+			$scope.addLogEntry(`${action_taker.name} used the Move force power to move an object of Silhouette ${$scope.move_power.strength} or less within ${$scope.getRangeString($scope.move_power.range)} somewhere else within ${$scope.getRangeString($scope.move_power.range)}.`);
+		} else { // if ($scope.move_power.using_move_hurl) {
+			let object_silhouette = $scope.move_power.hurl_object_silhouette;
+			$scope.addLogEntry(`${action_taker.name} uses the Move force power to hurl an object of Silhouette ${object_silhouette} at ${hurl_target.name}`);
+		
+			let damage = 5;
+			if (object_silhouette > 0) {
+				damage = object_silhouette * 10;
+			}
+			damage = damage + $scope.die_pool.succ;
+			if (hurl_target.target_type === 'character') {
+				$scope.applyDamageToCharacterTarget(hurl_target, damage, 0, 0, 'personal');
+			} else { // if (target.target_type === 'vehicle') {
+				$scope.applyDamageToVehicleTarget(hurl_target, damage, 0, 0, 'personal');
+			}
+		}
+	}
+	
+	$scope.failMoveBasic = function(action_taker, hurl_target) {
+		if ($scope.move_power.using_move_basic) {
+			$scope.addLogEntry(`${action_taker.name} failed to use the Move force power.`);
+		} else { // if ($scope.move_power.using_move_hurl) {
+			let object_silhouette = $scope.move_power.hurl_object_silhouette;
+			$scope.addLogEntry(`${action_taker.name} failed to use the Move force power to hurl an object of Silhouette ${object_silhouette} at ${hurl_target.name}`);
+		}
+	}
+	
+	// Activate the Power
+	
+	$scope.activateMoveBasic = function() {
+		$scope.force_powers.fp_spent = $scope.force_powers.fp_spent + 1;
+		$scope.force_powers.$save().then(function(ref) {
+			$scope.move_power.move_basic_activated = true;
+			$scope.move_power.$save();
+		}, function(error) {
+			console.log("Error:", error);
+		});
+	}
+	
+	// Use Strength to Increase the Silhouette
+	$scope.strengthMove = function(action_taker) {
+		$scope.force_powers.fp_spent = $scope.force_powers.fp_spent + 1;
+		$scope.force_powers.$save().then(function(ref) {
+			$scope.move_power.strength = $scope.move_power.strength + action_taker.force_powers.move.strength;
+			$scope.move_power.$save();
+		}, function(error) {
+			console.log("Error:", error);
+		});
+	}
+	
+	// Use Range to Increase the Range
+	$scope.rangeMove = function(action_taker) {
+		$scope.force_powers.fp_spent = $scope.force_powers.fp_spent + 1;
+		$scope.force_powers.$save().then(function(ref) {
+			$scope.move_power.range = $scope.move_power.range + action_taker.force_powers.move.range;
+			$scope.move_power.$save();
+		}, function(error) {
+			console.log("Error:", error);
+		});
+	}
+	
+	// Maneuvers
+	
+	$scope.incrementManeuversTaken = function() {
+		if (!$scope.general_info.in_combat) {
+			return;
+		}
+		$scope.action_tracker.maneuvers_taken = $scope.action_tracker.maneuvers_taken + 1;
+		$scope.action_tracker.$save();
+	}
+	
+	$scope.move = function(action_taker, direction, moving_towards) {
+		$scope.incrementManeuversTaken();
+		$scope.removeAims(action_taker);
+		$scope.leaveCover(action_taker);
+		
+		switch(direction) {
+			case 'forward':
+			case 'backward':
+			case 'left':
+			case 'right':
+				$scope.addLogEntry(`${action_taker.name} moves ${direction}.`);
+				break;
+			case 'towards':
+				$scope.addLogEntry(`${action_taker.name} moves towards ${moving_towards.name}.`);
+				break;
+			case 'engage':
+				$scope.addLogEntry(`${action_taker.name} engages ${moving_towards.name}.`);
+				break;
+			default:
+				$scope.addLogEntry(`{action_taker.name} moves.`);
+				break;
+		}
+	}
+	
+	$scope.healWounds = function(target, wounds_to_heal) {
+		let actual_wounds_healed = Math.min(wounds_to_heal, target.wounds);
+		target.wounds = target.wounds - actual_wounds_healed;
+		$scope.characters_array.$save(target);
+		
+		$scope.addLogEntry(`${target.name} healed ${actual_wounds_healed} wounds (${target.wounds}/${target.wound_threshold}).`);
+	}
+	
+	$scope.applyStimpack = function(action_taker, stim_target) {
+		$scope.incrementManeuversTaken();
+		
+		let wounds_to_heal = 5 - stim_target.stim_packs_used;
+		stim_target.stim_packs_used = stim_target.stim_packs_used + 1;
+	
+		if (action_taker === stim_target) {
+			$scope.addLogEntry(`${action_taker.name} applied a stimpack to themself (${action_taker.stim_packs_used}/5 stimpacks used).`);
+		} else {
+			$scope.addLogEntry(`${action_taker.name} applied a stimpack to ${stim_target.name} (${stim_target.stim_packs_used}/5 stimpacks used).`);
+		}
+	
+		$scope.healWounds(stim_target, wounds_to_heal);
+	}
+	
+	$scope.applyRepairPatch = function(action_taker, patch_target) {
+		$scope.incrementManeuversTaken();
+		
+		patch_target.stim_packs_used = patch_target.stim_packs_used + 1;
+		
+		if (action_taker === patch_target) {
+			$scope.addLogEntry(`${action_taker.name} applied a repair patch to themself (${action_taker.stim_packs_used}/5 repair patches used).`);
+		} else {
+			$scope.addLogEntry(`${action_taker.name} applied a repair patch to ${patch_target.name} (${patch_target.stim_packs_used}/5 repair patches used).`);
+		}
+		
+		$scope.healWounds(patch_target, 3);
+	}
+	
+	$scope.aim = function(action_taker) {
+		$scope.incrementManeuversTaken();
+		
+		action_taker.aims = action_taker.aims + 1;
+		$scope.characters_array.$save(action_taker);
+		
+		$scope.num_dice.num_boost_dice = $scope.num_dice.num_boost_dice + 1;
+		$scope.num_dice.$save();
+		
+		$scope.addLogEntry(`${action_taker.name} aims.`);
+	}
+	
+	$scope.standUp = function(action_taker) {
+		$scope.incrementManeuversTaken();
+		
+		action_taker.prone = false;
+		$scope.characters_array.$save(action_taker);
+		$scope.addLogEntry(`${action_taker.name} stands up.`);
+	}
+	
+	$scope.takeCover = function(action_taker) {
+		$scope.incrementManeuversTaken();
+		
+		action_taker.cover_bonus = 1;
+		$scope.characters_array.$save(action_taker);
+		$scope.addLogEntry(`${action_taker.name} takes cover.`);
+	}
+	
+	// Incidentals
+	
+	$scope.goProne = function(action_taker) {
+		action_taker.prone = true;
+		$scope.characters_array.$save(action_taker);
+		$scope.addLogEntry(`${action_taker.name} goes prone.`);
+	}
+	
+	// Get Potential Vehicles a Person Can Be In
+	$scope.getPotentialVehicles = function() {
+		// .$id : .name
+		let vehicles_dict = {
+			'': 'No Vehicle',
+		}
+		for (let i = 0; i < $scope.vehicles_array.length; i++) {
+			let vehicle = $scope.vehicles_array[i];
+			vehicles_dict[vehicle.$id] = vehicle.name;
+		}
+		return vehicles_dict;
+	}
+	
+	$scope.passOneDay = function() {
+		$scope.remote_logs.$add(new Log()).then(function(ref) {
+			$scope.addLogEntry('--- One Day Passes ---');
+			for (let i = 0; i < $scope.characters_array.length; i++) {
+				let character = $scope.characters_array[i];
+				
+				character.stim_packs_used = 0;
+				character.strain = 0;
+				if (character.wounds > 0) {
+					if (character.species === 'GENDAI') {
+						character.wounds = 0;
+						$scope.addLogEntry(`${character.name} regenerates all wounds (${character.wounds}/${character.wound_threshold}).`);
+					} else {
+						let wounds_healed = 1;
+						if (character.species === 'TRAND') {
+							wounds_healed = 2;
+						}
+						$scope.healWounds(character, wounds_healed);
+					}
+				}
+				$scope.characters_array.$save(character);
+			}
+			$scope.newLog();
+		});
+	}
+	
+	$scope.resetCombat = function() {
+		for (var i = 0; i < $scope.characters_array.length; i++) {
+			var character = $scope.characters_array[i];
+			
+			character.prone = false;
+			character.cover_bonus = 0;
+			
+			character.aims = 0;
+			character.temp_boosts = 0;
+			character.temp_setbacks = 0;
+			
+			character.turn_taken = false;
+			
+			$scope.characters_array.$save(character);
+		}
+		
+		$scope.newTurnResets();
+	}
+	
+	$scope.newTurnResets = function() {
+		$scope.action_tracker.actions_taken = 0;
+		$scope.action_tracker.maneuvers_taken = 0;
+		$scope.action_tracker.actions_available = 1;
+		$scope.action_tracker.maneuvers_available = 1;
+		
+		$scope.action_tracker.adv_spent = 0;
+		$scope.action_tracker.triumph_spent = 0;
+		$scope.action_tracker.threat_spent = 0;
+		$scope.action_tracker.despair_spent = 0;
+		
+		$scope.action_tracker.roll_made = false;
+		$scope.action_tracker.force_roll_made = false;
+		
+		$scope.action_tracker.boost_any_used = false;
+		$scope.action_tracker.setback_target_used = false;
+		$scope.action_tracker.boost_target_used = false;
+		$scope.action_tracker.setback_any_used = false;
+		
+		$scope.action_tracker.$save();
+		
+		$scope.force_powers.fp_converted = 0;
+		$scope.force_powers.fp_spent = 0;
+		
+		$scope.force_powers.$save();
+		
+		$scope.move_power.using_move = false;
+		$scope.move_power.using_move_basic = false;
+		$scope.move_power.using_move_hurl = false;
+		$scope.move_power.hurl_object_silhouette = 0;
+		$scope.move_power.move_basic_activated = false;
+		$scope.move_power.range = 1;
+		$scope.move_power.strength = 0;
+		$scope.move_power.$save();
+	}
+	
+	$scope.getSkillDice = function(character, skill_key) {
+		var skill_rank = character.skill_values[skill_key];
+		var char_key = $scope.skill_info[skill_key].char_key;
+		var char_rank = character.char_values[char_key];
+		var highest = Math.max(char_rank, skill_rank);
+		var smallest = Math.min(char_rank, skill_rank);
+		
+		return [highest - smallest, smallest];
+	}
+	
+	$scope.applyStatsFromWeaponInfo = function(weapon, weapon_info) {
+		weapon.damage = weapon_info.damage;
+		weapon.damage_add = weapon_info.damage_add;
+		weapon.pierce = weapon_info.pierce;
+		weapon.breach = weapon_info.breach;
+	}
+	
+	$scope.readCharacterFiles = function(num_char_copies) {
+		if (!num_char_copies) {
+			num_char_copies = 1;
+		}
+		var files = document.getElementById("character-file-input").files;
+		var reader = new FileReader();
+		function readFile(index) {
+			if (index >= files.length) {
+				return
+			}
+			var file = files[index];
+			reader.onloadend = function() {
+				var xmlData = reader.result;
+				for (var i = 0; i < num_char_copies; i++) {
+					var char_num = 0;
+					if (num_char_copies > 1) {
+						char_num = i + 1;
+					}
+					$scope.importCharacter(xmlData, char_num);
+				}
+				readFile(index+1);
+			};
+			reader.readAsText(files[index]);
+		}
+		readFile(0);
+	}
+	
+	$scope.importCharacter = function(xmlData, char_num) {
+		var parser = new DOMParser();
+		var xmlDoc = parser.parseFromString(xmlData,"text/xml");
+		
+		// var npc_node = xmlDoc.getElementsByTagName("NPCs")[0];
+		var npc_nodes = xmlDoc.getElementsByTagName("NPCs");
+		if (npc_nodes.length > 0) {
+			npc_nodes[0].parentNode.removeChild(npc_nodes[0]);
+		}
+		// npc_node.parentNode.removeChild(npc_node);
+	
+		var name = '';
+		var char_name_nodes = xmlDoc.getElementsByTagName("CharName");
+		if (char_name_nodes.length > 0) {
+			name = char_name_nodes[0].childNodes[0].nodeValue;
+		} else {
+			name = xmlDoc.getElementsByTagName("Name")[0].childNodes[0].nodeValue;
+		}
+		if (char_num > 0) {
+			name = name + ' ' + char_num;
+		}
+		
+		// Wounds Threshold, Strain Threshold, Soak
+		var wt_node = xmlDoc.getElementsByTagName("WoundThreshold")[0];
+		var wt = $scope.sumAttrNodeValues(wt_node);
+		var st_node = xmlDoc.getElementsByTagName("StrainThreshold")[0];
+		var st = $scope.sumAttrNodeValues(st_node);
+		var soak_node = xmlDoc.getElementsByTagName("SoakValue")[0];
+		var soak = $scope.sumAttrNodeValues(soak_node);
+		
+		// Defense
+		var def_ranged_node = xmlDoc.getElementsByTagName("DefenseRanged")[0];
+		var def_ranged = $scope.sumAttrNodeValues(def_ranged_node);
+		var def_melee_node = xmlDoc.getElementsByTagName("DefenseMelee")[0];
+		var def_melee = $scope.sumAttrNodeValues(def_melee_node);
+		
+		// Characteristics
+		var char_nodes = xmlDoc.getElementsByTagName("CharCharacteristic");
+		var char_values = {};
+		for (var i = 0; i < char_nodes.length; i++) {
+			var key = char_nodes[i].getElementsByTagName("Key")[0].childNodes[0].nodeValue;
+			var rank_node = char_nodes[i].getElementsByTagName("Rank")[0];
+			// TODO: Do not count the 'Non-Career Ranks' node. See Zang for example.
+			var ranks = $scope.sumAttrNodeValues(rank_node);
+			char_values[key] = ranks;
+		}
+		
+		// Skill Values
+		var skill_values = {};
+		for (let k in $scope.skill_info) {
+			skill_values[k] = 0;
+		}
+		var skill_nodes = xmlDoc.getElementsByTagName("CharSkill");
+		for (var i = 0; i < skill_nodes.length; i++) {
+			var key = skill_nodes[i].getElementsByTagName("Key")[0].childNodes[0].nodeValue;
+			var rank_node = skill_nodes[i].getElementsByTagName("Rank")[0];
+			// var ranks = $scope.sumAttrNodeValues(rank_node);
+			var ranks = $scope.sumAttrNodesIgnoring(rank_node, ["NonCareerRanks"]);
+			skill_values[key] = ranks;
+		}
+	
+		var new_char = new Character(name, wt, st, soak, def_ranged, def_melee, char_values, skill_values);
+		
+		// Species
+		var species_key_nodes = xmlDoc.getElementsByTagName("SpeciesKey");
+		if (species_key_nodes.length > 0) {
+			new_char.species = species_key_nodes[0].childNodes[0].nodeValue;
+		}
+		
+		// Force Rating
+		var force_rating_nodes = xmlDoc.getElementsByTagName("ForceRating");
+		if (force_rating_nodes.length > 0) {
+			new_char.force_rating = $scope.sumAttrNodeValues(force_rating_nodes[0]);
+		}
+		
+		// Force Powers
+		// TODO: Look into how this works for NPCs
+		let force_power_nodes = xmlDoc.getElementsByTagName("CharForcePower");
+		for (let i = 0; i < force_power_nodes.length; i++) {
+			let power_node = force_power_nodes[i];
+			let power_key = power_node.getElementsByTagName("Key")[0].childNodes[0].nodeValue;
+			if (power_key === 'MOVE') {
+				let power_data = {
+					name: 'Move',
+					unlocked: false,
+					strength: 0,
+					range: 0,
+					hurl: false,
+				};
+				let force_ability_nodes = power_node.getElementsByTagName('CharForceAbility');
+				for (let j = 0; j < force_ability_nodes.length; j++) {
+					let ability_node = force_ability_nodes[j];
+					let ability_key = ability_node.getElementsByTagName("Key")[0].childNodes[0].nodeValue;
+					let purchased_nodes = ability_node.getElementsByTagName("Purchased");
+					if (purchased_nodes.length > 0) {
+						let purchased_value = purchased_nodes[0].childNodes[0].nodeValue;
+						if (purchased_value === 'true') {
+							// TODO: MOVEMAGNITUDE, the other controls, etc.
+							if (ability_key === 'MOVEBASIC') {
+								power_data.unlocked = true;
+							} else if (ability_key === 'MOVESTRENGTH') {
+								power_data.strength = power_data.strength + 1;
+							} else if (ability_key === 'MOVERANGE') {
+								power_data.range = power_data.range + 1;
+							} else if (ability_key === 'MOVECONTROL1') {
+								power_data.hurl = true;
+							}
+						}
+					}
+				}
+				new_char.force_powers['move'] = power_data;
+			}
+		}
+		
+		
+		// Weapons
+		var weapon_nodes = xmlDoc.getElementsByTagName("CharWeapon");
+		for (var i = 0; i < weapon_nodes.length; i++) {
+			var equipped_nodes = weapon_nodes[i].getElementsByTagName("Equipped");
+			if (equipped_nodes.length != 0 && equipped_nodes[0].childNodes[0].nodeValue === "true") {
+				var item_key_value_nodes = weapon_nodes[i].getElementsByTagName("ItemKey")[0].childNodes;
+				if (item_key_value_nodes.length != 0) {
+					var weapon_key = item_key_value_nodes[0].nodeValue;					
+					let weapon_info = $scope.weapon_info[weapon_key];
+					
+					// TODO: Use the custom name
+					let weapon = new WeaponEntry(weapon_info.name, weapon_info.skill_key);
+					$scope.applyStatsFromWeaponInfo(weapon, weapon_info);
+					// TODO: Check if it's planetary damage
+					weapon.damage_scale = 'personal';
+					
+					new_char.weapons.push(weapon);
+				}
+			}
+			// TODO: Add code for including unarmed strike, including modifications for Trandoshans by looking at how UNARMED looks in Gutch's .xml
+			// TODO: Also add arc welder for astromechs
+		}
+		// Fist
+		let fist_name = 'Fist';
+		if (new_char.species === 'TRAND') {
+			fist_name = 'Claws';
+		}
+		new_char.left_fist = new WeaponEntry(fist_name, 'BRAWL');
+		
+		// Custom Weapons
+		let custom_weapon_nodes = xmlDoc.getElementsByTagName("AdvWeapon");
+		for (let i = 0; i < custom_weapon_nodes.length; i++) {
+			let weapon_node = custom_weapon_nodes[i];
+			let name = weapon_node.getElementsByTagName('Name')[0].childNodes[0].nodeValue;
+			let skill_key = weapon_node.getElementsByTagName('SkillKey')[0].childNodes[0].nodeValue;
+			let damage = $scope.getXMLIntIfExists(weapon_node, 'Damage');
+			let damage_add = $scope.getXMLIntIfExists(weapon_node, 'DamageAdd');
+			// TODO: Crit Rating
+			// TODO: Vicious
+			
+			
+			let pierce = 0;
+			let breach = 0;
+			let descriptor_nodes = weapon_node.getElementsByTagName('Descriptor');
+			for (let j = 0; j < descriptor_nodes.length; j++) {
+				let descriptor_node = descriptor_nodes[j];
+				let descriptor_key = descriptor_node.getElementsByTagName('Key')[0].childNodes[0].nodeValue;
+				let count = $scope.getXMLIntIfExists(descriptor_node, 'Count');
+				if (descriptor_key === 'PIERCE') {
+					pierce = count;
+				} else if (descriptor_key === 'BREACH') {
+					breach = count;
+				}
+			}
+			
+			let weapon = new WeaponEntry(name, skill_key);
+			weapon.damage = damage;
+			weapon.damage_add = damage_add;
+			weapon.pierce = pierce;
+			weapon.breach = breach;
+			
+			new_char.weapons.push(weapon);
+		}
+		
+		var armor = null;
+		var armor_nodes = xmlDoc.getElementsByTagName("CharArmor");
+		for (var i = 0; i < armor_nodes.length; i++) {
+			var equipped_nodes = weapon_nodes[i].getElementsByTagName("Equipped");
+			if (equipped_nodes.length != 0 && equipped_nodes[0].childNodes[0].nodeValue === "true") {
+				var cortosis = false;
+				var armor_mod_nodes = armor_nodes[i].getElementsByTagName("Mod");
+				for (var j = 0; j < armor_mod_nodes.length; j++) {
+					var mod_key_value = armor_mod_nodes[j].getElementsByTagName("Key")[0].childNodes[0].nodeValue;
+					if (mod_key_value === 'CORTOSIS') {
+						cortosis = true;
+					}
+				}
+				new_char.armor = new ArmorEntry(cortosis);
+			}
+		}
+		
+		$scope.$apply(function () {
+			$scope.characters_array.$add(new_char);
+			$scope.debug = new_char;
+		});
+		
+	}
+	
+	$scope.getXMLIntIfExists = function(xmlData, nodeName) {
+		var nodes = xmlData.getElementsByTagName(nodeName);
+		if (nodes.length <= 0) {
+			return 0;
+		}
+		return parseInt(nodes[0].childNodes[0].nodeValue);
+	}
+	
+	$scope.importCustomVehicle = function(xmlData) {
+		var parser = new DOMParser();
+		var xmlDoc = parser.parseFromString(xmlData,"text/xml");
+		
+		var vehicle_key = xmlDoc.getElementsByTagName("ItemKey")[0].childNodes[0].nodeValue;
+		var vehicle_info = $scope.vehicle_info[vehicle_key];
+		
+		var name = xmlDoc.getElementsByTagName("Name")[0].childNodes[0].nodeValue;
+		
+		var weapons = vehicle_info.weapons.slice();
+		var weapon_upgrade_nodes = xmlDoc.getElementsByTagName("WeaponUpgrade");
+		for (var i = 0; i < weapon_upgrade_nodes.length; i++) {
+			var weapon_key = weapon_upgrade_nodes[i].getElementsByTagName("WeapKey")[0].childNodes[0].nodeValue;
+			let weapon_info = $scope.weapon_info[weapon_key];
+			var weapon = new WeaponEntry(weapon_info.name, weapon_info.skill_key);
+			$scope.applyStatsFromWeaponInfo(weapon, weapon_info);
+			// TODO: Check if damage scale actually personal
+			weapon.damage_scale = 'planetary';
+			weapons.push(weapon);
+		}
+		var ordnance_nodes = xmlDoc.getElementsByTagName("CharWeapon");
+		for (var i = 0; i < ordnance_nodes.length; i++) {
+			var weapon_key = ordnance_nodes[i].getElementsByTagName("ItemKey")[0].childNodes[0].nodeValue;
+			let weapon_info = $scope.weapon_info[weapon_key];
+			var weapon = new WeaponEntry(weapon_info.name, weapon_info.skill_key);
+			$scope.applyStatsFromWeaponInfo(weapon, weapon_info);
+			// TODO: Check if damage scale actually personal
+			weapon.damage_scale = 'planetary';
+			weapons.push(weapon);
+		}
+		
+		var vehicle = new Vehicle(
+			name,
+			vehicle_info.model,
+			vehicle_info.hull_trauma_threshold,
+			vehicle_info.system_strain_threshold,
+			vehicle_info.armor,
+			vehicle_info.def_fore,
+			vehicle_info.def_aft,
+			vehicle_info.def_port,
+			vehicle_info.def_starboard,
+			weapons,
+			vehicle_info.silhouette,
+			vehicle_info.speed,
+			vehicle_info.handling,
+		);
+		$scope.vehicles_array.$add(vehicle);
+	}
+	
+	$scope.copyVehicleFromInfo = function(vehicle_info_key, num_copies) {
+		var num_to_copy = num_copies;
+		if (num_to_copy <= 0) {
+			num_to_copy = 1;
+		}
+		for (var i = 0; i < num_to_copy; i++) {
+			var vehicle_info = $scope.vehicle_info[vehicle_info_key];
+			var name = vehicle_info.name;
+			if (num_copies > 1) {
+				name = name + ' ' + (i + 1);
+			}
+			var vehicle = new Vehicle(
+				name,
+				vehicle_info.name,
+				vehicle_info.hull_trauma_threshold,
+				vehicle_info.system_strain_threshold,
+				vehicle_info.armor,
+				vehicle_info.def_fore,
+				vehicle_info.def_aft,
+				vehicle_info.def_port,
+				vehicle_info.def_starboard,
+				vehicle_info.weapons,
+				vehicle_info.silhouette,
+				vehicle_info.speed,
+				vehicle_info.handling,
+			);
+			$scope.vehicles_array.$add(vehicle);
+		}
+	}
+	
+	$scope.readCustomVehicle = function() {
+		var file = document.getElementById("custom-vehicle-file-input").files[0];
+		var reader = new FileReader();
+		reader.onloadend = function() {
+			var xmlData = reader.result;
+			$scope.importCustomVehicle(xmlData);
+		};
+		reader.readAsText(file);
+	}
+	
+	$scope.sumAttrNodeValues = function(xmlNode) {
+		var node_children = xmlNode.childNodes;
+		var sum = 0;
+		for (var i = 0; i < node_children.length; i++) {
+			if(node_children[i].nodeType !== Node.TEXT_NODE) {
+				var value = parseInt(node_children[i].childNodes[0].nodeValue);
+				if (isNaN(value) != true) {
+					sum += value;
+				}
+			}
+		}
+		return sum;
+	}
+	
+	$scope.sumAttrNodesIgnoring = function(xmlNode, tagsToIgnore) {
+		for (var i = 0; i < tagsToIgnore.length; i++) {
+			var nodes_for_tag = xmlNode.getElementsByTagName(tagsToIgnore[i]);
+			if (nodes_for_tag.length > 0) {
+				nodes_for_tag[0].parentNode.removeChild(nodes_for_tag[0]);
+			}
+		}
+		return $scope.sumAttrNodeValues(xmlNode);
+	}
+	
+	$scope.readSkillData = function() {
+		$scope.skill_info.$remove();
+	
+		var file = document.getElementById("skill-data-input").files[0];
+		var reader = new FileReader();
+		reader.onloadend = function() {
+			var xmlData = reader.result;
+			$scope.uploadSkillData(xmlData);
+		};
+		reader.readAsText(file);
+	}
+	
+	$scope.uploadSkillData = function(xmlData) {
+		var parser = new DOMParser();
+		var xmlDoc = parser.parseFromString(xmlData,"text/xml");
+		skill_nodes = xmlDoc.getElementsByTagName("Skill");
+		for (var i = 0; i < skill_nodes.length; i++) {
+			var skill_key = skill_nodes[i].getElementsByTagName("Key")[0].childNodes[0].nodeValue;
+			var name = skill_nodes[i].getElementsByTagName("Name")[0].childNodes[0].nodeValue;
+			var char_key = skill_nodes[i].getElementsByTagName("CharKey")[0].childNodes[0].nodeValue;
+			$scope.skill_info[skill_key] = {
+				"name": name,
+				"char_key": char_key,
+			}
+		}
+		
+		$scope.skill_info.$save();
+		
+		$scope.debug = $scope.skill_info;
+	}
+	
+	$scope.readWeaponData = function() {
+		$scope.weapon_info.$remove();
+	
+		var file = document.getElementById("weapon-data-input").files[0];
+		var reader = new FileReader();
+		reader.onloadend = function() {
+			var xmlData = reader.result;
+			$scope.uploadWeaponData(xmlData);
+		};
+		reader.readAsText(file);
+	}
+	
+	$scope.uploadWeaponData = function(xmlData) {
+	
+		let parser = new DOMParser();
+		let xmlDoc = parser.parseFromString(xmlData,"text/xml");
+		weapon_nodes = xmlDoc.getElementsByTagName("Weapon");
+		for (var i = 0; i < weapon_nodes.length; i++) {
+			var weapon_key = weapon_nodes[i].getElementsByTagName("Key")[0].childNodes[0].nodeValue;
+			var weapon_name = weapon_nodes[i].getElementsByTagName("Name")[0].childNodes[0].nodeValue;
+			var skill_key = weapon_nodes[i].getElementsByTagName("SkillKey")[0].childNodes[0].nodeValue;
+			
+			var damage_nodes = weapon_nodes[i].getElementsByTagName("Damage");
+			var damage_add_nodes = weapon_nodes[i].getElementsByTagName("DamageAdd");
+			var weapon_damage = 0;
+			var damage_add = 0;
+			if (damage_nodes.length != 0) {
+				weapon_damage = parseInt(damage_nodes[0].childNodes[0].nodeValue);
+			}
+			if (damage_add_nodes.length != 0) {
+				damage_add = parseInt(damage_add_nodes[0].childNodes[0].nodeValue);
+			}
+			
+			var pierce = 0;
+			var breach = 0;
+			var quality_nodes = weapon_nodes[i].getElementsByTagName("Quality");
+			for (var j = 0; j < quality_nodes.length; j++) {
+				var quality_key = quality_nodes[j].getElementsByTagName("Key")[0].childNodes[0].nodeValue;
+				if (quality_key === "PIERCE") {
+					var num_pierce = parseInt(quality_nodes[j].getElementsByTagName("Count")[0].childNodes[0].nodeValue);
+					pierce = pierce + num_pierce;
+				} else if (quality_key == "BREACH") {
+					var num_breach = parseInt(quality_nodes[j].getElementsByTagName("Count")[0].childNodes[0].nodeValue);
+					breach = breach + num_breach;
+				}
+			}
+			
+			$scope.weapon_info[weapon_key] = {
+				"name": weapon_name,
+				"damage": weapon_damage,
+				"damage_add": damage_add,
+				"pierce": pierce,
+				"breach": breach,
+				"skill_key": skill_key,
+			}
+		}
+		
+		$scope.weapon_info.$save();
+		
+		$scope.debug = $scope.weapon_info;
+	}
+	
+	$scope.readVehicleData = function() {
+		$scope.vehicle_info.$remove();
+	
+		var files = document.getElementById("vehicle-info-file-input").files;
+		var reader = new FileReader();
+		function readFile(index) {
+			if (index >= files.length) {
+				return
+			}
+			var file = files[index];
+			reader.onloadend = function() {
+				var xmlData = reader.result;
+				$scope.importVehicleInfo(xmlData);
+				readFile(index+1);
+			};
+			reader.readAsText(files[index]);
+		}
+		readFile(0);
+		$scope.vehicle_info.$save();
+	}
+	
+	$scope.importVehicleInfo = function(xmlData) {
+		let parser = new DOMParser();
+		let xmlDoc = parser.parseFromString(xmlData,"text/xml");
+		
+		// TODO: Not safe because weapons will have "KEY" nodes as well
+		var vehicle_key = xmlDoc.getElementsByTagName("Key")[0].childNodes[0].nodeValue;
+		var name = xmlDoc.getElementsByTagName("Name")[0].childNodes[0].nodeValue;
+		var hullTraumaThreshold = 0;
+		var hullTraumaNodes = xmlDoc.getElementsByTagName("HullTrauma");
+		if (hullTraumaNodes.length > 0) {
+			hullTraumaThreshold = parseInt(hullTraumaNodes[0].childNodes[0].nodeValue);
+		}
+		var systemStrainThreshold = parseInt(xmlDoc.getElementsByTagName("SystemStrain")[0].childNodes[0].nodeValue);
+		var armor = 0;
+		var armorNodes = xmlDoc.getElementsByTagName("Armor");
+		if (armorNodes.length > 0) {
+			armor = parseInt(armorNodes[0].childNodes[0].nodeValue);
+		}
+		
+		var defFore = $scope.getXMLIntIfExists(xmlDoc, "DefFore");
+		var defAft = $scope.getXMLIntIfExists(xmlDoc, "DefAft");
+		var defPort = $scope.getXMLIntIfExists(xmlDoc, "DefPort");
+		var defStarboard = $scope.getXMLIntIfExists(xmlDoc, "DefStarboard");
+		
+		var silhouette = $scope.getXMLIntIfExists(xmlDoc, "Silhouette");
+		var speed = $scope.getXMLIntIfExists(xmlDoc, "Speed");
+		var handling = $scope.getXMLIntIfExists(xmlDoc, "Handling");
+		
+		var weapons = [];
+		var weapon_nodes = xmlDoc.getElementsByTagName("VehicleWeapon");
+		for (var i = 0; i < weapon_nodes.length; i++) {
+			var weapon_node = weapon_nodes[i];
+			// TODO: Actually do things with Quality Nodes, like 'Linked'
+			var quality_nodes = weapon_node.getElementsByTagName("Qualities");
+			if (quality_nodes.length > 0) {
+				weapon_node.removeChild(quality_nodes[0]);
+			}
+			// TODO: Check if the weapon actually uses personal damage
+			var weapon_key = weapon_node.getElementsByTagName("Key")[0].childNodes[0].nodeValue;
+			let weapon_info = $scope.weapon_info[weapon_key];
+			if (!weapon_info) {
+				console.log('While importing vehicle info, failed to find weapon info for key ' + weapon_key + '.');
+				continue;
+			}
+			var weapon = new WeaponEntry(weapon_info.name, weapon_info.skill_key);
+			$scope.applyStatsFromWeaponInfo(weapon, weapon_info);
+			// TODO: Check if damage scale actually personal
+			weapon.damage_scale = 'planetary';
+			weapons.push(weapon);
+		}
+		
+		$scope.vehicle_info[vehicle_key] = {
+			"name": name,
+			"model": name,
+			"hull_trauma_threshold": hullTraumaThreshold,
+			"system_strain_threshold": systemStrainThreshold,
+			"armor": armor,
+			"weapons": weapons,
+			"def_fore": defFore,
+			"def_aft": defAft,
+			"def_port": defPort,
+			"def_starboard": defStarboard,
+			"silhouette": silhouette,
+			"speed": speed,
+			"handling": handling,
+		}
+		$scope.vehicle_info.$save();
+	}
+	
+	$scope.downloadXMLFileData = function(url) {
+		var Connect = new XMLHttpRequest();
+		// Define which file to open and
+		// send the request.
+		Connect.open("GET", url, false);
+		Connect.setRequestHeader("Content-Type", "text/xml");
+		Connect.send(null);
+		// Place the response in an XML document.
+		var TheDocument = Connect.responseXML;
+		return TheDocument;
+	}
+	
+	$scope.addNewItem = function(name, price, rarity) {
+		var newItem = new ItemEntry(name, price, rarity);
+		$scope.item_entries.$add(newItem);
+	}
+	
+	$scope.makePurchases = function(buyer, purchase_skill, rarity_mod) {
+	
+		for (var i = 0; i < $scope.item_entries.length; i++) {
+			item_entry = $scope.item_entries[i];
+			
+			// TODO: Make skill a choice between Streetwise or Negotiation
+			var skill_rank = buyer.skill_values[purchase_skill];
+			var char_key = $scope.skill_info[purchase_skill].char_key;
+			var char_rank = buyer.char_values[char_key];
+			var highest = Math.max(char_rank, skill_rank);
+			var smallest = Math.min(char_rank, skill_rank);
+			var num_prof_dice = smallest;
+			var num_ab_dice = highest - smallest;
+			
+			// TODO: Add in planetary modifiers to rarity
+			modified_rarity = Math.max(item_entry.rarity + rarity_mod, 0);
+			num_diff_dice = Math.floor(modified_rarity / 2);
+			
+			// TODO: Add the option of boosts, setbacks, and difficulty upgrades
+			var dice_pool = new DicePool(num_ab_dice, num_prof_dice, 0, num_diff_dice, 0, 0, 0);
+			dice_pool.roll();
+			item_entry.die_pool = dice_pool;
+			item_entry.roll_made = true;
+			
+			$scope.item_entries.$save(item_entry);
+		}
+	}
+	
+	$scope.getSellPercentage = function(numSucc, numThreat) {
+		var base_percent = Math.min(numSucc, 3) * 25;
+		var lowered_amount = numThreat * 5;
+		return base_percent - lowered_amount;
+	}
+	
+	$scope.rollInitiative = function() {
+		$scope.newLog();
+	
+		$scope.initSyncObject.initiative_turn = 0;
+		$scope.initSyncObject.$save();
+		$scope.init_order_array.$ref().remove();
+		let temp_init_order = [];
+		for (var i = 0; i < $scope.characters_array.length; i++) {
+			let character = $scope.characters_array[i];
+			var num_ab_dice = 0;
+			var num_prof_dice = 0;
+			if (character.initiative_type === "cool") {
+				var dice_needed = $scope.getSkillDice(character, "COOL");
+				num_ab_dice = dice_needed[0];
+				num_prof_dice = dice_needed[1];
+			} else if (character.initiative_type === "vigilance") {
+				var dice_needed = $scope.getSkillDice(character, "VIGIL");
+				num_ab_dice = dice_needed[0];
+				num_prof_dice = dice_needed[1];
+			} else {
+				continue;
+			}
+			// TODO: Custom initiative_type
+			
+			var dice_pool = new DicePool(num_ab_dice, num_prof_dice, 0, 0, 0, 0, 0);
+			dice_pool.roll();
+			character.initiative_roll = dice_pool;
+			
+			if (character.ally_or_enemy === "ally") {
+				slot = new AllySlot(dice_pool.succ, dice_pool.adv);
+			} else {
+				slot = new EnemySlot(dice_pool.succ, dice_pool.adv);
+			}
+			temp_init_order.push(slot);
+		}
+		temp_init_order.sort($scope.initiativeCompator);
+		temp_init_order.push(new EndOfRoundSlot());
+		for (let i = 0; i < temp_init_order.length; i++) {
+			$scope.init_order_array.$add(temp_init_order[i]);
+		}
+		
+		for (let i = 0; i < $scope.characters_array.length; i++) {
+			let character = $scope.characters_array[i];
+			character.turn_taken = false;
+			$scope.characters_array.$save(character);
+		}
+	}
+	
+	$scope.getInitiativeOrder = function() {
+		if ($scope.initSyncObject.initiative_turn >= $scope.init_order_array.length) {
+			return [];
+		}
+		var initiative_slots = [];
+		for (var i = $scope.initSyncObject.initiative_turn; i < $scope.init_order_array.length; i++) {
+			initiative_slots.push($scope.init_order_array[i]);
+		}
+		for (var i = 0; i < $scope.initSyncObject.initiative_turn; i++) {
+			initiative_slots.push($scope.init_order_array[i]);
+		}
+		return initiative_slots;
+	}
+	
+	$scope.nextTurn = function() {
+		$scope.initSyncObject.initiative_turn = $scope.initSyncObject.initiative_turn + 1;
+		if ($scope.initSyncObject.initiative_turn >= $scope.init_order_array.length) {
+			$scope.initSyncObject.initiative_turn = 0;
+		} else if ($scope.action_taker) {
+			// If it's not a new round, mark the current character's turn as taken
+			$scope.action_taker.turn_taken = true;
+			$scope.characters_array.$save($scope.action_taker);
+		}
+		
+		// End of Round
+		if ($scope.init_order_array[$scope.initSyncObject.initiative_turn].type === 'end_of_round') {
+			$scope.remote_logs.$add(new Log()).then(function(ref) {
+				$scope.addLogEntry("--- End of Round ---");
+				
+				// End of Round Effects
+				for (let i = 0; i < $scope.characters_array.length; i++) {
+					let character = $scope.characters_array[i];
+					character.turn_taken = false;
+					if (character.species === 'GENDAI') {
+						if (character.wounds > 0) {
+							character.wounds = character.wounds - 1;
+							$scope.addLogEntry(`${character.name} heals 1 wound from their regeneration (now ${character.wounds}/${character.wound_threshold}).`);
+						}
+					}
+					$scope.characters_array.$save(character);
+				}
+				
+				$scope.nextTurn();
+			});
+			return;
+		}
+		
+		$scope.initSyncObject.$save();
+		
+		$scope.newLog();
+		
+		$scope.newTurnResets();
+	}
+	
+	$scope.initiativeCompator = function(a, b) {
+		var succ_diff = b.succ - a.succ;
+		if (succ_diff != 0) {
+			return succ_diff;
+		}
+		var adv_diff = b.adv - a.adv;
+		if (adv_diff != 0) {
+			return adv_diff;
+		}
+		if (a.ally_or_enemy === "ally" && b.ally_or_enemy === "enemy") {
+			return -1;
+		}
+		if (a.ally_or_enemy === "enemy" && b.ally_or_enemy === "ally") {
+			return 1;
+		}
+		return 0;
+	}
+	
+	function download(content, fileName, contentType) {
+		var a = document.createElement("a");
+		var file = new Blob([content], {type: contentType});
+		a.href = URL.createObjectURL(file);
+		a.download = fileName;
+		a.click();
+	}
+	
+	$scope.weapon_damage_type = 'personal';
+	
+	// Die Roller
+	var dice_roller_ref = firebase.database().ref().child("dice_roller");
+	$scope.dice_roller = $firebaseObject(dice_roller_ref);
+	var die_pool_ref = dice_roller_ref.child("die_pool");
+	$scope.die_pool = $firebaseObject(die_pool_ref);
+	var num_dice_ref = dice_roller_ref.child("num_dice");
+	$scope.num_dice = $firebaseObject(num_dice_ref);
+	
+	// Logs
+	var remote_logs_ref = firebase.database().ref().child("remote_logs");
+	// download the data into a local object
+	// var syncObject = $firebaseObject(ref);
+	// synchronize the object with a three-way data binding
+	// click on `index.html` above to see it used in the DOM!
+	// syncObject.$bindTo($scope, "remote_logs");
+	$scope.remote_logs = $firebaseArray(remote_logs_ref);
+	
+	// Characters
+	var characters_ref = firebase.database().ref().child("characters");
+	$scope.characters_array = $firebaseArray(characters_ref);
+	
+	// Vehicles
+	var vehicles_ref = firebase.database().ref().child("vehicles");
+	$scope.vehicles_dict = $firebaseObject(vehicles_ref);
+	$scope.vehicles_array = $firebaseArray(vehicles_ref);
+	
+	
+	// Initiative
+	var initiative_order_ref = firebase.database().ref().child("initiative").child("initiative_order");
+	$scope.init_order_array = $firebaseArray(initiative_order_ref);
+	
+	var initiative_turn_ref = firebase.database().ref().child("initiative");
+	$scope.initSyncObject = $firebaseObject(initiative_turn_ref);
+	
+	// Action Tracker
+	var action_tracker_ref = firebase.database().ref().child("action_tracker");
+	$scope.action_tracker = $firebaseObject(action_tracker_ref);
+	// Force Powers
+	var force_powers_ref = action_tracker_ref.child("force_powers");
+	$scope.force_powers = $firebaseObject(force_powers_ref);
+	var move_power_ref = force_powers_ref.child("move");
+	$scope.move_power = $firebaseObject(move_power_ref);
+	
+	// Skill Data
+	var skill_data_ref = firebase.database().ref().child("skill_info");
+	$scope.skill_info = $firebaseObject(skill_data_ref);
+	// Weapon Data
+	var weapon_data_ref = firebase.database().ref().child("weapon_info");
+	$scope.weapon_info = $firebaseObject(weapon_data_ref);
+	// Vehicle Data
+	var vehicle_data_ref = firebase.database().ref().child("vehicle_info");
+	$scope.vehicle_info = $firebaseObject(vehicle_data_ref);
+	
+	// General Info
+	var general_info_ref = firebase.database().ref().child("general_info");
+	$scope.general_info = $firebaseObject(general_info_ref);
+	
+	// Item Buyer
+	var item_buyer_ref = firebase.database().ref().child("item_buyer");
+	$scope.item_buyer = $firebaseObject(item_buyer_ref);
+	var item_entries_ref = item_buyer_ref.child("item_entries");
+	$scope.item_entries = $firebaseArray(item_entries_ref);
+
+	$scope.debug = 'debug'
+	
+	
+	class Log {
+		constructor() {
+			this.log_entries = [];
+			
+			this.id = 'TODO: uuid';
+		}
+	}
+	
+	class LogEntry {
+		constructor() {
+			this.text = '';
+			
+			this.dice_image_urls = [];
+			this.succ = 0;
+			this.adv = 0;
+			this.triumph = 0;
+			this.fail = 0;
+			this.threat = 0;
+			this.despair = 0;
+			this.light_side_points = 0;
+			this.dark_side_points = 0;
+		}
+	}
+	
+	$scope.addLogEntry = function(text) {
+		var log_entry = new LogEntry();
+		log_entry.text = text;
+		var current_log = $scope.remote_logs[$scope.remote_logs.length - 1];
+		if (current_log.log_entries) {
+			current_log.log_entries.push(log_entry);
+			$scope.remote_logs.$save(current_log);
+		} else {
+			current_log.log_entries = [log_entry];
+			$scope.remote_logs.$save(current_log);
+		}
+	}
+	
+	$scope.addRollLogEntry = function(die_pool) {
+		let log_entry = new LogEntry();
+		log_entry.dice_image_urls = die_pool.image_urls.slice();
+		log_entry.succ = die_pool.succ;
+		log_entry.adv = die_pool.adv;
+		log_entry.triumph = die_pool.triumph;
+		log_entry.fail = die_pool.fail;
+		log_entry.threat = die_pool.threat;
+		log_entry.despair = die_pool.despair;
+		log_entry.light_side_points = die_pool.light_side_points;
+		log_entry.dark_side_points = die_pool.dark_side_points;
+		
+		var current_log = $scope.remote_logs[$scope.remote_logs.length - 1];
+		if (current_log.log_entries) {
+			current_log.log_entries.push(log_entry);
+			$scope.remote_logs.$save(current_log);
+		} else {
+			current_log.log_entries = [log_entry];
+			$scope.remote_logs.$save(current_log);
+		}
+	}
+	
+	$scope.newLog = function() {
+		if (!$scope.remote_logs[$scope.remote_logs.length - 1].log_entries) {
+			return;
+		}
+		$scope.remote_logs.$add(new Log());
+	}
+	
+	$scope.clearLogs = function() {
+		$scope.remote_logs.$ref().remove();
+		$scope.remote_logs.$add(new Log());
+	}
+	
+	$scope.getLogs = function(reverse) {
+		let logs = $scope.remote_logs.slice();
+		if (reverse) {
+			return logs.reverse();
+		}
+		return logs;
+	}
+	
+	$scope.getLogEntries = function(log, reverse) {
+		if (!log.log_entries) {
+			return [];
+		}
+		let log_entries = log.log_entries.slice();
+		if (reverse) {
+			return log_entries.reverse();
+		}
+		return log_entries;
+	}
+	
+	class Target {
+		constructor(target_type) {
+			this.target_type = target_type;
+		}
+	}
+
+	class Character extends Target {
+		constructor(name, wound_threshold, strain_threshold, soak, def_ranged, def_melee, char_values, skill_values) {
+			super('character');
+		
+			this.name = name;
+			this.wounds  = 0;
+			this.wound_threshold = wound_threshold;
+			this.strain = 0;
+			this.strain_threshold = strain_threshold;
+			this.soak = soak;
+			this.def_ranged = def_ranged;
+			this.def_melee = def_melee;
+			
+			this.char_values = char_values;
+			this.skill_values = skill_values;
+			
+			this.force_rating = 0;
+			this.force_powers = {};
+			
+			this.lightside_user = true;
+			
+			this.species = '';
+			
+			this.weapons = [];
+			this.armor = null;
+			
+			this.left_fist = null;
+			
+			this.stim_packs_used = 0;
+			
+			this.ally_or_enemy = 'ally';
+			this.initiative_type = 'none';
+			this.initiative_roll = new DicePool(0, 0, 0, 0, 0, 0, 0);
+			
+			this.vehicle = '';
+			
+			this.prone = false;
+			this.cover_bonus = 0;
+			
+			this.aims = 0;
+			
+			this.temp_boosts = 0;
+			this.temp_setbacks = 0;
+			
+			this.turn_taken = false;
+		}
+	}
+	
+	$scope.getCharWeaponFromKey = function(character, weapon_key) {
+		var actual_weapon = character.weapons.find(obj => {
+			return obj.key === weapon_key;
+		});
+		if (actual_weapon) {
+			return actual_weapon;
+		}
+		var vehicle = character.vehicle;
+		actual_weapon = vehicle.weapons.find(obj => {
+			return obj.key === weapon_key;
+		});
+		return actual_weapon;
+	}
+	
+	class Vehicle extends Target {
+		constructor(name, model, hull_trauma_threshold, system_strain_threshold, armor, def_fore, def_aft, def_port, def_starboard, weapons, silhouette, speed, handling) {
+			super('vehicle');
+			
+			this.name = name;
+			this.model = model;
+			this.hull_trauma = 0;
+			this.hull_trauma_threshold = hull_trauma_threshold;
+			this.system_strain = 0;
+			this.system_strain_threshold = system_strain_threshold;
+			this.armor = armor;
+			this.def_fore = def_fore;
+			this.def_aft = def_aft;
+			this.def_port = def_port;
+			this.def_starboard = def_starboard;
+			this.weapons = weapons;
+			this.silhouette = silhouette;
+			this.speed = speed;
+			this.handling = handling;
+		}
+	}
+	
+});
+</script>
+
+</body>
+</html>
