@@ -1419,16 +1419,18 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.dice_roller.$save().then(function(ref) {
 			var skill_info = $scope.skill_info[skill_key];
 			var log_message = `${action_taker.name} uses ${skill_info.name} `;
-			if ($scope.die_pool.succ <= 0) {
-				log_message = log_message + ' but fails.';
-				$scope.addLogEntry(log_message);
-				return;
-			}
-			log_message = log_message + ' and succeeds.';
-			$scope.addLogEntry(log_message);
 			
 			$scope.action_tracker.roll_made = true;
 			$scope.action_tracker.$save();
+			
+			
+			if ($scope.die_pool.succ <= 0) {
+				log_message = log_message + ' but fails.';
+				$scope.addLogEntry(log_message);
+			} else {
+				log_message = log_message + ' and succeeds.';
+				$scope.addLogEntry(log_message);
+			}
 		}, function(error) {
 			console.log("Error:", error);
 		});
