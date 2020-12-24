@@ -258,6 +258,33 @@
 							Heal 1 Strain
 						</td>
 					</tr>
+					<tr ng-if='!action_tarcker.hit_through_soak'>
+						<td>
+							<button ng-click='critTarget(attack_target, attack_weapon, true, "initial_hit")' ng-disabled='!canCritTarget(attack_weapon, true)' class='btn-block pb-1'>
+								<img ng-repeat='x in [].constructor(attack_weapon.crit_rating) track by $index' src="./dice_images/advantage.png" width=20>
+							</button>
+						</td>
+						<td>
+							<button ng-click='critTarget(attack_target, attack_weapon, false, "initial_hit")' ng-disabled='!canCritTarget(attack_weapon, false)' class='btn-block pb-1'>
+								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
+							</button>
+						</td>
+						<td class='align-middle'>
+							Crit Target
+						</td>
+					</tr>
+					<tr ng-repeat='(crit_id, crit_info) in action_tracker.crits_made'>
+						<!-- TODO: Finish adding code for crits. Actually add a button for applyCritical() -->
+						<td class='align-middle' colspan=2>
+							<button ng-click='applyCritical(characters_dict[crit_info.target_id], crit_info)' ng-disabled='crit_info.crit_made' class='btn-block pb-1'>
+								Apply d100 
+								<span ng-if='crit_info.crit_boost > 0 || + characters_dict[crit_info.target_id].criticals'>
+									+ {{crit_info.crit_boost + (characters_dict[crit_info.target_id].criticals ? characters_dict[crit_info.target_id].criticals.length * 10 : 0)}} 
+								</span>
+								Crit to {{characters_dict[crit_info.target_id].name}}
+							</button>
+						</td>
+					</tr>
 					<tr ng-if='action_tracker.roll_made && attack_target.target_type === "character"'>
 						<td>
 							<button ng-click='setbackTarget(attack_target, true)' ng-disabled='!canSetbackTarget(true)' class='btn-block pb-1'>
@@ -509,7 +536,7 @@
 						</select>
 						<span> with </span>
 						<!-- TODO: Have WeaponEntry's hold onto the actual name string for the weapon, and use that instead -->
-						<select ng-model="attack_weapon" ng-options='weapon as weapon.name for weapon in getPotentialWeaponsForAttack(action_taker)'>
+						<select ng-model="$parent.attack_weapon" ng-options='weapon as weapon.name for weapon in getPotentialWeaponsForAttack(action_taker)'>
 						</select>
 						<span ng-if='attack_target.target_type === "vehicle"'>
 							at Defense Zone 
@@ -1046,10 +1073,15 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	class WeaponEntry {
 		constructor(name, skill_key) {
 			this.name = name;
+			// TODO: Have a key for each weapon. Useful for weapons with special effects like the bolas
 			this.skill_key = skill_key;
+			
 			
 			this.damage = 0;
 			this.damage_add = 0;
+			this.crit = 0;
+			
+			// TODO: Migrate this to being in a qualities dict rather than seperate fields
 			this.pierce = 0;
 			this.breach = 0;
 			
@@ -1224,6 +1256,162 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		
 		// TODO: Make verbose?
 		$scope.addLogEntry(`${spent_log} spent to heal 1 strain (${action_taker.strain}/${action_taker.strain_threshold}).`);
+	}
+	
+	// Crit Target w/ X Addv (or 1 Triumph) (Repeatable; Each Repeat adds +10 to roll)
+	$scope.canCritTarget = function(weapon, using_adv) {
+		if (!weapon) {
+			return false;
+		}
+		let crit_rating = weapon.crit_rating;
+		return $scope.hasRequiredAdvantageOrTriumph(crit_rating, using_adv) && $scope.action_tracker.hit_through_soak;
+	}
+	
+	$scope.critTarget = function(target, weapon, using_adv, hit_id) {
+		let crit_rating = weapon.crit_rating;
+		let spent_log = $scope.spendRequiredAdvantageOrTriumph(crit_rating, using_adv);
+		
+		if (!$scope.action_tracker.crits_made) {
+			$scope.action_tracker.crits_made = {}
+		}		
+		if ($scope.action_tracker.crits_made[hit_id]) {
+			$scope.action_tracker.crits_made[hit_id].crit_boost = $scope.action_tracker.crits_made[hit_id].crit_boost + 10;
+			$scope.addLogEntry(`${spent_log} spent to boost ${target.name}'s crit by 10.`);
+		} else {
+			$scope.action_tracker.crits_made[hit_id] = {
+				'target_id': target.$id,
+				'crit_boost': 0,
+				'crit_made': false,
+			};
+			$scope.addLogEntry(`${spent_log} spent to crit ${target.name}.`);
+		}
+		$scope.action_tracker.$save();
+	
+		/* let num_existing_crits = target.criticals.length;
+		// TODO: Take Vicious and Durable into account)
+		let critical = target.applyCritical(target, num_existing_crits * 10);
+		let log_message = `${target.name} suffers the following critical injury. ` +
+			`${critical.name}: ${critical.description}`;
+		$scope.addLogEntry(log_message); */
+	}
+	
+	$scope.applyCritical = function(target, crit_info) {
+		let crit_roll = Math.floor(Math.random() * 100) + 1; // Random number 1-100
+		crit_roll = crit_roll + crit_info.crit_boost;
+		if (target.criticals) {
+			crit_roll = crit_roll + target.criticals.length * 10;
+		}
+		let critical = null;
+		
+		if (crit_roll <= 5) {
+			critical = new Critical('Minor Nick', 1);
+			critical.description = "The target suffers 1 strain.";
+			target.strain = target.strain + 1;
+		} else if (crit_roll <= 10) {
+			critical = new Critical('Slowed Down', 1);
+			critical.description = "The target can only act during the last allied initiative slot on his next turn. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 15) {
+			critical = new Critical('Sudden Jolt', 1);
+			critical.description = "The target drops whatever is in hand. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 20) {
+			critical = new Critical('Distracted', 1)
+			critical.description = "The target cannot perform a free maneuver during his next turn. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 25) {
+			critical = new Critical('Off-Balance', 1);
+			critical.description = "Add [SETBACK] to the target's next skill check.";
+			target.temp_setbacks = target.temp_setbacks + 1;
+		} else if (crit_roll <= 30) {
+			critical = new Critical('Discouraging Wound', 1);
+			critical.description = "Flip one light side Destiny Point to a dark side Destiny Point (reverse if NPC). <UNIMPLEMENTED>";
+		} else if (crit_roll <= 35) {
+			critical = new Critical('Stunned', 1);
+			critical.description = "The target is staggered until the end of the next round. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 40) {
+			critical = new Critical('Stinger', 1);
+			critical.description = "Increase difficulty of next check by one. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 45) {
+			critical = new Critical('Bowled Over', 2);
+			critical.description = "The target is knocked prone and suffers 1 strain.";
+			target.strain = target.strain + 1;
+			target.prone = true;
+		} else if (crit_roll <= 50) {
+			critical = new Critical('Head Ringer', 2);
+			critical.description = "The target increases the difficulty of all Intellect and Cunning checks by one until the end of the encounter. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 55) {
+			critical = new Critical('Fearsome Wound', 2);
+			critical.description = "The target increases the difficulty of all Presence and Willpower checks by one until the end of the encounter. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 60) {
+			critical = new Critical('Agonizing Wound', 2);
+			critical.description = "The target increases the difficulty of all Brawn and Agility checks by one until the end of the encounter. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 65) {
+			critical = new Critical('Slightly Dazed', 2);
+			critical.description = "The target is disoriented until the end of the encounter. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 70) {
+			critical = new Critical('Scattered Senses', 2);
+			critical.description = "The target removes all [BOOST] from skill checks until the end of the encounter. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 75) {
+			critical = new Critical('Hamstrung', 2);
+			critical.description = "The target loses his free maneuver until the end of the encounter. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 80) {
+			critical = new Critical('Overpowered', 2);
+			critical.description = "The target leaves himself open, and the attacker may make immediately attempt another free attack against him, using the exact same pool as the original attack. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 85) {
+			critical = new Critical('Winded', 2);
+			critical.description = "Until the end of the encounter, the target cannot voluntarily suffer strain to activate any abilities or gain additional maneuvers. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 90) {
+			critical = new Critical('Compromised', 2);
+			critical.description = "Increase the difficulty of all skill checks by one until the end of the encounter. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 95) {
+			critical = new Critical('At the Brink', 3);
+			critical.description = "The target suffers 1 strain each time he performs an action. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 100) {
+			critical = new Critical('Crippled', 3);
+			critical.description = "One of the target's limbs (selected by the GM) is crippled until healed or replaced. Increase difficulty of all checks that require use of that limb by one. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 105) {
+			critical = new Critical('Maimed', 3);
+			critical.description = "One of the target's limbs (selected by the GM) is permanently logs. Unless the target has a cybernetic replacement, the target cannot perform actions that would require the use of that limb. All other actions gain [SETBACK]. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 110) {
+			critical = new Critical('Horrific Injury', 3);
+			critical.description = "Roll 1d10 to determine which of the target's characteristics is affected: 1-3 for Brawn, 4-6 for Agility, 7 for Intellect, 8 for Cunning, 9 for Presence, and 10 for Willpower. Until this Critical Injury is healed, treat that characteristic as 1 ponit lower. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 115) {
+			critical = new Critical('Temporarily Lame', 3);
+			critical.description = "Until this Critical Injury is healed, the target cannot perform more than one maneuver during his turn. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 120) {
+			critical = new Critical('Blinded', 3);
+			critical.description = "The target can no longer see. Upgrade the difficulty of all checks twice. Upgrade the difficulty of Perception and Vigilance checks three times. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 125) {
+			critical = new Critical('Knocked Senseless', 3);
+			critical.description = "The target is staggered for the remainder of the encounter. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 130) {
+			critical = new Critical('Gruesome Injury', 4);
+			critical.description = "Roll 1d10 to determine which of the target's characteristics is affected: 1-3 for Brawn, 4-6 for Agility, 7 for Intellect, 8 for Cunning, 9 for Presence, 10 for Willpower. That characteristic is permanently reduced by 1 to a minimum of 1. <UNIMPLEMENTED>";
+		} else if (crit_roll <= 140) {
+			critical = new Critical('Bleeding Out', 4);
+			critical.description = "Every round, the target suffers 1 wound and 1 strain at the beginning of his turn. For every 5 wounds he suffers beyond his wound thershold, he suffers 1 additional Critical Injury. Roll on the chart, suffering the injury (if he suffers this result a second time due to this, roll again). <UNIMPLEMENTED>";
+		} else if (crit_roll <= 150) {
+			critical = new Critical('The End is Nigh', 4);
+			critical.description = "The target will die after the last initiative slot during the next round. <UNIMPLEMENTED>";
+		} else {
+			critical = new Critical('Dead', 10000000);
+			critical.description = "Complete, obliterated death. <UNIMPLEMENTED>";
+		}
+		if (target.criticals) {
+			target.criticals.push(critical);
+		} else {
+			target.criticals = [critical];
+		}
+		
+		let log_message = `${target.name} suffers the following critical injury. ` +
+			`${critical.name}: ${critical.description}`;
+		$scope.addLogEntry(log_message);
+		
+		$scope.characters_dict[crit_info.target_id] = target;
+		$scope.characters_dict.$save();
+		
+		crit_info.crit_made = true;
+		$scope.action_tracker.$save();
+		
+		return critical;
 	}
 	
 	// Setback Target w/ 2 Adv (TODO: Or Triumph)
@@ -1609,46 +1797,53 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			$scope.characters_array.$save(action_taker);
 		
 			$scope.action_tracker.roll_made = true;
-			$scope.action_tracker.$save();
 		
 			var log_message = `${action_taker.name} attacks ${target.name} with their ${weapon.name} `;
 			if ($scope.die_pool.succ <= 0) {
 				log_message = log_message + ' but misses.';
 				$scope.addLogEntry(log_message);
 				return;
-			}
-			log_message = log_message + ' and hits.';
-			$scope.addLogEntry(log_message);
-			var damage = $scope.die_pool.succ;
-			var weapon_damage = weapon.damage;
-			var damage_add = weapon.damage_add;
-			if (damage_add >= 1) {
-				var char_brawn = action_taker.char_values["BR"];
-				damage = damage + char_brawn + damage_add;
 			} else {
-				damage = damage + weapon_damage;
-			}
-			if (action_taker.species === 'TRAND') {
-				damage = damage + 1;
-				// TODO: Set lower crit rating when that becomes relevant wherever it's relevant
-			}
-			var pierce = weapon.pierce;
-			var breach = weapon.breach;
-			var damage_type = weapon.damage_scale;
-			if (target.target_type === 'character') {
-				if (target.armor && target.armor.cortosis) {
-					pierce = 0;
-					breach = 0;
+				log_message = log_message + ' and hits.';
+				$scope.addLogEntry(log_message);
+				
+				var damage = $scope.die_pool.succ;
+				var weapon_damage = weapon.damage;
+				var damage_add = weapon.damage_add;
+				if (damage_add >= 1) {
+					var char_brawn = action_taker.char_values["BR"];
+					damage = damage + char_brawn + damage_add;
+				} else {
+					damage = damage + weapon_damage;
 				}
-				$scope.applyDamageToCharacterTarget(target, damage, pierce, breach, damage_type);
-			} else { // if (target.target_type === 'vehicle') {
-				$scope.applyDamageToVehicleTarget(target, damage, pierce, breach, damage_type);
+				if (action_taker.species === 'TRAND') {
+					damage = damage + 1;
+					// TODO: Set lower crit rating when that becomes relevant wherever it's relevant
+				}
+				var pierce = weapon.pierce;
+				var breach = weapon.breach;
+				var damage_type = weapon.damage_scale;
+				if (target.target_type === 'character') {
+					if (target.armor && target.armor.cortosis) {
+						pierce = 0;
+						breach = 0;
+					}
+					let hit_through_soak = $scope.applyDamageToCharacterTarget(target, damage, pierce, breach, damage_type);
+					if (hit_through_soak) {
+						$scope.action_tracker.hit_through_soak = true;
+					}
+				} else { // if (target.target_type === 'vehicle') {
+					$scope.applyDamageToVehicleTarget(target, damage, pierce, breach, damage_type);
+				}
 			}
+			
+			$scope.action_tracker.$save();
 		}, function(error) {
 			console.log("Error:", error);
 		});
 	}
 	
+	// Returns true if the damage goes through the soak, false otherwise
 	$scope.applyDamageToCharacterTarget = function(character, damage, pierce, breach, damage_type) {	
 		var totalPierce = pierce + (breach * 10);
 		var soak_after_pierce = Math.max(0, character.soak - totalPierce);
@@ -1658,8 +1853,9 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		}
 		var wounds_taken = Math.max(0, real_damage - soak_after_pierce);
 		if (wounds_taken <= 0) {
+			// TODO: Move this log out of applyDamageToCharacterTarget and into the attack/hurl functions that called this
 			$scope.addLogEntry('But the attack fails to go through their soak.');
-			return;
+			return false;
 		}
 		character.wounds = character.wounds + wounds_taken;
 		$scope.addLogEntry(`${character.name} takes ${wounds_taken} wounds (${character.wounds}/${character.wound_threshold}).`);
@@ -1672,8 +1868,10 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			$scope.removeAims(character);
 		}
 		$scope.characters_array.$save(character);
+		return true;
 	}
 	
+	// Returns true if the damage goes through armor, false otherwise
 	$scope.applyDamageToVehicleTarget = function(vehicle, damage, pierce, breach, damage_type) {
 		var totalBreach = (breach * 10) + pierce;
 		var real_armor = vehicle.armor * 10;
@@ -1685,7 +1883,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		var damage_taken = Math.max(0, real_damage - armor_after_breach);
 		if (damage_taken <= 0) {
 			$scope.addLogEntry('But the attack fails to go through its armor.');
-			return;
+			return false;
 		}
 		var vehicle_damage = damage_taken / 10;
 		vehicle.hull_trauma = vehicle.hull_trauma + vehicle_damage;
@@ -1694,6 +1892,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			$scope.addLogEntry(`${vehicle.name} is disabled.`)
 		}
 		$scope.vehicles_array.$save(vehicle);
+		return true;
 	}
 	
 	// Force Powers
@@ -2150,6 +2349,9 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.action_tracker.roll_made = false;
 		$scope.action_tracker.force_roll_made = false;
 		
+		$scope.action_tracker.hit_through_soak = false;
+		$scope.action_tracker.crits_made = {};
+		
 		$scope.action_tracker.boost_any_used = false;
 		$scope.action_tracker.setback_target_used = false;
 		$scope.action_tracker.boost_target_used = false;
@@ -2185,6 +2387,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	$scope.applyStatsFromWeaponInfo = function(weapon, weapon_info) {
 		weapon.damage = weapon_info.damage;
 		weapon.damage_add = weapon_info.damage_add;
+		weapon.crit_rating = weapon_info.crit_rating;
 		weapon.pierce = weapon_info.pierce;
 		weapon.breach = weapon_info.breach;
 	}
@@ -2355,10 +2558,13 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		}
 		// Fist
 		let fist_name = 'Fist';
+		let fist_crit = 5;
 		if (new_char.species === 'TRAND') {
 			fist_name = 'Claws';
+			fist_crit = 3;
 		}
 		new_char.left_fist = new WeaponEntry(fist_name, 'BRAWL');
+		new_char.left_fist.crit_rating = fist_crit;
 		
 		// Custom Weapons
 		let custom_weapon_nodes = xmlDoc.getElementsByTagName("AdvWeapon");
@@ -2595,13 +2801,18 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			
 			var damage_nodes = weapon_nodes[i].getElementsByTagName("Damage");
 			var damage_add_nodes = weapon_nodes[i].getElementsByTagName("DamageAdd");
+			let crit_nodes = weapon_nodes[i].getElementsByTagName("Crit");
 			var weapon_damage = 0;
 			var damage_add = 0;
+			let crit_rating = 0;
 			if (damage_nodes.length != 0) {
 				weapon_damage = parseInt(damage_nodes[0].childNodes[0].nodeValue);
 			}
 			if (damage_add_nodes.length != 0) {
 				damage_add = parseInt(damage_add_nodes[0].childNodes[0].nodeValue);
+			}
+			if (crit_nodes.length != 0) {
+				crit_rating = parseInt(crit_nodes[0].childNodes[0].nodeValue);
 			}
 			
 			var pierce = 0;
@@ -2622,6 +2833,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				"name": weapon_name,
 				"damage": weapon_damage,
 				"damage_add": damage_add,
+				"crit_rating": crit_rating,
 				"pierce": pierce,
 				"breach": breach,
 				"skill_key": skill_key,
@@ -2923,6 +3135,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	
 	// Characters
 	var characters_ref = firebase.database().ref().child("characters");
+	$scope.characters_dict = $firebaseObject(characters_ref);
 	$scope.characters_array = $firebaseArray(characters_ref);
 	
 	// Vehicles
@@ -2946,6 +3159,9 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	$scope.force_powers = $firebaseObject(force_powers_ref);
 	var move_power_ref = force_powers_ref.child("move");
 	$scope.move_power = $firebaseObject(move_power_ref);
+	// Crits Made
+	var crits_made_ref = action_tracker_ref.child("crits_made");
+	$scope.crits_made = $firebaseObject(crits_made_ref);
 	
 	// Skill Data
 	var skill_data_ref = firebase.database().ref().child("skill_info");
@@ -3094,6 +3310,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			
 			this.left_fist = null;
 			
+			this.criticals = [];
+			
 			this.stim_packs_used = 0;
 			
 			this.ally_or_enemy = 'ally';
@@ -3114,18 +3332,13 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		}
 	}
 	
-	$scope.getCharWeaponFromKey = function(character, weapon_key) {
-		var actual_weapon = character.weapons.find(obj => {
-			return obj.key === weapon_key;
-		});
-		if (actual_weapon) {
-			return actual_weapon;
+	class Critical {
+		constructor(name, severity) {
+			this.name = name;
+			this.severity = severity;
+			
+			this.description = '';
 		}
-		var vehicle = character.vehicle;
-		actual_weapon = vehicle.weapons.find(obj => {
-			return obj.key === weapon_key;
-		});
-		return actual_weapon;
 	}
 	
 	class Vehicle extends Target {
