@@ -258,7 +258,7 @@
 							Heal 1 Strain
 						</td>
 					</tr>
-					<tr ng-if='!action_tarcker.hit_through_soak'>
+					<tr ng-if='action_tracker.roll_made && !action_tarcker.hit_through_soak'>
 						<td>
 							<button ng-click='critTarget(attack_target, attack_weapon, true, "initial_hit")' ng-disabled='!canCritTarget(attack_weapon, true)' class='btn-block pb-1'>
 								<img ng-repeat='x in [].constructor(attack_weapon.crit_rating) track by $index' src="./dice_images/advantage.png" width=20>
@@ -531,16 +531,27 @@
 							<input type="checkbox" class="custom-control-input" id="chars_in_other_vehicles_switch" ng-model='chars_in_other_vehicles'>
 							<label class="custom-control-label" for="chars_in_other_vehicles_switch">Show Characters in Other Vehicles</label>
 						</div>
-						<span>Attack </span>
+						<div>Attack </div>
 						<select ng-model="$parent.attack_target" ng-options='character as character.name for character in getPotentialTargetsToAttack(action_taker, (attack_weapon ? attack_weapon.damage_scale : ""), non_scale_matching_targets, chars_in_other_vehicles)'>
 						</select>
-						<span> with </span>
+						<div> with </div>
 						<!-- TODO: Have WeaponEntry's hold onto the actual name string for the weapon, and use that instead -->
+						<!-- Disallow Engaged for Gunnery Weapons -->
 						<select ng-model="$parent.attack_weapon" ng-options='weapon as weapon.name for weapon in getPotentialWeaponsForAttack(action_taker)'>
 						</select>
-						<span ng-if='attack_target.target_type === "vehicle"'>
+						<div ng-if='!$parent.attack_weapon.vehicle_weapon'>
+							at Range
+							<select ng-model="$parent.target_range">
+								<option value="engaged">Engaged</option>
+								<option value="short">Short</option>
+								<option value="medium">Medium</option>
+								<option value="long">Long</option>
+								<option value="extreme">Extreme</option>
+							</select>
+						</div>
+						<div ng-if='attack_target.target_type === "vehicle"'>
 							at Defense Zone 
-							<select ng-model="target_defense_zone">
+							<select ng-model="$parent.target_defense_zone">
 								<option value="fore">Fore</option>
 								<option value="aft">Aft</option>
 								<option value="port">Port</option>
@@ -548,12 +559,12 @@
 								<option value="most">Most</option>
 								<option value="least">Least</option>
 							</select>
-						</span>
+						</div>
 					</div>
 				</div>
 				<div class='row mt-2'>
 					<div class='col'>
-						<button ng-click='matchAttackDice(action_taker, attack_target, attack_weapon)' class='btn-block'>Match Dice</button>
+						<button ng-click='matchAttackDice(action_taker, attack_target, attack_weapon, target_range, target_defense_zone)' class='btn-block'>Match Dice</button>
 					</div>
 					<div class='col'>
 						<button ng-click='attackTarget(action_taker, attack_target, attack_weapon)' ng-disabled='!canTakeAction(action_taker)' class='btn-block'>Make Attack</button>
@@ -1086,6 +1097,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			this.breach = 0;
 			
 			this.damage_scale = 'personal';
+			this.vehicle_weapon = false;
 		}
 	}
 	
@@ -1719,65 +1731,144 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		return personal_weapons.concat(vehicle_weapons);
 	}
 	
-	$scope.matchAttackDice = function(action_taker, target, weapon) {
+	// Helper function for matching Ab, Proff, Boost, and Setback for any attack roll (including Force Hurl_
+	$scope.setSomeAttackDice = function(action_taker, target, skill_key, is_melee_attack, target_defense_zone) {
 		// Skill Dice
-		let skill_key = weapon.skill_key;
 		let skill_dice_needed = $scope.getSkillDice(action_taker, skill_key);
 		$scope.num_dice.num_ab_dice = skill_dice_needed[0];
 		$scope.num_dice.num_prof_dice = skill_dice_needed[1];
 		
-		var num_boost_dice = 0;
-		// Aim
-		num_boost_dice = action_taker.aims;
+		let num_boost_dice = 0;
+		let num_setback_dice = 0;
+		
 		// Temp Boosts
 		num_boost_dice = num_boost_dice + action_taker.temp_boosts;
-		
-		var num_setback_dice = 0;
+		// Temp Setbacks
 		num_setback_dice = num_setback_dice + action_taker.temp_setbacks;
+		
+		// Aim
+		num_boost_dice = action_taker.aims;
+		
 		if (target.target_type === 'character') {
-			if ($scope.isMeleeSkill(skill_key)) {
+			if (is_melee_attack) {
+				// Melee Defense
 				num_setback_dice = num_setback_dice + target.def_melee;
+				// Melee against prone gets +1 boost
 				if (target.prone) {
 					num_boost_dice = num_boost_dice + 1;
 				}
-			} else if ($scope.isRangedSkill(skill_key)) {
+			} else { // (Assume it is a ranged attack)
+				// Ranged Defense
 				num_setback_dice = num_setback_dice + target.def_ranged;
+				// Ranged against prone gets +1 setback
 				if (target.prone) {
 					num_setback_dice = num_setback_dice + 1;
 				}
+				// Cover
 				num_setback_dice = num_setback_dice + target.cover_bonus;
 			}
+			// TODO: Adjust difficulty dice for attacking a target larger/smaller than you
+			
 		} else { // if (target.target_type === 'vehicle') {
-			// TODO: Make this a parameter instead?
-			switch ($scope.target_defense_zone) {
+			// Vehicle Defense Zones
+			switch (target_defense_zone) {
 				case 'fore':
-					num_setback_dice = target.def_fore;
+					num_setback_dice = num_setback_dice + target.def_fore;
 					break;
 				case 'aft':
-					num_setback_dice = target.def_aft;
+					num_setback_dice = num_setback_dice + target.def_aft;
 					break;
 				case 'port':
-					num_setback_dice = target.def_port;
+					num_setback_dice = num_setback_dice + target.def_port;
 					break;
 				case 'starboard':
-					num_setback_dice = target.def_starboard;
+					num_setback_dice = num_setback_dice + target.def_starboard;
 					break;
 				case 'least':
 					if (target.silhouette <= 4) {
-						num_setback_dice = Math.min(target.def_fore, target.def_aft);
+						num_setback_dice = num_setback_dice + Math.min(target.def_fore, target.def_aft);
 					} else {
-						num_setback_dice = Math.min(target.def_fore, target.def_aft, target.def_port, target.def_starboard);
+						num_setback_dice = num_setback_dice + Math.min(target.def_fore, target.def_aft, target.def_port, target.def_starboard);
 					}
 					break;
 				case 'most':
 				default:
-					num_setback_dice = Math.max(target.def_fore, target.def_aft, target.def_port, target.def_starboard);
+					num_setback_dice = num_setback_dice + Math.max(target.def_fore, target.def_aft, target.def_port, target.def_starboard);
 					break;
 			}
 		}
-		// TODO: Use silhouettes to set difficulty dice if planetary scale weapon
+		
 		$scope.num_dice.num_boost_dice = num_boost_dice;
 		$scope.num_dice.num_setback_dice = num_setback_dice;
+	}
+	
+	$scope.matchAttackDice = function(action_taker, target, weapon, target_range, target_defense_zone) {
+		// Skill Dice
+		let skill_key = weapon.skill_key;
+		let is_melee_attack = $scope.isMeleeSkill(skill_key)
+		$scope.setSomeAttackDice(action_taker, target, skill_key, is_melee_attack, target_defense_zone);
+				
+		let target_silhouette = target.silhouette;
+		if (weapon.vehicle_weapon) {
+			let attacker_silhouette = $scope.vehicles_dict[action_taker.vehicle].silhouette;
+			let silhouette_diff = attacker_silhouette - target_silhouette;
+			console.log('silhouette_diff: ' + silhouette_diff);
+			console.log('attacker_silhouette: ' + attacker_silhouette);
+			console.log('target_silhouette: ' + target_silhouette);
+			if (silhouette_diff <= -2) {
+				$scope.num_dice.num_diff_dice = 1;
+			} else if (silhouette_diff <= 1) {
+				$scope.num_dice.num_diff_dice = 2;
+			} else if (silhouette_diff <= 2) {
+				$scope.num_dice.num_diff_dice = 3;
+			} else if (silhouette_diff <= 3) {
+				$scope.num_dice.num_diff_dice = 4;
+			} else { // silhouette_diff >= 4
+				$scope.num_dice.num_diff_dice = 5;
+			}
+		} else {
+			if (is_melee_attack) {
+				// Melee attacks against other characters is always 2 difficulty
+				$scope.num_dice.num_diff_dice = 2;
+			} else { // Assume it's a ranged attack
+				// TODO: Attacking at various ranges
+				switch(target_range) {
+					case 'engaged':
+						if (skill_key === 'RANGHVY') {
+							$scope.num_dice.num_diff_dice = 3;
+						} else { // if (skill_key === 'RANGLT') {
+							$scope.num_dice.num_diff_dice = 2;
+						}
+						break;
+					case 'short':
+						$scope.num_dice.num_diff_dice = 1;
+						break;
+					case 'medium':
+						$scope.num_dice.num_diff_dice = 2;
+						break;
+					case 'long':
+						$scope.num_dice.num_diff_dice = 3;
+						break;
+					case 'extreme':
+						$scope.num_dice.num_diff_dice = 4;
+						break;
+					default:
+						// If we don't know the range, just keep the dice the same
+						break;
+				}
+			}
+			
+			let attacker_silhouette = action_taker.silhouette;
+			let silhouette_diff = attacker_silhouette - target_silhouette;
+			console.log(silhouette_diff);
+			// Character attacking something of silhouette 2+ larger is -1 difficulty
+			if (silhouette_diff <= -2) {
+				$scope.num_dice.num_diff_dice = Math.max($scope.num_dice.num_diff_dice - 1, 0);
+			// Character attacking something of silhouette 2- smaller is +1 difficulty
+			} else if (silhouette_diff >= 2) {
+				$scope.num_dice.num_diff_dice = $scope.num_dice.num_diff_dice + 1;
+			}
+		}
 		
 		$scope.num_dice.num_force_dice = 0;
 		
@@ -1887,7 +1978,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		}
 		var vehicle_damage = damage_taken / 10;
 		vehicle.hull_trauma = vehicle.hull_trauma + vehicle_damage;
-		$scope.addLogEntry(`(${vehicle.hull_trauma}/${vehicle.hull_trauma_threshold} hull trauma)`);
+		$scope.addLogEntry(`${vehicle.name} takes ${vehicle_damage} hull trauma (${vehicle.hull_trauma}/${vehicle.hull_trauma_threshold}).`);
 		if (vehicle.hull_trauma > vehicle.hull_trauma_threshold) {
 			$scope.addLogEntry(`${vehicle.name} is disabled.`)
 		}
@@ -2013,65 +2104,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	$scope.forceMoveHurl = function(action_taker, target, object_silhouette) {
 		$scope.incrementActionsTaken();
 	
-		// TODO: Refactor this. Sooooo much is just copy-pasted
-		// Skill Dice
-		let skill_key = 'DISC'; // Except this
-		let skill_dice_needed = $scope.getSkillDice(action_taker, skill_key);
-		$scope.num_dice.num_ab_dice = skill_dice_needed[0];
-		$scope.num_dice.num_prof_dice = skill_dice_needed[1];
-		
-		var num_boost_dice = 0;
-		// Aim
-		num_boost_dice = action_taker.aims;
-		// Temp Boosts
-		num_boost_dice = num_boost_dice + action_taker.temp_boosts;
-		
-		var num_setback_dice = 0;
-		num_setback_dice = num_setback_dice + action_taker.temp_setbacks;
-		if (target.target_type === 'character') {
-			if ($scope.isMeleeSkill(skill_key)) {
-				num_setback_dice = num_setback_dice + target.def_melee;
-				if (target.prone) {
-					num_boost_dice = num_boost_dice + 1;
-				}
-			} else if ($scope.isRangedSkill(skill_key)) {
-				num_setback_dice = num_setback_dice + target.def_ranged;
-				if (target.prone) {
-					num_setback_dice = num_setback_dice + 1;
-				}
-				num_setback_dice = num_setback_dice + target.cover_bonus;
-			}
-		} else { // if (target.target_type === 'vehicle') {
-			// TODO: Make this a parameter instead?
-			switch ($scope.target_defense_zone) {
-				case 'fore':
-					num_setback_dice = target.def_fore;
-					break;
-				case 'aft':
-					num_setback_dice = target.def_aft;
-					break;
-				case 'port':
-					num_setback_dice = target.def_port;
-					break;
-				case 'starboard':
-					num_setback_dice = target.def_starboard;
-					break;
-				case 'least':
-					if (target.silhouette <= 4) {
-						num_setback_dice = Math.min(target.def_fore, target.def_aft);
-					} else {
-						num_setback_dice = Math.min(target.def_fore, target.def_aft, target.def_port, target.def_starboard);
-					}
-					break;
-				case 'most':
-				default:
-					num_setback_dice = Math.max(target.def_fore, target.def_aft, target.def_port, target.def_starboard);
-					break;
-			}
-		}
-		// TODO: Use silhouettes to set difficulty dice if planetary scale weapon
-		$scope.num_dice.num_boost_dice = num_boost_dice;
-		$scope.num_dice.num_setback_dice = num_setback_dice;
+		// Skill Dice, Boosts, and Setbacks
+		$scope.setSomeAttackDice(action_taker, target, skill_key, false, 'most');
 		
 		$scope.num_dice.num_diff_dice = object_silhouette;
 		$scope.num_dice.num_force_dice = action_taker.force_rating; // And this
@@ -2533,6 +2567,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			}
 		}
 		
+		// TODO: Get and set silhouette
+		
 		
 		// Weapons
 		var weapon_nodes = xmlDoc.getElementsByTagName("CharWeapon");
@@ -2651,6 +2687,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			$scope.applyStatsFromWeaponInfo(weapon, weapon_info);
 			// TODO: Check if damage scale actually personal
 			weapon.damage_scale = 'planetary';
+			weapon.vehicle_weapon = true;
 			weapons.push(weapon);
 		}
 		var ordnance_nodes = xmlDoc.getElementsByTagName("CharWeapon");
@@ -2661,6 +2698,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			$scope.applyStatsFromWeaponInfo(weapon, weapon_info);
 			// TODO: Check if damage scale actually personal
 			weapon.damage_scale = 'planetary';
+			weapon.vehicle_weapon = true;
 			weapons.push(weapon);
 		}
 		
@@ -2914,6 +2952,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			$scope.applyStatsFromWeaponInfo(weapon, weapon_info);
 			// TODO: Check if damage scale actually personal
 			weapon.damage_scale = 'planetary';
+			weapon.vehicle_weapon = true;
 			weapons.push(weapon);
 		}
 		
@@ -3294,6 +3333,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			this.soak = soak;
 			this.def_ranged = def_ranged;
 			this.def_melee = def_melee;
+			
+			this.silhouette = 1;
 			
 			this.char_values = char_values;
 			this.skill_values = skill_values;
