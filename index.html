@@ -273,30 +273,29 @@
 							Boost Next Ally
 						</td>
 					</tr>
-					<tr ng-if='action_tracker.roll_made && action_tracker.hit_through_soak && attack_weapon.crit_rating > 0'>
+					<tr ng-repeat='(hit_id, hit_info) in action_tracker.hits_made'>
 						<td>
-							<button ng-click='critTarget(attack_target, attack_weapon, true, "initial_hit")' ng-disabled='!canCritTarget(attack_weapon, true)' class='btn-block pb-1'>
+							<button ng-click='critTarget(attack_target, attack_weapon, true, hit_id)' ng-disabled='!canCritTarget(attack_weapon, true, hit_info)' class='btn-block pb-1'>
 								<img ng-repeat='x in [].constructor(attack_weapon.crit_rating) track by $index' src="./dice_images/advantage.png" width=20>
 							</button>
 						</td>
 						<td>
-							<button ng-click='critTarget(attack_target, attack_weapon, false, "initial_hit")' ng-disabled='!canCritTarget(attack_weapon, false)' class='btn-block pb-1'>
+							<button ng-click='critTarget(attack_target, attack_weapon, false, hit_id)' ng-disabled='!canCritTarget(attack_weapon, false, hit_info)' class='btn-block pb-1'>
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
 							</button>
 						</td>
 						<td class='align-middle'>
-							Crit Target
+							Crit {{characters_dict[hit_info.target_id].name}}
 						</td>
 					</tr>
-					<tr ng-repeat='(crit_id, crit_info) in action_tracker.crits_made'>
-						<!-- TODO: Finish adding code for crits. Actually add a button for applyCritical() -->
+					<tr ng-repeat='(hit_id, hit_info) in action_tracker.hits_made' ng-if='hit_info.crit_made'>
 						<td class='align-middle' colspan=2>
-							<button ng-click='applyCritical(characters_dict[crit_info.target_id], crit_info)' ng-disabled='crit_info.crit_made' class='btn-block pb-1'>
+							<button ng-click='applyCritical(characters_dict[hit_info.target_id], hit_info)' ng-disabled='hit_info.crit_applied' class='btn-block pb-1'>
 								Apply d100 
-								<span ng-if='crit_info.crit_boost > 0 || + characters_dict[crit_info.target_id].criticals'>
-									+ {{crit_info.crit_boost}} 
+								<span ng-if='hit_info.crit_boost > 0'>
+									+ {{hit_info.crit_boost}} 
 								</span>
-								Crit to {{characters_dict[crit_info.target_id].name}}
+								Crit to {{characters_dict[hit_info.target_id].name}}
 							</button>
 						</td>
 					</tr>
@@ -329,6 +328,31 @@
 						<td>
 							Boost Any Ally
 							<select ng-model='any_boost_target' ng-options='character as character.name for character in getAllies(action_taker, true)'>
+						</td>
+					</tr>
+					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
+						<td>
+						</td>
+						<td>
+							<button ng-click='upgradeTargetDiff(attack_target)' ng-disabled='!canUpgradeTargetDiff()' class='btn-block pb-1'>
+								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
+							</button>
+						</td>
+						<td>
+							Upgrade Target Difficulty
+						</td>
+					</tr>
+					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
+						<td>
+						</td>
+						<td>
+							<button ng-click='upgradeAlly(any_upgrade_target)' ng-disabled='!canUpgradeAlly()' class='btn-block pb-1'>
+								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
+							</button>
+						</td>
+						<td>
+							Upgrade Any Ally
+							<select ng-model='any_upgrade_target' ng-options='character as character.name for character in getAllies(action_taker, true)'>
 						</td>
 					</tr>
 				</tbody>
@@ -391,6 +415,19 @@
 						<td>
 							Setback Any Ally
 							<select ng-model='any_setback_target' ng-options='character as character.name for character in getAllies(action_taker, true)'>
+						</td>
+					</tr>
+					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
+						<td>
+						</td>
+						<td>
+							<button ng-click='upgradeAllyDiff(any_diff_upgrade_target)' ng-disabled='!canUpgradeAllyDiff()' class='btn-block pb-1'>
+								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/despair.png" width=20>
+							</button>
+						</td>
+						<td>
+							Setback Any Ally
+							<select ng-model='any_diff_upgrade_target' ng-options='character as character.name for character in getAllies(action_taker, true)'>
 						</td>
 					</tr>
 				</tbody>
@@ -1544,49 +1581,41 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	}
 	
 	// Crit Target w/ X Addv (or 1 Triumph) (Repeatable; Each Repeat adds +10 to roll)
-	$scope.canCritTarget = function(weapon, using_adv) {
+	$scope.canCritTarget = function(weapon, using_adv, hit_info) {
 		if (!weapon) {
 			return false;
 		}
+		if (hit_info.crit_applied) {
+			return false;
+		}
 		let crit_rating = weapon.crit_rating;
-		return $scope.hasRequiredAdvantageOrTriumph(crit_rating, using_adv) && $scope.action_tracker.hit_through_soak;
+		return $scope.hasRequiredAdvantageOrTriumph(crit_rating, using_adv);
 	}
 	
 	$scope.critTarget = function(target, weapon, using_adv, hit_id) {
 		let crit_rating = weapon.crit_rating;
 		let spent_log = $scope.spendRequiredAdvantageOrTriumph(crit_rating, using_adv);
 		
-		if (!$scope.action_tracker.crits_made) {
-			$scope.action_tracker.crits_made = {}
-		}		
-		if ($scope.action_tracker.crits_made[hit_id]) {
-			$scope.action_tracker.crits_made[hit_id].crit_boost = $scope.action_tracker.crits_made[hit_id].crit_boost + 10;
+		let hit_info = $scope.action_tracker.hits_made[hit_id];
+		if (hit_info.crit_made) {
+			hit_info.crit_boost += 10;
 			$scope.addLogEntry(`${spent_log} spent to boost ${target.name}'s crit by 10.`);
 		} else {
+			hit_info.crit_made = true;
 			crit_boost = 0;
 			if (target.criticals) {
 				crit_boost += target.criticals.length * 10;
 			}
-			$scope.action_tracker.crits_made[hit_id] = {
-				'target_id': target.$id,
-				'crit_boost': crit_boost,
-				'crit_made': false,
-			};
+			hit_info.crit_boost = crit_boost;
 			$scope.addLogEntry(`${spent_log} spent to crit ${target.name}.`);
 		}
+
 		$scope.action_tracker.$save();
-	
-		/* let num_existing_crits = target.criticals.length;
-		// TODO: Take Vicious and Durable into account)
-		let critical = target.applyCritical(target, num_existing_crits * 10);
-		let log_message = `${target.name} suffers the following critical injury. ` +
-			`${critical.name}: ${critical.description}`;
-		$scope.addLogEntry(log_message); */
 	}
 	
-	$scope.applyCritical = function(target, crit_info) {
+	$scope.applyCritical = function(target, hit_info) {
 		let crit_roll = Math.floor(Math.random() * 100) + 1; // Random number 1-100
-		crit_roll = crit_roll + crit_info.crit_boost;
+		crit_roll = crit_roll + hit_info.crit_boost;
 		if (target.criticals) {
 			crit_roll = crit_roll + target.criticals.length * 10;
 		}
@@ -1697,10 +1726,11 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			`${critical.name}: ${critical.description}`;
 		$scope.addLogEntry(log_message);
 		
-		$scope.characters_dict[crit_info.target_id] = target;
+		// TODO: Investigte this
+		$scope.characters_dict[hit_info.target_id] = target;
 		$scope.characters_dict.$save();
 		
-		crit_info.crit_made = true;
+		hit_info.crit_applied = true;
 		$scope.action_tracker.$save();
 		
 		return critical;
@@ -1736,6 +1766,36 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		
 		// TODO: Make Verbose?
 		$scope.addLogEntry(`${spent_log} spent to boost ${ally.name}.`);
+	}
+	
+	// Upgrade Target's Difficulty Triumph
+	$scope.canUpgradeTargetDiff = function() {
+		return !$scope.action_tracker.upgrade_target_diff_used && $scope.hasRequiredAdvantageOrTriumph(1, false);
+	}
+	
+	$scope.upgradeTargetDiff = function(target) {
+		$scope.action_tracker.upgrade_target_diff_used = true;
+		$scope.spendRequiredAdvantageOrTriumph(1, false);
+		
+		ally.temp_diff_upgrades += 1;
+		$scope.characters_array.$save(ally);
+		
+		$scope.addLogEntry(`1 Triumph spent to upgrade difficulty of ${target.name}\'s next check.`);
+	}
+	
+	// Upgrade Any Ally w/ 1 Triumph
+	$scope.canUpgradeAlly = function() {
+		return !$scope.action_tracker.upgrade_ally_used && $scope.hasRequiredAdvantageOrTriumph(1, false);
+	}
+	
+	$scope.upgradeAlly = function(ally) {
+		$scope.action_tracker.upgrade_ally_used = true;
+		$scope.spendRequiredAdvantageOrTriumph(1, false);
+		
+		ally.temp_upgrades += 1;
+		$scope.characters_array.$save(ally);
+		
+		$scope.addLogEntry(`1 Triumph spent to upgrade ${ally.name}\'s next check.`);
 	}
 	
 	//// Negative Dice Side Effects
@@ -1810,6 +1870,25 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		
 		// TODO: Make Verbose?
 		$scope.addLogEntry(`${spent_log} spent to setback ${ally.name}.`);
+	}
+	
+	// Upgrade Difficulty of Ally's next check w/ 1 Despair
+	$scope.canUpgradeAllyDiff = function() {
+		return !$scope.action_tracker.upgrade_any_diff_used && $scope.hasRequiredThreatOrDespair(1, false);
+	}
+	
+	$scope.upgradeAllyDiff = function(ally) {
+		if (!ally) {
+			// TODO: Show an error message
+			return;
+		}
+		$scope.action_tracker.upgrade_any_diff_used = true;
+		$scope.spendRequiredThreatOrDespair(1, false);
+	
+		ally.temp_diff_upgrades++;
+		$scope.characters_array.$save(ally);
+		
+		$scope.addLogEntry(`1 Despair spent to setback ${ally.name}.`);
 	}
 	
 	$scope.convertActionToManeuver = function(action_taker) {
@@ -1920,6 +1999,36 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		return true;
 	}
 	
+	$scope.upgradeDice = function(num_upgrades) {
+		let num_ab_dice = $scope.num_dice.num_ab_dice;
+		let num_prof_dice = $scope.num_dice.num_prof_dice;
+		for (let i = 0; i < num_upgrades; i++) {
+			if (num_ab_dice > 0) {
+				num_ab_dice--;
+				num_prof_dice++;
+			} else {
+				num_ab_dice++;
+			}
+		}
+		$scope.num_dice.num_ab_dice = num_ab_dice;
+		$scope.num_dice.num_prof_dice = num_prof_dice;
+	}
+	
+	$scope.upgradeDiffDice = function(num_upgrades) {
+		let num_diff_dice = $scope.num_dice.num_diff_dice;
+		let num_chal_dice = $scope.num_dice.num_chal_dice;
+		for (let i = 0; i < num_upgrades; i++) {
+			if (num_diff_dice > 0) {
+				num_diff_dice--;
+				num_chal_dice++;
+			} else {
+				num_diff_dice++;
+			}
+		}
+		$scope.num_dice.num_diff_dice = num_diff_dice;
+		$scope.num_dice.num_chal_dice = num_chal_dice;
+	}
+	
 	$scope.matchCommonDice = function(action_taker, skill_key) {
 		var skill_dice_needed = $scope.getSkillDice(action_taker, skill_key);
 		$scope.num_dice.num_ab_dice = skill_dice_needed[0];
@@ -1930,17 +2039,27 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.num_dice.num_force_dice = 0;
 		// TODO: Add any setback removal to skill (separate icon/value in dice roller that removes the matching number of setbacks?)
 		
+		$scope.upgradeDice(action_taker.temp_upgrades);
+		
 		$scope.matchEnhanceDice(action_taker, skill_key);
 	}
 	
 	$scope.matchActionDice = function(action_taker, skill_key) {
 		$scope.matchCommonDice(action_taker, skill_key);
-		$scope.num_dice.$save();
+		// TODO: Allow setting common action difficulty in the UI
+		$scope.num_dice.$save().then(function(ref) {
+			$scope.upgradeDiffDice(action_taker.temp_diff_upgrades);
+			$scope.num_dice.$save();
+		}, function(error) {
+			console.log("Error:", error);
+		});
 	}
 	
 	$scope.resetTempDiceEffects = function(action_taker) {
 		action_taker.temp_boosts = 0;
 		action_taker.temp_setbacks = 0;
+		action_taker.temp_upgrades = 0;
+		action_taker.temp_diff_upgrades = 0;
 		$scope.characters_array.$save(action_taker);
 		
 		$scope.action_tracker.boost_any[action_taker.ally_or_enemy] = 0;
@@ -1977,7 +2096,13 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			$scope.num_dice.num_diff_dice += 2;
 		}
 		$scope.num_dice.num_chal_dice = 0;
-		$scope.num_dice.$save();
+		
+		$scope.num_dice.$save().then(function(ref) {
+			$scope.upgradeDiffDice(action_taker.temp_diff_upgrades);
+			$scope.num_dice.$save();
+		}, function(error) {
+			console.log("Error:", error);
+		});
 	}
 	
 	$scope.healCritical = function(action_taker, crit_heal_target, crit_to_heal) {
@@ -2007,7 +2132,13 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			$scope.num_dice.num_diff_dice += 1;
 		}
 		$scope.num_dice.num_chal_dice = 0;
-		$scope.num_dice.$save();
+		
+		$scope.num_dice.$save().then(function(ref) {
+			$scope.upgradeDiffDice(action_taker.temp_diff_upgrades);
+			$scope.num_dice.$save();
+		}, function(error) {
+			console.log("Error:", error);
+		});
 	}
 	
 	$scope.isMeleeSkill = function(skill_key) {
@@ -2173,6 +2304,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			}
 		}
 		
+		$scope.upgradeDice(action_taker.temp_upgrades);
+		
 		$scope.num_dice.num_boost_dice = num_boost_dice;
 		$scope.num_dice.num_setback_dice = num_setback_dice;
 	}
@@ -2241,10 +2374,34 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			}
 		}
 		
+		$scope.num_dice.num_chal_dice = 0;
 		$scope.num_dice.num_force_dice = 0;
 		$scope.matchEnhanceDice(action_taker, skill_key);
 		
-		$scope.num_dice.$save();
+		$scope.num_dice.$save().then(function(ref) {
+			let num_diff_upgrades = action_taker.temp_diff_upgrades;
+			if (target.talents['ADV']) {
+				num_diff_upgrades += target.talents['ADV'];
+			}
+			$scope.upgradeDiffDice(num_diff_upgrades);
+			$scope.num_dice.$save();
+		}, function(error) {
+			console.log("Error:", error);
+		});
+	}
+	
+	$scope.addHit = function(target) {
+		let base_hit_info = {
+			target_id: target.$id,
+			crit_made: false,
+			crit_boost: 0,
+			crit_applied: false,
+		}
+		if ($scope.action_tracker.hit_info) {
+			$scope.action_tracker.hits_made.push(base_hit_info);
+		} else {
+			$scope.action_tracker.hits_made = [base_hit_info];
+		}
 	}
 	
 	$scope.attackTarget = function(action_taker, target, weapon) {
@@ -2287,7 +2444,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				}
 				let hit_through_soak = $scope.applyDamageToCharacterTarget(target, damage, pierce, breach, damage_type);
 				if (hit_through_soak) {
-					$scope.action_tracker.hit_through_soak = true;
+					$scope.addHit(target);
 				}
 			} else { // if (target.target_type === 'vehicle') {
 				$scope.applyDamageToVehicleTarget(target, damage, pierce, breach, damage_type);
@@ -2524,14 +2681,26 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.setSomeAttackDice(action_taker, target, 'DISC', false, 'most');
 		
 		$scope.num_dice.num_diff_dice = object_silhouette;
-		$scope.num_dice.num_force_dice = action_taker.force_rating; // And this
+		$scope.num_dice.num_chal_dice = 0;
+		$scope.num_dice.num_force_dice = action_taker.force_rating;
 		
+		$scope.num_dice.$save().then(function(ref) {
+			let num_diff_upgrades = action_taker.temp_diff_upgrades;
+			if (target.talents['ADV']) {
+				num_diff_upgrades += target.talents['ADV'];
+			}
+			$scope.upgradeDiffDice(num_diff_upgrades);
+			$scope.num_dice.$save();
+		}, function(error) {
+			console.log("Error:", error);
+		});
+		
+		// TODO: Make rolling then the effects separate clicks
 		$scope.num_dice.$save().then(function(ref) {
 			$scope.rollNewDiePool();
 			
 			action_taker.aims = 0;
-			action_taker.temp_boosts = 0;
-			action_taker.temp_setbacks = 0;
+			$scope.resetTempDiceEffects(action_taker);
 			$scope.characters_array.$save(action_taker);
 			
 			$scope.action_tracker.boost_any[action_taker.ally_or_enemy] = 0;
@@ -2843,9 +3012,9 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				character.prone = false;
 				character.cover_bonus = 0;
 				
+				$scope.resetTempDiceEffects(character);
 				character.aims = 0;
-				character.temp_boosts = 0;
-				character.temp_setbacks = 0;
+				
 				
 				character.turn_taken = false;
 				
@@ -2920,14 +3089,16 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.action_tracker.roll_made = false;
 		$scope.action_tracker.force_roll_made = false;
 		
-		$scope.action_tracker.hit_through_soak = false;
-		$scope.action_tracker.crits_made = {};
+		$scope.action_tracker.hits_made = {};
 		
 		$scope.action_tracker.boost_next_used = false;
 		$scope.action_tracker.boost_any_used = false;
 		$scope.action_tracker.setback_target_used = false;
 		$scope.action_tracker.boost_target_used = false;
 		$scope.action_tracker.setback_any_used = false;
+		$scope.action_tracker.upgrade_target_diff_used = false;
+		$scope.action_tracker.upgrade_ally_used = false;
+		$scope.action_tracker.upgrade_any_diff_used = false;
 		
 		$scope.action_tracker.$save();
 		
@@ -3055,8 +3226,35 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			var ranks = $scope.sumAttrNodesIgnoring(rank_node, ["NonCareerRanks"]);
 			skill_values[key] = ranks;
 		}
+		
 	
 		var new_char = new Character(name, wt, st, soak, def_ranged, def_melee, char_values, skill_values);
+		
+		// Talents
+		let talent_dict = {};
+		let talent_nodes = xmlDoc.getElementsByTagName('CharTalent');
+		for (let i = 0; i < talent_nodes.length; i++) {
+			let talent_node = talent_nodes[i];
+			let num_new_ranks = 0;
+			let key = talent_node.getElementsByTagName('Key')[0].childNodes[0].nodeValue;
+			let purchased_nodes = talent_node.getElementsByTagName('Purchased');
+			if (purchased_nodes.length > 0) {
+				num_new_ranks++;
+			}
+			let ranks_nodes = talent_node.getElementsByTagName('Ranks');
+			if (ranks_nodes.length > 0) {
+				let num_ranks = parseInt(ranks_nodes[0].childNodes[0].nodeValue);
+				num_new_ranks += num_ranks;
+			}
+			if (num_new_ranks) {
+				if (talent_dict[num_new_ranks]) {
+					talent_dict[key] += num_new_ranks;
+				} else {
+					talent_dict[key] = num_new_ranks;
+				}
+			}
+		}
+		new_char.talents = talent_dict;
 		
 		// Species
 		var species_key_nodes = xmlDoc.getElementsByTagName("SpeciesKey");
@@ -3773,9 +3971,6 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	$scope.enhance_power = $firebaseObject(enhance_power_ref);
 	var move_power_ref = force_powers_ref.child("move");
 	$scope.move_power = $firebaseObject(move_power_ref);
-	// Crits Made
-	var crits_made_ref = action_tracker_ref.child("crits_made");
-	$scope.crits_made = $firebaseObject(crits_made_ref);
 	
 	// Day
 	let day_ref = firebase.database().ref().child("day");
@@ -3919,6 +4114,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			this.char_values = char_values;
 			this.skill_values = skill_values;
 			
+			this.talents = {};
+			
 			this.force_rating = 0;
 			this.force_powers = {};
 			
@@ -3948,6 +4145,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			
 			this.temp_boosts = 0;
 			this.temp_setbacks = 0;
+			this.temp_upgrades = 0;
+			this.temp_diff_upgrades = 0;
 			
 			this.turn_taken = false;
 		}
