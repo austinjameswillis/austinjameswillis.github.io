@@ -1343,6 +1343,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			this.pierce = 0;
 			this.breach = 0;
 			
+			this.setback_adds = 0;
+			
 			this.damage_scale = 'personal';
 			this.vehicle_weapon = false;
 		}
@@ -1888,7 +1890,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		ally.temp_diff_upgrades++;
 		$scope.characters_array.$save(ally);
 		
-		$scope.addLogEntry(`1 Despair spent to setback ${ally.name}.`);
+		$scope.addLogEntry(`1 Despair spent to upgrade the difficulty of ${ally.name}\'s next check.`);
 	}
 	
 	$scope.convertActionToManeuver = function(action_taker) {
@@ -2237,7 +2239,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	}
 	
 	// Helper function for matching Ab, Proff, Boost, and Setback for any attack roll (including Force Hurl_
-	$scope.setSomeAttackDice = function(action_taker, target, skill_key, is_melee_attack, target_defense_zone) {
+	$scope.setSomeAttackDice = function(action_taker, target, skill_key, is_melee_attack, target_defense_zone, additional_setbacks) {
 		// Skill Dice
 		let skill_dice_needed = $scope.getSkillDice(action_taker, skill_key);
 		$scope.num_dice.num_ab_dice = skill_dice_needed[0];
@@ -2251,6 +2253,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		num_boost_dice = num_boost_dice + $scope.action_tracker.boost_any[action_taker.ally_or_enemy];
 		// Temp Setbacks
 		num_setback_dice = num_setback_dice + action_taker.temp_setbacks;
+		// Other Setbacks
+		num_setback_dice += additional_setbacks;
 		
 		// Aim
 		num_boost_dice = num_boost_dice + action_taker.aims;
@@ -2314,7 +2318,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		// Skill Dice
 		let skill_key = weapon.skill_key;
 		let is_melee_attack = $scope.isMeleeSkill(skill_key)
-		$scope.setSomeAttackDice(action_taker, target, skill_key, is_melee_attack, target_defense_zone);
+		$scope.setSomeAttackDice(action_taker, target, skill_key, is_melee_attack, target_defense_zone, weapon.setback_adds);
 				
 		let target_silhouette = target.silhouette;
 		if (weapon.vehicle_weapon) {
@@ -2678,7 +2682,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.incrementActionsTaken();
 	
 		// Skill Dice, Boosts, and Setbacks
-		$scope.setSomeAttackDice(action_taker, target, 'DISC', false, 'most');
+		$scope.setSomeAttackDice(action_taker, target, 'DISC', false, 'most', 0);
 		
 		$scope.num_dice.num_diff_dice = object_silhouette;
 		$scope.num_dice.num_chal_dice = 0;
@@ -3344,21 +3348,53 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		// Weapons
 		var weapon_nodes = xmlDoc.getElementsByTagName("CharWeapon");
 		for (var i = 0; i < weapon_nodes.length; i++) {
-			var equipped_nodes = weapon_nodes[i].getElementsByTagName("Equipped");
-			if (equipped_nodes.length != 0 && equipped_nodes[0].childNodes[0].nodeValue === "true") {
-				var item_key_value_nodes = weapon_nodes[i].getElementsByTagName("ItemKey")[0].childNodes;
-				if (item_key_value_nodes.length != 0) {
-					var weapon_key = item_key_value_nodes[0].nodeValue;					
-					let weapon_info = $scope.weapon_info[weapon_key];
-					
-					// TODO: Use the custom name
-					let weapon = new WeaponEntry(weapon_info.name, weapon_info.skill_key);
-					$scope.applyStatsFromWeaponInfo(weapon, weapon_info);
-					// TODO: Check if it's planetary damage
-					weapon.damage_scale = 'personal';
-					
-					new_char.weapons.push(weapon);
+			let weapon_node = weapon_nodes[i];
+			var held_nodes = weapon_node.getElementsByTagName("Held");
+			if (held_nodes.length != 0 && held_nodes[0].childNodes[0].nodeValue === "true") {
+				let weapon_key = weapon_node.getElementsByTagName("ItemKey")[0].childNodes[0].nodeValue;	
+				let weapon_info = $scope.weapon_info[weapon_key];
+				
+				let weapon_name = weapon_info.name;
+				let rename_nodes = weapon_node.getElementsByTagName('Rename');
+				if (rename_nodes.length > 0) {
+					weapon_name = rename_nodes[0].childNodes[0].nodeValue;
 				}
+				
+				let weapon = new WeaponEntry(weapon_name, weapon_info.skill_key);
+				$scope.applyStatsFromWeaponInfo(weapon, weapon_info);
+				// TODO: Check if it's planetary damage
+				weapon.damage_scale = 'personal';
+				
+				// TODO: Refactor this and also apply to custom weapons (double-check NPC XML first)
+				// Attachments + Attachment Mods
+				let all_mods_nodes = weapon_node.getElementsByTagName('AllMods');
+				if (all_mods_nodes.length > 0) {
+					let mod_nodes = all_mods_nodes[0].getElementsByTagName('Mod');
+					for (let j = 0; j < mod_nodes.length; j++) {
+						let mod = mod_nodes[j];
+						let mod_key_nodes = mod.getElementsByTagName('Key');
+						if (mod_key_nodes.length > 0) {
+							let mod_key = mod_key_nodes[0].childNodes[0].nodeValue;
+							let count = 0;
+							let count_nodes = mod.getElementsByTagName('Count');
+							if (count_nodes.length > 0) {
+								count = parseInt(count_nodes[0].childNodes[0].nodeValue);
+							}
+							switch(mod_key) {
+								case 'DAMADD':
+									weapon.damage += count;
+									break;
+								case 'SETBACKADD':
+									weapon.setback_adds += count;
+									break;
+								default:
+									break;
+							}
+						}
+					}
+				}
+				
+				new_char.weapons.push(weapon);
 			}
 			// TODO: Add code for including unarmed strike, including modifications for Trandoshans by looking at how UNARMED looks in Gutch's .xml
 			// TODO: Also add arc welder for astromechs
