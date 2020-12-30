@@ -3350,7 +3350,11 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		for (var i = 0; i < weapon_nodes.length; i++) {
 			let weapon_node = weapon_nodes[i];
 			var held_nodes = weapon_node.getElementsByTagName("Held");
-			if (held_nodes.length != 0 && held_nodes[0].childNodes[0].nodeValue === "true") {
+			var equipped_nodes = weapon_node.getElementsByTagName("Equipped");
+			if (
+					(held_nodes.length != 0 && held_nodes[0].childNodes[0].nodeValue === "true") ||
+					(equipped_nodes.length != 0 && equipped_nodes[0].childNodes[0].nodeValue === "true")
+				) {
 				let weapon_key = weapon_node.getElementsByTagName("ItemKey")[0].childNodes[0].nodeValue;	
 				let weapon_info = $scope.weapon_info[weapon_key];
 				
