@@ -38,7 +38,8 @@
 <script src="https://www.gstatic.com/firebasejs/8.2.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.2.0/firebase-database.js"></script>
 
-<script src ="dice.js"></script>
+<script src="dice.js"></script>
+<script src="character_import.js"></script>
 <body>
 
 <div ng-app="myApp" ng-controller="myCtrl" class="container">
@@ -206,7 +207,8 @@
 			<thead>
 				<th>Character Taking Action</th>
 				<th>Wounds</th>
-				<th>Strain</th>
+				<th ng-if='action_taker.char_type != "Minion"'>Strain</th>
+				<th ng-if='action_taker.char_type === "Minion"'># in Group</th>
 			<thead>
 		</tr>
 		<td>
@@ -217,11 +219,19 @@
 				<label class="custom-control-label" for="show_turn_taken_chars_switch">Show Characters Who Have Already Gone</label>
 			</div>
 		</td>
-		<td ng-class="{'table-danger': action_taker.wounds > action_taker.wound_threshold}">
+		<td ng-if='action_taker.char_type != "Minion"'>
 			{{action_taker.wounds}} / {{action_taker.wound_threshold}}
 		</td>
-		<td ng-class="{'table-warning': action_taker.strain > action_taker.strain_threshold}">
+		<td ng-if='action_taker.char_type === "Minion"'>
+			{{action_taker.wounds}} / {{getMinionGroupWT(action_taker)}}
+		</td>
+		<td ng-if='action_taker.char_type != "Minion"'>
 			{{action_taker.strain}} / {{action_taker.strain_threshold}}
+		</td>
+		<td ng-if='action_taker.char_type === "Minion"'>
+			<img ng-if='action_taker.ally_or_enemy === "ally"' ng-repeat='x in [].constructor(getNumActiveMinions(action_taker)) track by $index' ng-src='./dice_images/pc.png' height=25>
+			<img ng-if='action_taker.ally_or_enemy === "enemy"' ng-repeat='x in [].constructor(getNumActiveMinions(action_taker)) track by $index' ng-src='./dice_images/npc.png' height=25>
+			<img ng-repeat='x in [].constructor(action_taker.num_in_group - getNumActiveMinions(action_taker)) track by $index' ng-src='./dice_images/dead.png' height=25>
 		</td>
 	</table>
 </p>
@@ -243,14 +253,14 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
+					<tr ng-if='action_tracker.roll_made && general_info.in_combat && action_taker.char_type != "Minion"'>
 						<td>
-							<button ng-click='healStrain(action_taker, true)' ng-disabled='!canHealStrain(true) || action_taker.strain <= 0' class='btn-block pb-1'>
+							<button ng-click='healStrain(action_taker, true)' ng-disabled='!canHealStrain(true) || action_taker.strain <= 0' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/advantage.png" width=20>
 							</button>
 						</td>
 						<td>
-							<button ng-click='healStrain(action_taker, false)' ng-disabled='!canHealStrain(false) || action_taker.strain <= 0' class='btn-block pb-1'>
+							<button ng-click='healStrain(action_taker, false)' ng-disabled='!canHealStrain(false) || action_taker.strain <= 0' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
 							</button>
 						</td>
@@ -260,12 +270,12 @@
 					</tr>
 					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
 						<td>
-							<button ng-click='boostNextAlly(action_taker, true)' ng-disabled='!canBoostNextAlly(true)' class='btn-block pb-1'>
+							<button ng-click='boostNextAlly(action_taker, true)' ng-disabled='!canBoostNextAlly(true)' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/advantage.png" width=20>
 							</button>
 						</td>
 						<td>
-							<button ng-click='boostNextAlly(action_taker, false)' ng-disabled='!canBoostNextAlly(false)' class='btn-block pb-1'>
+							<button ng-click='boostNextAlly(action_taker, false)' ng-disabled='!canBoostNextAlly(false)' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
 							</button>
 						</td>
@@ -275,12 +285,12 @@
 					</tr>
 					<tr ng-repeat='(hit_id, hit_info) in action_tracker.hits_made'>
 						<td>
-							<button ng-click='critTarget(attack_target, attack_weapon, true, hit_id)' ng-disabled='!canCritTarget(attack_weapon, true, hit_info)' class='btn-block pb-1'>
+							<button ng-click='critTarget(attack_target, attack_weapon, true, hit_id)' ng-disabled='!canCritTarget(attack_weapon, true, hit_info)' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(attack_weapon.crit_rating) track by $index' src="./dice_images/advantage.png" width=20>
 							</button>
 						</td>
 						<td>
-							<button ng-click='critTarget(attack_target, attack_weapon, false, hit_id)' ng-disabled='!canCritTarget(attack_weapon, false, hit_info)' class='btn-block pb-1'>
+							<button ng-click='critTarget(attack_target, attack_weapon, false, hit_id)' ng-disabled='!canCritTarget(attack_weapon, false, hit_info)' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
 							</button>
 						</td>
@@ -301,12 +311,12 @@
 					</tr>
 					<tr ng-if='action_tracker.roll_made && attack_target.target_type === "character" && general_info.in_combat'>
 						<td>
-							<button ng-click='setbackTarget(attack_target, true)' ng-disabled='!canSetbackTarget(true)' class='btn-block pb-1'>
+							<button ng-click='setbackTarget(attack_target, true)' ng-disabled='!canSetbackTarget(true)' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(2) track by $index' src="./dice_images/advantage.png" width=20>
 							</button>
 						</td>
 						<td>
-							<button ng-click='setbackTarget(attack_target, false)' ng-disabled='!canSetbackTarget(false)' class='btn-block pb-1'>
+							<button ng-click='setbackTarget(attack_target, false)' ng-disabled='!canSetbackTarget(false)' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
 							</button>
 						</td>
@@ -316,25 +326,25 @@
 					</tr>
 					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
 						<td>
-							<button ng-click='boostAlly(any_boost_target, true)' ng-disabled='!canBoostAlly(true)' class='btn-block pb-1'>
+							<button ng-click='boostAlly(any_boost_target, true)' ng-disabled='!canBoostAlly(true)' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(2) track by $index' src="./dice_images/advantage.png" width=20>
 							</button>
 						</td>
 						<td>
-							<button ng-click='boostAlly(any_boost_target, false)' ng-disabled='!canBoostAlly(false)' class='btn-block pb-1'>
+							<button ng-click='boostAlly(any_boost_target, false)' ng-disabled='!canBoostAlly(false)' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
 							</button>
 						</td>
 						<td>
 							Boost Any Ally
-							<select ng-model='any_boost_target' ng-options='character as character.name for character in getAllies(action_taker, true)'>
+							<select ng-model='any_boost_target' ng-options='character as character.name for character in getAllies(action_taker, true)' >
 						</td>
 					</tr>
 					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
 						<td>
 						</td>
 						<td>
-							<button ng-click='upgradeTargetDiff(attack_target)' ng-disabled='!canUpgradeTargetDiff()' class='btn-block pb-1'>
+							<button ng-click='upgradeTargetDiff(attack_target)' ng-disabled='!canUpgradeTargetDiff()' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
 							</button>
 						</td>
@@ -346,7 +356,7 @@
 						<td>
 						</td>
 						<td>
-							<button ng-click='upgradeAlly(any_upgrade_target)' ng-disabled='!canUpgradeAlly()' class='btn-block pb-1'>
+							<button ng-click='upgradeAlly(any_upgrade_target)' ng-disabled='!canUpgradeAlly()' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
 							</button>
 						</td>
@@ -373,12 +383,12 @@
 				<tbody>
 					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
 						<td>
-							<button ng-click='inflictStrain(action_taker, true)' ng-disabled='!canInflictStrain(true)' class='btn-block pb-1'>
+							<button ng-click='inflictStrain(action_taker, true)' ng-disabled='!canInflictStrain(true)' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/threat.png" width=20>
 							</button>
 						</td>
 						<td>
-							<button ng-click='inflictStrain(action_taker, false)' ng-disabled='!canInflictStrain(false)' class='btn-block pb-1'>
+							<button ng-click='inflictStrain(action_taker, false)' ng-disabled='!canInflictStrain(false)' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/despair.png" width=20>
 							</button>
 						</td>
@@ -388,12 +398,12 @@
 					</tr>
 					<tr ng-if='action_tracker.roll_made && attack_target.target_type === "character" && general_info.in_combat'>
 						<td>
-							<button ng-click='boostTarget(attack_target, true)' ng-disabled='!canBoostTarget(true)' class='btn-block pb-1'>
+							<button ng-click='boostTarget(attack_target, true)' ng-disabled='!canBoostTarget(true)' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(2) track by $index' src="./dice_images/threat.png" width=20>
 							</button>
 						</td>
 						<td>
-							<button ng-click='boostTarget(attack_target, false)' ng-disabled='!canBoostTarget(false)' class='btn-block pb-1'>
+							<button ng-click='boostTarget(attack_target, false)' ng-disabled='!canBoostTarget(false)' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/despair.png" width=20>
 							</button>
 						</td>
@@ -403,12 +413,12 @@
 					</tr>
 					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
 						<td>
-							<button ng-click='setbackAlly(any_setback_target, true)' ng-disabled='!canSetbackAlly(true)' class='btn-block pb-1'>
+							<button ng-click='setbackAlly(any_setback_target, true)' ng-disabled='!canSetbackAlly(true)' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(2) track by $index' src="./dice_images/threat.png" width=20>
 							</button>
 						</td>
 						<td>
-							<button ng-click='setbackAlly(any_setback_target, false)' ng-disabled='!canSetbackAlly(false)' class='btn-block pb-1'>
+							<button ng-click='setbackAlly(any_setback_target, false)' ng-disabled='!canSetbackAlly(false)' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/despair.png" width=20>
 							</button>
 						</td>
@@ -421,7 +431,7 @@
 						<td>
 						</td>
 						<td>
-							<button ng-click='upgradeAllyDiff(any_diff_upgrade_target)' ng-disabled='!canUpgradeAllyDiff()' class='btn-block pb-1'>
+							<button ng-click='upgradeAllyDiff(any_diff_upgrade_target)' ng-disabled='!canUpgradeAllyDiff()' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/despair.png" width=20>
 							</button>
 						</td>
@@ -603,7 +613,7 @@
 						<button ng-click='convertActionToManeuver(action_taker)' ng-disabled='action_tracker.actions_available <= 0 || action_tracker.maneuvers_available >= 2' class='btn-block'>Convert Action to Maneuver</button>
 					</div>
 					<div class='col'>
-						<button ng-click='strainForManeuver(action_taker)' ng-disabled='action_taker.strain > action_taker.strain_threshold - 2 || action_tracker.maneuvers_available >= 2' class='btn-block'>Strain for Maneuver</button>
+						<button ng-click='strainForManeuver(action_taker)' ng-disabled='action_taker.strain > action_taker.strain_threshold - 2 || action_tracker.maneuvers_available >= 2 || action_taker.char_type === "Minion"' class='btn-block'>Strain for Maneuver</button>
 					</div>
 				</div>
 			</div>
@@ -1003,82 +1013,166 @@
 Num Copies: <input type="number" ng-model="read_char_copies" min=1>
 </p>
 
-<p>
-	<table class="table table-hover">
-		<thead>
-			<tr>
-				<th>Name</th>
-				<th>Soak</th>
-				<th>Defense <span style="white-space: nowrap;">Melee / Ranged</span></th>
-				<th>Wounds</th>
-				<th>Strain</th>
-				<th>Ally / Enemy</th>
-				<th>Initiative Type</th>
-				<th>Vehicle</th>
-			</tr>
-		</thead>
-		
-		<tbody>		
-			<tr ng-repeat="character in characters_array">
-				<td>{{character.name}}</td>
-				<td>{{character.soak}}</td>
-				<td style="white-space: nowrap;">{{character.def_ranged}} / {{character.def_melee}}</td>
-				<td ng-class="{'table-danger': character.wounds > character.wound_threshold}" style="white-space: nowrap;">
-					<span>
-						<button ng-click="character.wounds = character.wounds - 1; characters_array.$save(character)">
-							-
-						</button>
-					</span>
-					<span>
-						{{character.wounds}} / {{character.wound_threshold}}
-					</span>
-					<span>
-						<button ng-click="character.wounds = character.wounds + 1; characters_array.$save(character)">
-							+
-						</button>
-					</span>
-				</td>
-				<td ng-class="{'table-warning': character.strain > character.strain_threshold}" style="white-space: nowrap;">
-					<span>
-						<button ng-click="character.strain = character.strain - 1; characters_array.$save(character)">
-							-
-						</button>
-					</span>
-					<span>
-						{{character.strain}} / {{character.strain_threshold}}
-					</span>
-					<span>
-						<button ng-click="character.strain = character.strain + 1; characters_array.$save(character);">
-							+
-						</button>
-					</span>
-				</td>
-				<td>
-					<input type="radio" ng-model="character.ally_or_enemy" value="ally" ng-change='characters_array.$save(character)'> Ally<br>
-					<input type="radio" ng-model="character.ally_or_enemy" value="enemy" ng-change='characters_array.$save(character)'> Enemy
-				</td>
-				<td>
-					<input type="radio" ng-model="character.initiative_type" value="cool" ng-change='characters_array.$save(character)'> Cool<br>
-					<input type="radio" ng-model="character.initiative_type" value="vigilance" ng-change='characters_array.$save(character)'> Vigilance<br>
-					<input type="radio" ng-model="character.initiative_type" value="custom" ng-change='characters_array.$save(character)'> Custom<br>
-					<input type="radio" ng-model="character.initiative_type" value="none" ng-change='characters_array.$save(character)'> None<br>
-					<img ng-repeat='die_image in character.initiative_roll.image_urls track by $index' ng-src='{{die_image}}' height=20><br>
-				</td>
-				<td>
-					<!-- <select ng-model="character.vehicle" ng-options='vehicle.$id as vehicle.name for vehicle in vehicles_array' ng-change='characters_array.$save(character)'>
-					<select> -->
-					<select ng-model="character.vehicle" ng-options='id as name for (id, name) in getPotentialVehicles()' ng-change='characters_array.$save(character)'>
-					<select>
-				</td>
-				<td>
-					<button ng-click="characters_array.$remove(character)">
-						Remove Character
+
+<table class="table table-hover">
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>Soak</th>
+			<th>Defense <span style="white-space: nowrap;">Melee / Ranged</span></th>
+			<th>Wounds</th>
+			<th>Strain</th>
+			<th>Ally / Enemy</th>
+			<th>Initiative Type</th>
+			<th>Vehicle</th>
+		</tr>
+	</thead>
+	
+	<tbody>		
+		<tr ng-repeat="character in getNonMinions()">
+			<td>{{character.name}}</td>
+			<td>{{character.soak}}</td>
+			<td style="white-space: nowrap;">{{character.def_ranged}} / {{character.def_melee}}</td>
+			<td ng-class="{'table-danger': character.wounds > character.wound_threshold}" style="white-space: nowrap;">
+				<span>
+					<button ng-click="character.wounds = character.wounds - 1; characters_array.$save(character)">
+						-
 					</button>
-				</td>
-			</tr>
+				</span>
+				<span>
+					{{character.wounds}} / {{character.wound_threshold}}
+				</span>
+				<span>
+					<button ng-click="character.wounds = character.wounds + 1; characters_array.$save(character)">
+						+
+					</button>
+				</span>
+			</td>
+			<td ng-class="{'table-warning': character.strain > character.strain_threshold}" style="white-space: nowrap;">
+				<span>
+					<button ng-click="character.strain = character.strain - 1; characters_array.$save(character)">
+						-
+					</button>
+				</span>
+				<span>
+					{{character.strain}} / {{character.strain_threshold}}
+				</span>
+				<span>
+					<button ng-click="character.strain = character.strain + 1; characters_array.$save(character);">
+						+
+					</button>
+				</span>
+			</td>
+			<td>
+				<input type="radio" ng-model="character.ally_or_enemy" value="ally" ng-change='characters_array.$save(character)'> Ally<br>
+				<input type="radio" ng-model="character.ally_or_enemy" value="enemy" ng-change='characters_array.$save(character)'> Enemy
+			</td>
+			<td>
+				<input type="radio" ng-model="character.initiative_type" value="cool" ng-change='characters_array.$save(character)'> Cool<br>
+				<input type="radio" ng-model="character.initiative_type" value="vigilance" ng-change='characters_array.$save(character)'> Vigilance<br>
+				<input type="radio" ng-model="character.initiative_type" value="custom" ng-change='characters_array.$save(character)'> Custom<br>
+				<input type="radio" ng-model="character.initiative_type" value="none" ng-change='characters_array.$save(character)'> None<br>
+				<img ng-repeat='die_image in character.initiative_roll.image_urls track by $index' ng-src='{{die_image}}' height=20><br>
+			</td>
+			<td>
+				<!-- <select ng-model="character.vehicle" ng-options='vehicle.$id as vehicle.name for vehicle in vehicles_array' ng-change='characters_array.$save(character)'>
+				<select> -->
+				<select ng-model="character.vehicle" ng-options='id as name for (id, name) in getPotentialVehicles()' ng-change='characters_array.$save(character)'>
+				<select>
+			</td>
+			<td>
+				<button ng-click="characters_array.$remove(character)">
+					Remove Character
+				</button>
+			</td>
+		</tr>
 	</tbody>
-	</table>
-</p>
+</table>
+
+<h4>Minion Groups</h4>
+
+<table class="table table-hover">
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>Soak</th>
+			<th>Defense <span style="white-space: nowrap;">Melee / Ranged</span></th>
+			<th>Wounds</th>
+			<th style="white-space: nowrap;"># In Group</th>
+			<th>Ally / Enemy</th>
+			<th>Initiative Type</th>
+			<th>Vehicle</th>
+		</tr>
+	</thead>
+	
+	<tbody>		
+		<tr ng-repeat="character in getMinions()">
+			<td>{{character.name}}</td>
+			<td>{{character.soak}}</td>
+			<td style="white-space: nowrap;">{{character.def_ranged}} / {{character.def_melee}}</td>
+			<td ng-class="{'table-danger': character.wounds > getMinionGroupWT(character)}" style="white-space: nowrap;">
+				<span>
+					<button ng-click="character.wounds = character.wounds - 1; characters_array.$save(character)">
+						-
+					</button>
+				</span>
+				<span>
+					{{character.wounds}} / {{getMinionGroupWT(character)}}
+				</span>
+				<span>
+					<button ng-click="character.wounds = character.wounds + 1; characters_array.$save(character)">
+						+
+					</button>
+				</span>
+			</td>
+			<td ng-class="{'table-warning': character.strain > character.strain_threshold}" >
+				<div clas='container'>
+					<div class='row' style="white-space: nowrap;">
+						<div class='col' style="text-align: center;">
+							<span style="white-space: nowrap;">
+								<button ng-click="character.num_in_group = character.num_in_group - 1; characters_array.$save(character)" style="width: 40px">
+									-
+								</button>
+								<button ng-click="character.num_in_group = character.num_in_group + 1; characters_array.$save(character);" style="width: 40px">
+									+
+								</button>
+							</span>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col'>
+							<img ng-if='character.ally_or_enemy === "ally"' ng-repeat='x in [].constructor(getNumActiveMinions(character)) track by $index' ng-src='./dice_images/pc.png' height=25>
+							<img ng-if='character.ally_or_enemy === "enemy"' ng-repeat='x in [].constructor(getNumActiveMinions(character)) track by $index' ng-src='./dice_images/npc.png' height=25>
+							<img ng-repeat='x in [].constructor(character.num_in_group - getNumActiveMinions(character)) track by $index' ng-src='./dice_images/dead.png' height=25>
+						</div>
+					</div>
+				</div>
+			</td>
+			<td>
+				<input type="radio" ng-model="character.ally_or_enemy" value="ally" ng-change='characters_array.$save(character)'> Ally<br>
+				<input type="radio" ng-model="character.ally_or_enemy" value="enemy" ng-change='characters_array.$save(character)'> Enemy
+			</td>
+			<td>
+				<input type="radio" ng-model="character.initiative_type" value="cool" ng-change='characters_array.$save(character)'> Cool<br>
+				<input type="radio" ng-model="character.initiative_type" value="vigilance" ng-change='characters_array.$save(character)'> Vigilance<br>
+				<input type="radio" ng-model="character.initiative_type" value="custom" ng-change='characters_array.$save(character)'> Custom<br>
+				<input type="radio" ng-model="character.initiative_type" value="none" ng-change='characters_array.$save(character)'> None<br>
+				<img ng-repeat='die_image in character.initiative_roll.image_urls track by $index' ng-src='{{die_image}}' height=20><br>
+			</td>
+			<td>
+				<!-- <select ng-model="character.vehicle" ng-options='vehicle.$id as vehicle.name for vehicle in vehicles_array' ng-change='characters_array.$save(character)'>
+				<select> -->
+				<select ng-model="character.vehicle" ng-options='id as name for (id, name) in getPotentialVehicles()' ng-change='characters_array.$save(character)'>
+				<select>
+			</td>
+			<td>
+				<button ng-click="characters_array.$remove(character)">
+					Remove Character
+				</button>
+			</td>
+		</tr>
+	</tbody>
+</table>
 
 
 <h3>Vehicles</h3>
@@ -1444,8 +1538,15 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			if ($scope.general_info.in_combat && potential_taker.initiative_type === 'none') {
 				continue;
 			}
-			if (potential_taker.wounds > potential_taker.wound_threshold || potential_taker.strain > potential_taker.strain_threshold) {
-				continue;
+			// TODO: Refacotr with getPotentialTargetsToAttack
+			if (potential_taker.char_type === 'Minion') {
+				if (potential_taker.wounds > $scope.getMinionGroupWT(potential_taker)) {
+					continue;
+				}
+			} else {
+				if (potential_taker.wounds > potential_taker.wound_threshold || potential_taker.strain > potential_taker.strain_threshold) {
+					continue;
+				}
 			}
 			options.push(potential_taker);
 		}
@@ -1464,6 +1565,28 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			}
 		}
 		return other_characters;
+	}
+	
+	$scope.getNonMinions = function() {
+		let potential_chars = [];
+		for (let i = 0; i < $scope.characters_array.length; i++) {
+			let maybe_char = $scope.characters_array[i];
+			if (maybe_char.char_type != 'Minion') {
+				potential_chars.push(maybe_char);
+			}
+		}
+		return potential_chars;
+	}
+	
+	$scope.getMinions = function() {
+		let potential_chars = [];
+		for (let i = 0; i < $scope.characters_array.length; i++) {
+			let maybe_char = $scope.characters_array[i];
+			if (maybe_char.char_type === 'Minion') {
+				potential_chars.push(maybe_char);
+			}
+		}
+		return potential_chars;
 	}
 	
 	$scope.getAllies = function(character, include_self) {
@@ -1597,19 +1720,29 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	$scope.critTarget = function(target, weapon, using_adv, hit_id) {
 		let crit_rating = weapon.crit_rating;
 		let spent_log = $scope.spendRequiredAdvantageOrTriumph(crit_rating, using_adv);
+		$scope.addLogEntry(`${spent_log} spent to crit ${target.name}.`);
 		
 		let hit_info = $scope.action_tracker.hits_made[hit_id];
-		if (hit_info.crit_made) {
-			hit_info.crit_boost += 10;
-			$scope.addLogEntry(`${spent_log} spent to boost ${target.name}'s crit by 10.`);
-		} else {
-			hit_info.crit_made = true;
-			crit_boost = 0;
-			if (target.criticals) {
-				crit_boost += target.criticals.length * 10;
+		
+		if (target.char_type === 'Minion') {
+			target.wounds += target.wound_threshold;
+			hit_info.crit_applied = true;
+			$scope.addLogEntry(`1 minion in ${target.name} dies. (${$scope.getNumActiveMinions(target)}/${target.num_in_group} minions remaining) (${target.wounds}/${$scope.getMinionGroupWT(target)} wounds)`);
+			if ($scope.getNumActiveMinions(target) <= 0) {
+				$scope.addLogEntry(`Minion group ${target.name} has been destroyed.`);
 			}
-			hit_info.crit_boost = crit_boost;
-			$scope.addLogEntry(`${spent_log} spent to crit ${target.name}.`);
+		} else {
+			if (hit_info.crit_made) {
+				hit_info.crit_boost += 10;
+				$scope.addLogEntry(`${spent_log} spent to boost ${target.name}'s crit by 10.`);
+			} else {
+				hit_info.crit_made = true;
+				crit_boost = 0;
+				if (target.criticals) {
+					crit_boost += target.criticals.length * 10;
+				}
+				hit_info.crit_boost = crit_boost;
+			}
 		}
 
 		$scope.action_tracker.$save();
@@ -1830,11 +1963,27 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	$scope.inflictStrain = function(action_taker, using_threat) {	
 		let spent_log = $scope.spendRequiredThreatOrDespair(1, using_threat);
 		
-		action_taker.strain = action_taker.strain + 1;
-		$scope.characters_array.$save(action_taker);
+		if (action_taker.char_type === 'Minion') {
+			let num_starting_minions = $scope.getNumActiveMinions(action_taker);
+			action_taker.wounds += 1;
+			
+			$scope.addLogEntry(`${spent_log} spent to inflict 1 strain (wound). (${action_taker.wounds}/${$scope.getMinionGroupWT(action_taker)} wounds).`);
+			
+			let num_new_minions = $scope.getNumActiveMinions(action_taker);
+			let num_minions_lost = num_starting_minions - num_new_minions;
+			if (num_minions_lost > 0) {
+				$scope.addLogEntry(`${character.name} loses ${num_minions_lost} minions. (${$scope.getNumActiveMinions(target)}/${target.num_in_group} minions remaining)`);
+				if (new_minions_in_group <= 0) {
+					$scope.addLogEntry(`Minion group ${character.name} has been destroyed.`);
+				}
+			}
+		} else {
+			action_taker.strain = action_taker.strain + 1;
+			// TODO: Make verbose?
+			$scope.addLogEntry(`${spent_log} spent to inflict 1 strain (${action_taker.strain}/${action_taker.strain_threshold}).`);
+		}
 		
-		// TODO: Make verbose?
-		$scope.addLogEntry(`${spent_log} spent to inflict 1 strain (${action_taker.strain}/${action_taker.strain_threshold}).`);
+		$scope.characters_array.$save(action_taker);
 	}
 	
 	// Boost Target w/ 2 Threat or 1 Despair
@@ -2178,8 +2327,14 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			if (potential_target.ally_or_enemy === action_taker.ally_or_enemy) {
 				continue;
 			}
-			if (potential_target.wounds > potential_target.wound_threshold || potential_target.strain > potential_target.strain_threshold) {
-				continue;
+			if (potential_target.char_type === 'Minion') {
+				if (potential_target.wounds > $scope.getMinionGroupWT(potential_target)) {
+					continue;
+				}
+			} else {
+				if (potential_target.wounds > potential_target.wound_threshold || potential_target.strain > potential_target.strain_threshold) {
+					continue;
+				}
 			}
 			
 			if (potential_target.vehicle) {
@@ -2460,6 +2615,11 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	
 	// Returns true if the damage goes through the soak, false otherwise
 	$scope.applyDamageToCharacterTarget = function(character, damage, pierce, breach, damage_type) {
+		let starting_minions_in_group = 0;
+		if (character.char_type === 'Minion') {
+			starting_minions_in_group = $scope.getNumActiveMinions(character);
+		}
+	
 		var totalPierce = pierce + (breach * 10);
 		var soak_after_pierce = Math.max(0, character.soak - totalPierce);
 		var real_damage = damage;
@@ -2473,15 +2633,29 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			return false;
 		}
 		character.wounds = character.wounds + wounds_taken;
-		$scope.addLogEntry(`${character.name} takes ${wounds_taken} wounds (${character.wounds}/${character.wound_threshold}).`);
-		if (character.wounds > character.wound_threshold) {
-			$scope.addLogEntry(`${character.name} passes out.`);
-			// Move this to a 'go unconscious' function
-			character.prone = true;
-			character.aims = 0;
+		
+		if (character.char_type === 'Minion') {
+			$scope.addLogEntry(`${character.name} takes ${wounds_taken} wounds (${character.wounds}/${$scope.getMinionGroupWT(character)}).`);
+			let new_minions_in_group = $scope.getNumActiveMinions(character);
+			let num_minions_lost = starting_minions_in_group - new_minions_in_group;
+			if (num_minions_lost > 0) {
+				$scope.addLogEntry(`${character.name} lost ${num_minions_lost} minions. (${$scope.getNumActiveMinions(character)}/${character.num_in_group} minions remaining)`);
+				if (new_minions_in_group <= 0) {
+					$scope.addLogEntry(`Minion group ${character.name} has been destroyed.`);
+				}
+			}
 		} else {
-			$scope.removeAims(character);
+			$scope.addLogEntry(`${character.name} takes ${wounds_taken} wounds (${character.wounds}/${character.wound_threshold}).`);
+			if (character.wounds > character.wound_threshold) {
+				$scope.addLogEntry(`${character.name} passes out.`);
+				// TODO: Move this to a 'go unconscious' function
+				character.prone = true;
+				character.aims = 0;
+			} else {
+				$scope.removeAims(character);
+			}
 		}
+		
 		$scope.characters_array.$save(character);
 		return true;
 	}
@@ -3125,7 +3299,35 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.move_power.$save();
 	}
 	
+	// TODO: Refactor with $scope.upgradeDice
+	$scope.getMinionSkillDice = function(minion, skill_key) {
+		if ($scope.getNumActiveMinions(minion) <= 0) {
+			return [0,0];
+		}
+	
+		let char_key = $scope.skill_info[skill_key].char_key;
+		let num_ab_dice = minion.char_values[char_key];
+		let num_prof_dice = 0;
+		if (!minion.group_skills[skill_key]) {
+			return [num_ab_dice, 0];
+		}
+		
+		for (let i = 0; i < $scope.getNumActiveMinions(minion) - 1; i++) {
+			if (num_ab_dice > 0) {
+				num_ab_dice--;
+				num_prof_dice++;
+			} else {
+				num_ab_dice++;
+			}
+		}
+		return [num_ab_dice, num_prof_dice];		
+	}
+	
 	$scope.getSkillDice = function(character, skill_key) {
+		if (character.char_type === 'Minion') {
+			return $scope.getMinionSkillDice(character, skill_key);
+		}
+	
 		var skill_rank = character.skill_values[skill_key];
 		var char_key = $scope.skill_info[skill_key].char_key;
 		var char_rank = character.char_values[char_key];
@@ -3174,12 +3376,11 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		var parser = new DOMParser();
 		var xmlDoc = parser.parseFromString(xmlData,"text/xml");
 		
-		// var npc_node = xmlDoc.getElementsByTagName("NPCs")[0];
+		// Remove all NPCs
 		var npc_nodes = xmlDoc.getElementsByTagName("NPCs");
 		if (npc_nodes.length > 0) {
 			npc_nodes[0].parentNode.removeChild(npc_nodes[0]);
 		}
-		// npc_node.parentNode.removeChild(npc_node);
 	
 		var name = '';
 		var char_name_nodes = xmlDoc.getElementsByTagName("CharName");
@@ -3192,50 +3393,26 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			name = name + ' ' + char_num;
 		}
 		
-		// Wounds Threshold, Strain Threshold, Soak
-		var wt_node = xmlDoc.getElementsByTagName("WoundThreshold")[0];
-		var wt = $scope.sumAttrNodeValues(wt_node);
-		var st_node = xmlDoc.getElementsByTagName("StrainThreshold")[0];
-		var st = $scope.sumAttrNodeValues(st_node);
-		var soak_node = xmlDoc.getElementsByTagName("SoakValue")[0];
-		var soak = $scope.sumAttrNodeValues(soak_node);
-		
-		// Defense
-		var def_ranged_node = xmlDoc.getElementsByTagName("DefenseRanged")[0];
-		var def_ranged = $scope.sumAttrNodeValues(def_ranged_node);
-		var def_melee_node = xmlDoc.getElementsByTagName("DefenseMelee")[0];
-		var def_melee = $scope.sumAttrNodeValues(def_melee_node);
-		
-		// Characteristics
-		var char_nodes = xmlDoc.getElementsByTagName("CharCharacteristic");
-		var char_values = {};
-		for (var i = 0; i < char_nodes.length; i++) {
-			var key = char_nodes[i].getElementsByTagName("Key")[0].childNodes[0].nodeValue;
-			var rank_node = char_nodes[i].getElementsByTagName("Rank")[0];
-			// TODO: Do not count the 'Non-Career Ranks' node. See Zang for example.
-			var ranks = $scope.sumAttrNodeValues(rank_node);
-			char_values[key] = ranks;
+		// TODO: Get Type of Charcter
+		let character_type = 'PlayerCharacter';
+		let retrieved_char_type = getNodeValIfExists(xmlDoc, 'Type');
+		if (retrieved_char_type) {
+			character_type = retrieved_char_type;
 		}
 		
-		// Skill Values
-		var skill_values = {};
-		for (let k in $scope.skill_info) {
-			skill_values[k] = 0;
+		let new_char = null;
+		if (character_type === 'Minion') {
+			new_char = new Minion(name);
+		} else {
+			new_char = new Character(name);
 		}
-		var skill_nodes = xmlDoc.getElementsByTagName("CharSkill");
-		for (var i = 0; i < skill_nodes.length; i++) {
-			var key = skill_nodes[i].getElementsByTagName("Key")[0].childNodes[0].nodeValue;
-			var rank_node = skill_nodes[i].getElementsByTagName("Rank")[0];
-			// var ranks = $scope.sumAttrNodeValues(rank_node);
-			var ranks = $scope.sumAttrNodesIgnoring(rank_node, ["NonCareerRanks"]);
-			skill_values[key] = ranks;
-		}
+		setBasicCharAttributes(xmlDoc, new_char);
+		setCharCharacteristics(xmlDoc, new_char);
+		setCharSkills(xmlDoc, new_char, $scope.skill_info);
 		
-	
-		var new_char = new Character(name, wt, st, soak, def_ranged, def_melee, char_values, skill_values);
 		
 		// Talents
-		let talent_dict = {};
+		let talent_dict = {'ADV': 0};
 		let talent_nodes = xmlDoc.getElementsByTagName('CharTalent');
 		for (let i = 0; i < talent_nodes.length; i++) {
 			let talent_node = talent_nodes[i];
@@ -3353,7 +3530,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			var equipped_nodes = weapon_node.getElementsByTagName("Equipped");
 			if (
 					(held_nodes.length != 0 && held_nodes[0].childNodes[0].nodeValue === "true") ||
-					(equipped_nodes.length != 0 && equipped_nodes[0].childNodes[0].nodeValue === "true")
+					(equipped_nodes.length != 0 && equipped_nodes[0].childNodes[0].nodeValue === "true") ||
+					character_type === 'Minion'
 				) {
 				let weapon_key = weapon_node.getElementsByTagName("ItemKey")[0].childNodes[0].nodeValue;	
 				let weapon_info = $scope.weapon_info[weapon_key];
@@ -4130,68 +4308,6 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		return log_entries;
 	}
 	
-	class Target {
-		constructor(target_type) {
-			this.target_type = target_type;
-		}
-	}
-
-	class Character extends Target {
-		constructor(name, wound_threshold, strain_threshold, soak, def_ranged, def_melee, char_values, skill_values) {
-			super('character');
-		
-			this.name = name;
-			this.wounds  = 0;
-			this.wound_threshold = wound_threshold;
-			this.strain = 0;
-			this.strain_threshold = strain_threshold;
-			this.soak = soak;
-			this.def_ranged = def_ranged;
-			this.def_melee = def_melee;
-			
-			this.silhouette = 1;
-			
-			this.char_values = char_values;
-			this.skill_values = skill_values;
-			
-			this.talents = {};
-			
-			this.force_rating = 0;
-			this.force_powers = {};
-			
-			this.lightside_user = true;
-			
-			this.species = '';
-			
-			this.weapons = [];
-			this.armor = null;
-			
-			this.left_fist = null;
-			
-			this.criticals = [];
-			
-			this.stim_packs_used = 0;
-			
-			this.ally_or_enemy = 'ally';
-			this.initiative_type = 'none';
-			this.initiative_roll = new DicePool(0, 0, 0, 0, 0, 0, 0);
-			
-			this.vehicle = '';
-			
-			this.prone = false;
-			this.cover_bonus = 0;
-			
-			this.aims = 0;
-			
-			this.temp_boosts = 0;
-			this.temp_setbacks = 0;
-			this.temp_upgrades = 0;
-			this.temp_diff_upgrades = 0;
-			
-			this.turn_taken = false;
-		}
-	}
-	
 	class Critical {
 		constructor(name, severity) {
 			this.name = name;
@@ -4223,6 +4339,18 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			this.speed = speed;
 			this.handling = handling;
 		}
+	}
+	
+	$scope.getMinionGroupWT = function(minion) {
+		return minion.num_in_group * minion.wound_threshold;
+	}
+	
+	$scope.getNumActiveMinions = function(minion) {
+		if (minion.wounds - 1 <= 0) {
+			return minion.num_in_group;
+		}
+		let num_dead = Math.min(minion.num_in_group, Math.floor((minion.wounds - 1) / minion.wound_threshold));
+		return minion.num_in_group - num_dead;
 	}
 	
 });
