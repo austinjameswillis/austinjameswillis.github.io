@@ -2583,15 +2583,11 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			var damage = $scope.die_pool.succ;
 			var weapon_damage = weapon.damage;
 			var damage_add = weapon.damage_add;
-			if (damage_add >= 1) {
+			if (weapon_damage >= 1) {
+				damage = damage + weapon_damage;
+			} else {
 				var char_brawn = action_taker.char_values["BR"];
 				damage = damage + char_brawn + damage_add;
-			} else {
-				damage = damage + weapon_damage;
-			}
-			if (action_taker.species === 'TRAND') {
-				damage = damage + 1;
-				// TODO: Set lower crit rating when that becomes relevant wherever it's relevant
 			}
 			var pierce = weapon.pierce;
 			var breach = weapon.breach;
@@ -3584,12 +3580,15 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		// Fist
 		let fist_name = 'Fist';
 		let fist_crit = 5;
+		let fist_damage_add = 0;
 		if (new_char.species === 'TRAND') {
 			fist_name = 'Claws';
 			fist_crit = 3;
+			fist_damage_add = 1;
 		}
 		new_char.left_fist = new WeaponEntry(fist_name, 'BRAWL');
 		new_char.left_fist.crit_rating = fist_crit;
+		new_char.left_fist.damage_add = fist_damage_add;
 		
 		// Custom Weapons
 		let custom_weapon_nodes = xmlDoc.getElementsByTagName("AdvWeapon");
