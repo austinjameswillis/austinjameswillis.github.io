@@ -40,7 +40,13 @@
 
 <script src="dice.js"></script>
 <script src="character_import.js"></script>
+
 <body>
+
+<audio id="nextTurnBeep">
+  <source src="beep.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
 
 <div ng-app="myApp" ng-controller="myCtrl" class="container">
 
@@ -4076,6 +4082,9 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	}
 	
 	$scope.nextTurn = function() {
+		$scope.turn_number.turn_number += 1;
+		$scope.turn_number.$save();
+	
 		$scope.initSyncObject.initiative_turn = $scope.initSyncObject.initiative_turn + 1;
 		if ($scope.initSyncObject.initiative_turn >= $scope.init_order_array.length) {
 			$scope.initSyncObject.initiative_turn = 0;
@@ -4188,6 +4197,14 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	$scope.enhance_power = $firebaseObject(enhance_power_ref);
 	var move_power_ref = force_powers_ref.child("move");
 	$scope.move_power = $firebaseObject(move_power_ref);
+	// Turn Number
+	var turn_number_ref = action_tracker_ref.child("round_tracker");
+	$scope.turn_number = $firebaseObject(turn_number_ref);
+	var stopNextTurnBeep = $scope.turn_number.$watch(function() {
+		let x = document.getElementById("nextTurnBeep");
+		x.volume = 0.8;
+		x.play();
+	});
 	
 	// Day
 	let day_ref = firebase.database().ref().child("day");
