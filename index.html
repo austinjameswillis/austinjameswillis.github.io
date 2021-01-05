@@ -1737,6 +1737,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			if ($scope.getNumActiveMinions(target) <= 0) {
 				$scope.addLogEntry(`Minion group ${target.name} has been destroyed.`);
 			}
+			$scope.characters_array.$save(target);
 		} else {
 			if (hit_info.crit_made) {
 				hit_info.crit_boost += 10;
