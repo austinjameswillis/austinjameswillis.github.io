@@ -343,7 +343,7 @@
 						</td>
 						<td>
 							Boost Any Ally
-							<select ng-model='any_boost_target' ng-options='character as character.name for character in getAllies(action_taker, true)' >
+							<select ng-model='any_boost_target' ng-options='character as character.name for character in getActiveAllies(action_taker, true)' >
 						</td>
 					</tr>
 					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
@@ -368,7 +368,7 @@
 						</td>
 						<td>
 							Upgrade Any Ally
-							<select ng-model='any_upgrade_target' ng-options='character as character.name for character in getAllies(action_taker, true)'>
+							<select ng-model='any_upgrade_target' ng-options='character as character.name for character in getActiveAllies(action_taker, true)'>
 						</td>
 					</tr>
 				</tbody>
@@ -430,7 +430,7 @@
 						</td>
 						<td>
 							Setback Any Ally
-							<select ng-model='any_setback_target' ng-options='character as character.name for character in getAllies(action_taker, true)'>
+							<select ng-model='any_setback_target' ng-options='character as character.name for character in getActiveAllies(action_taker, true)'>
 						</td>
 					</tr>
 					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
@@ -443,7 +443,7 @@
 						</td>
 						<td>
 							Upgrade Ally Difficulty
-							<select ng-model='any_diff_upgrade_target' ng-options='character as character.name for character in getAllies(action_taker, true)'>
+							<select ng-model='any_diff_upgrade_target' ng-options='character as character.name for character in getActiveAllies(action_taker, true)'>
 						</td>
 					</tr>
 				</tbody>
@@ -1611,6 +1611,29 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			potential_allies.push(maybe_ally);
 		}
 		return potential_allies;
+	}
+	
+	$scope.getActiveAllies = function(character, include_self) {
+		let all_allies = $scope.getAllies(character, include_self);
+		let all_active_allies = [];
+		for (let i = 0; i < all_allies.length; i++) {
+			let potential_ally = all_allies[i];
+			if (potential_ally.initiative_type === 'none') {
+				continue;
+			}
+			// TODO: Refactor with getPotentialTargetsToAttack
+			if (potential_ally.char_type === 'Minion') {
+				if (potential_ally.wounds > $scope.getMinionGroupWT(potential_ally)) {
+					continue;
+				}
+			} else {
+				if (potential_ally.wounds > potential_ally.wound_threshold || potential_ally.strain > potential_ally.strain_threshold) {
+					continue;
+				}
+			}
+			all_active_allies.push(potential_ally);
+		}
+		return all_active_allies;
 	}
 	
 	$scope.getAlliedOrganics = function(character) {
