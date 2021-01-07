@@ -3834,7 +3834,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	}
 	
 	$scope.readWeaponData = function() {
-		$scope.weapon_info.$remove();
+		// $scope.weapon_info.$remove();
 	
 		var file = document.getElementById("weapon-data-input").files[0];
 		var reader = new FileReader();
