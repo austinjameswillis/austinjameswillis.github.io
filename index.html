@@ -832,38 +832,85 @@
 						</ul>
 					</div>
 				</div>
-				<div ng-if='action_taker.force_powers.enhance.force_leap' class='row mt-2'>
-					<button ng-click='forceLeap(action_taker)' ng-disabled='!canTakeAction(action_taker)'>
-						Force Leap
-					</button>
+				<div ng-if='action_taker.force_powers.enhance.force_leap'>
+					<div class='row'>
+						<div class='col'>
+							<h6>Force Leap</h6>
+						</div>
+					</div>
+					<div class='row mt-2'>
+						<div class='col'>
+							<button ng-click='matchForceDice(action_taker)' class='btn-block'>Match Dice</button>
+						</div>
+						<div class='col'>
+							<button class='btn-block' ng-click='rollNewDiePool()'>Roll Dice</button>
+						</div>
+						<div class='col'>
+							<button ng-click='forceLeap(action_taker)' ng-disabled='!canTakeAction(action_taker)' class='btn-block'>
+								Force Leap
+							</button>
+						</div>
+					</div>
 				</div>
 			</div>
 			<!-- Move Force Power -->
 			<div ng-if='selected_force_power.name === "Move"' class='container mt-2'>
 				<div class='row'>
 					<div class='col'>
-						<button ng-click='forceMoveObject(action_taker)' ng-disabled='!canTakeAction(action_taker)'>
+						<h6>Move Object</h6>
+					</div>
+				</div>
+				<div class='row'>
+					<div class='col'>
+						<button ng-click='matchForceDice(action_taker)' class='btn-block'>Match Dice</button>
+					</div>
+					<div class='col'>
+						<button class='btn-block' ng-click='rollNewDiePool()'>Roll Dice</button>
+					</div>
+					<div class='col'>
+						<button ng-click='forceMoveObject(action_taker)' ng-disabled='!canTakeAction(action_taker)' class='btn-block'>
 							Move Object
 						</button>
 					</div>
 				</div>
-				<div ng-if='action_taker.force_powers.move.hurl && general_info.in_combat' class='row mt-2'>
-					<div class='col'>
-						Hurl object of Silhouette
-						<input type="number" ng-model="hurl_object_silhouette" style="width:50px;" min=0 max=10>
-						at 
-						<select ng-model="$parent.$parent.attack_target" ng-options='character as character.name for character in getPotentialTargetsToAttack(action_taker, "personal", false, false)'>
-						</select>
-						<button ng-click='forceMoveHurl(action_taker, $parent.$parent.attack_target, hurl_object_silhouette)' ng-disabled='!canTakeAction(action_taker)'>Hurl Object (Attack)</button>
+				<div ng-if='action_taker.force_powers.move.hurl && general_info.in_combat'>
+					<div class='row mt-2'>
+						<div class='col'>
+							<h6>Hurl Object (Attack)</h6>
+						</div>
 					</div>
-				</div>
-				<div ng-if='action_taker.force_powers.move.pull' class='row mt-2'>
-					<div class='col'>
-						<ul>
-							<li ng-if='action_taker.force_powers.move.pull'>
-								Can pull objects out of secure mountings or out of an opponent's grasp.
-							</li>
-						</ul>
+					<div  class='row mt-2'>
+						<div class='col'>
+							Hurl object of Silhouette
+							<input type="number" ng-model="hurl_object_silhouette" style="width:50px;" min=0 max=10>
+							at 
+							<select ng-model="$parent.$parent.attack_target" ng-options='character as character.name for character in getPotentialTargetsToAttack(action_taker, "personal", false, false)'>
+							</select>
+						</div>
+					</div>
+					<div ng-if='action_taker.force_powers.move.pull' class='row mt-2'>
+						<div class='col'>
+							<ul>
+								<li ng-if='action_taker.force_powers.move.pull'>
+									Can pull objects out of secure mountings or out of an opponent's grasp.
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div class='row mt-2'>
+						<div class='col'>
+							<button class='btn-block' ng-click='matchForceHurl(action_taker, $parent.$parent.attack_target, hurl_object_silhouette)'>
+								Match Dice
+							</button>
+						</div>
+						<div class='col'>
+							<button class='btn-block' ng-click='rollNewDiePool()'>Roll Dice</button>
+						</div>
+						<div class='col'>
+							<button ng-click='forceMoveHurl(action_taker, $parent.$parent.attack_target, hurl_object_silhouette)' ng-disabled='!canTakeAction(action_taker)' class='btn-block'>
+								Hurl Object (Attack)
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -2568,15 +2615,19 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.matchEnhanceDice(action_taker, skill_key);
 		
 		$scope.num_dice.$save().then(function(ref) {
-			let num_diff_upgrades = action_taker.temp_diff_upgrades;
-			if (target.talents['ADV']) {
-				num_diff_upgrades += target.talents['ADV'];
-			}
-			$scope.upgradeDiffDice(num_diff_upgrades);
-			$scope.num_dice.$save();
+			$scope.upgradeAttackDifficultyDice(target);
 		}, function(error) {
 			console.log("Error:", error);
 		});
+	}
+	
+	$scope.upgradeAttackDifficultyDice = function(target) {
+		let num_diff_upgrades = action_taker.temp_diff_upgrades;
+		if (target.talents['ADV']) {
+			num_diff_upgrades += target.talents['ADV'];
+		}
+		$scope.upgradeDiffDice(num_diff_upgrades);
+		$scope.num_dice.$save();
 	}
 	
 	$scope.addHit = function(target) {
@@ -2711,6 +2762,17 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	}
 	
 	// Force Powers
+	$scope.matchForceDice = function(action_taker) {
+		$scope.num_dice.num_ab_dice = 0;
+		$scope.num_dice.num_prof_dice = 0;
+		$scope.num_dice.num_boost_dice = 0;
+		$scope.num_dice.num_diff_dice = 0;
+		$scope.num_dice.num_chal_dice = 0;
+		$scope.num_dice.num_setback_dice = 0;
+		$scope.num_dice.num_force_dice = action_taker.force_rating;
+		$scope.num_dice.$save();
+	}
+	
 	$scope.getMatchingForcePoints = function(action_taker) {
 		if (!action_taker) {
 			return 0;
@@ -2796,24 +2858,6 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		return './dice_images/darkside.png';
 	}
 	
-	$scope.makeForceRoll = function(action_taker) {
-		$scope.num_dice.num_ab_dice = 0;
-		$scope.num_dice.num_prof_dice = 0;
-		$scope.num_dice.num_boost_dice = 0;
-		$scope.num_dice.num_diff_dice = 0;
-		$scope.num_dice.num_chal_dice = 0;
-		$scope.num_dice.num_setback_dice = 0;
-		$scope.num_dice.num_force_dice = action_taker.force_rating;
-		$scope.num_dice.$save().then(function(ref) {
-			$scope.rollNewDiePool();
-		}, function(error) {
-			console.log("Error:", error);
-		});
-		
-		$scope.action_tracker.force_roll_made = true;
-		$scope.action_tracker.$save();
-	}
-	
 	////Enhance
 	// TODO: Simplify these two args to just one boolean?
 	$scope.activateEnhanceBasic = function(action_taker, adding_succ) {
@@ -2835,13 +2879,9 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	$scope.forceLeap = function(action_taker) {
 		$scope.incrementActionsTaken();
 		
+		$scope.action_tracker.force_roll_made = true;
 		$scope.enhance_power.using_force_leap = true;
-		$scope.move_power.$save().then(function(ref) {
-			$scope.makeForceRoll(action_taker);		
-		}, function(error) {
-			console.log("Error:", error);
-		});
-		
+		$scope.action_tracker.$save();
 	}
 	
 	// TODO: This should be able to be horizontal or vertical
@@ -2865,14 +2905,26 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	}
 	
 	//// Move
-	// Init the Power
 	$scope.forceMoveObject = function(action_taker) {
 		$scope.incrementActionsTaken();
 		
+		$scope.action_tracker.force_roll_made = true;
 		$scope.move_power.using_move = true;
 		$scope.move_power.using_move_basic = true;
-		$scope.move_power.$save().then(function(ref) {
-			$scope.makeForceRoll(action_taker);		
+		// (move_power is within action_tracker)
+		$scope.action_tracker.$save();
+	}
+	
+	$scope.matchForceHurl = function(action_taker, target, object_silhouette) {
+		// Skill Dice
+		$scope.setSomeAttackDice(action_taker, target, 'DISC', false, 'most', 0);
+		
+		$scope.num_dice.num_diff_dice = object_silhouette;
+		$scope.num_dice.num_force_dice = action_taker.force_rating;
+		$scope.num_dice.num_force_dice = action_taker.force_rating;
+		
+		$scope.num_dice.$save().then(function(ref) {
+			$scope.upgradeAttackDifficultyDice(target);
 		}, function(error) {
 			console.log("Error:", error);
 		});
@@ -2883,53 +2935,23 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	
 		// Skill Dice, Boosts, and Setbacks
 		$scope.setSomeAttackDice(action_taker, target, 'DISC', false, 'most', 0);
+			
+		action_taker.aims = 0;
+		$scope.resetTempDiceEffects(action_taker);
+		$scope.characters_array.$save(action_taker);
 		
-		$scope.num_dice.num_diff_dice = object_silhouette;
-		$scope.num_dice.num_chal_dice = 0;
-		$scope.num_dice.num_force_dice = action_taker.force_rating;
+		$scope.action_tracker.roll_made = true;
+		$scope.action_tracker.force_roll_made = true;
 		
-		$scope.num_dice.$save().then(function(ref) {
-			let num_diff_upgrades = action_taker.temp_diff_upgrades;
-			if (target.talents['ADV']) {
-				num_diff_upgrades += target.talents['ADV'];
-			}
-			$scope.upgradeDiffDice(num_diff_upgrades);
-			$scope.num_dice.$save();
-		}, function(error) {
-			console.log("Error:", error);
-		});
+		if ($scope.die_pool.succ <= 0) {
+			$scope.addLogEntry(`${action_taker.name} failed to use their Move force power to hurl an object of silhouette ${object_silhouette} at ${target.name}.`);
+		} else {
+			$scope.move_power.using_move = true;
+			$scope.move_power.using_move_hurl = true;
+			$scope.move_power.hurl_object_silhouette = object_silhouette;
+		}
 		
-		// TODO: Make rolling then the effects separate clicks
-		$scope.num_dice.$save().then(function(ref) {
-			$scope.rollNewDiePool();
-			
-			action_taker.aims = 0;
-			$scope.resetTempDiceEffects(action_taker);
-			$scope.characters_array.$save(action_taker);
-			
-			$scope.action_tracker.boost_any[action_taker.ally_or_enemy] = 0;
-			
-			$scope.action_tracker.roll_made = true;
-			
-			// $scope.dice_roller() is what gets changed in $scope.rollNewDiePool()
-			$scope.dice_roller.$save().then(function(ref) {
-				if ($scope.die_pool.succ <= 0) {
-					$scope.addLogEntry(`${action_taker.name} failed to use their Move force power to hurl an object of silhouette ${object_silhouette} at ${target.name}.`);
-				} else {
-					$scope.move_power.using_move = true;
-					$scope.move_power.using_move_hurl = true;
-					$scope.move_power.hurl_object_silhouette = object_silhouette;
-					$scope.action_tracker.force_roll_made = true;
-				}
-				// Also saving the $scope.action_tracker.roll_made = true; above
-				$scope.action_tracker.$save();
-			}, function(error) {
-				console.log("Error:", error);
-			});
-			
-		}, function(error) {
-			console.log("Error:", error);
-		});
+		$scope.action_tracker.$save();
 	}
 	
 	$scope.useMoveBasic = function(action_taker, hurl_target) {
@@ -3314,6 +3336,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.enhance_power.using_enhance_basic = false;
 		$scope.enhance_power.enhance_force_leap_activated = false;
 		$scope.enhance_power.using_force_leap = false;
+		$scope.enhance_power.$save();
 		
 		$scope.move_power.using_move = false;
 		$scope.move_power.using_move_basic = false;
