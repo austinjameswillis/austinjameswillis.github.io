@@ -220,6 +220,9 @@
 		<td>
 			<select ng-model="action_taker" ng-options='character as character.name for character in getPotentialTurnTakers(show_turn_taken_chars)'>
 			</select>
+			<button ng-click='startOfTurnResets(action_taker)' ng-disabled='!needToStartOfTurnReset(action_taker)' ng-class="{'btn-danger': needToStartOfTurnReset(action_taker)}" class='btn'>
+				Start of Turn
+			</button>
 			<div class="custom-control custom-switch">
 				<input type="checkbox" class="custom-control-input" id="show_turn_taken_chars_switch" ng-model='show_turn_taken_chars'>
 				<label class="custom-control-label" for="show_turn_taken_chars_switch">Show Characters Who Have Already Gone</label>
@@ -291,12 +294,12 @@
 					</tr>
 					<tr ng-repeat='(hit_id, hit_info) in action_tracker.hits_made'>
 						<td>
-							<button ng-click='critTarget(attack_target, attack_weapon, true, hit_id)' ng-disabled='!canCritTarget(attack_weapon, true, hit_info)' class='btn-block pb-1' style="white-space: nowrap;">
+							<button ng-click='critTarget(action_taker, attack_target, attack_weapon, true, hit_id)' ng-disabled='!canCritTarget(attack_weapon, true, hit_info)' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(attack_weapon.crit_rating) track by $index' src="./dice_images/advantage.png" width=20>
 							</button>
 						</td>
 						<td>
-							<button ng-click='critTarget(attack_target, attack_weapon, false, hit_id)' ng-disabled='!canCritTarget(attack_weapon, false, hit_info)' class='btn-block pb-1' style="white-space: nowrap;">
+							<button ng-click='critTarget(action_taker, attack_target, attack_weapon, false, hit_id)' ng-disabled='!canCritTarget(attack_weapon, false, hit_info)' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
 							</button>
 						</td>
@@ -636,6 +639,14 @@
 						</select>
 					</div>
 				</div>
+				<div class='row mt-2' ng-if='action_taker.talents["FRENZ"] && (action_take_skill === "BRAWL" || action_take_skill === "MELEE")'>
+					<div class='col-4'>
+						Frenzied Attack ({{action_taker.talents["FRENZ"]}})
+					</div>
+					<div class='col'>
+						<input type="number" ng-model="$parent.frenzied_attack_upgrades" min=0 max={{action_taker.talents["FRENZ"]}}>
+					</div>
+				</div>
 				<div class='row mt-2'>
 					<div class='col'>
 						<button ng-click='matchActionDice(action_taker, action_take_skill)' class='btn-block'>Match Dice</button>
@@ -683,7 +694,7 @@
 						<button ng-click='rollNewDiePool()' class='btn-block'>Roll Dice</button>
 					</div>
 					<div class='col'>
-						<button ng-click='healCritical(action_taker, crit_heal_target, crit_to_heal)' ng-disable='!canTakeAction(action_taker)' class='btn-block'>
+						<button ng-click='healCritical(action_taker, crit_heal_target, crit_to_heal)' ng-disabled='!canTakeAction(action_taker)' class='btn-block'>
 							Heal Critical
 						</button>
 					</div>
@@ -718,7 +729,7 @@
 						<button ng-click='rollNewDiePool()' class='btn-block'>Roll Dice</button>
 					</div>
 					<div class='col'>
-						<button ng-click='healCritical(action_taker, droid_crit_heal_target, droid_crit_to_heal)' ng-disable='!canTakeAction(action_taker)' class='btn-block'>
+						<button ng-click='healCritical(action_taker, droid_crit_heal_target, droid_crit_to_heal)' ng-disabled='!canTakeAction(action_taker)' class='btn-block'>
 							Repair Critical
 						</button>
 					</div>
@@ -789,6 +800,14 @@
 							<option value="most">Most</option>
 							<option value="least">Least</option>
 						</select>
+					</div>
+				</div>
+				<div class='row mt-2' ng-if='action_taker.talents["FRENZ"] && ($parent.attack_weapon.skill_key === "BRAWL" || $parent.attack_weapon.skill_key === "MELEE")'>
+					<div class='col-4'>
+						Frenzied Attack ({{action_taker.talents["FRENZ"]}})
+					</div>
+					<div class='col'>
+						<input type="number" ng-model="$parent.$parent.frenzied_attack_upgrades" min=0 max={{action_taker.talents["FRENZ"]}}>
 					</div>
 				</div>
 				<div class='row mt-2'>
@@ -985,6 +1004,23 @@
 						</div>
 					</div>
 				</div>
+				<div class='container mt-3' ng-if='action_taker.talents["DEFSTA"]'>
+					<div class='row'>
+						<div class='col'>
+							<h6>Defensive Stance ({{action_taker.talents["DEFSTA"]}})</h6>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-2'>
+							<input type="number" ng-model="def_stance_upgrades" min=0 max={{action_taker.talents["DEFSTA"]}}>
+						</div>
+						<div class='col'>
+							<button ng-click='takeDefensiveStance(action_taker, def_stance_upgrades)' ng-disabled='action_tracker.defensive_stance_taken || action_taker.strain + def_stance_upgrades > action_taker.strain_threshold || !canTakeManeuver(action_taker)'>
+								Take Defensive Stance
+							</button>
+						</div>
+					</div>
+				</div>
 			</div>
 			<!-- Combat Incidentals -->
 			<div ng-if='general_info.in_combat'>
@@ -998,6 +1034,28 @@
 						<div class='col'>
 							<button ng-click='goProne(action_taker)' ng-disabled='action_taker.prone'>Go Prone</button>
 						</div>
+					</div>
+				</div>
+			</div>
+			<div class='container mt-3'>
+				<div class='row'>
+					<div class='col'>
+						<h5>Other</h5>
+					</div>
+				</div>
+			</div>
+			<div class='container' ng-if='action_taker.species === "ARKANOFF"'>
+				<div class='row'>
+					<div class='col'>
+						<h6>Genetically Engineered</h6>
+					</div>
+				</div>
+				<div class='row'>
+					<div class='col'>
+						<input type="checkbox" ng-model="$parent.using_genetically_engineered" ng-disabled='action_tracker.genetically_engineered_used || action_taker.strain >= action_taker.strain_threshold'>
+						1 Strain for 
+						<img src="./dice_images/blue.png" width=25>
+						to Brawn/Agility Check
 					</div>
 				</div>
 			</div>
@@ -1793,10 +1851,9 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		return $scope.hasRequiredAdvantageOrTriumph(crit_rating, using_adv);
 	}
 	
-	$scope.critTarget = function(target, weapon, using_adv, hit_id) {
+	$scope.critTarget = function(action_taker, target, weapon, using_adv, hit_id) {
 		let crit_rating = weapon.crit_rating;
 		let spent_log = $scope.spendRequiredAdvantageOrTriumph(crit_rating, using_adv);
-		$scope.addLogEntry(`${spent_log} spent to crit ${target.name}.`);
 		
 		let hit_info = $scope.action_tracker.hits_made[hit_id];
 		
@@ -1818,7 +1875,11 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				if (target.criticals) {
 					crit_boost += target.criticals.length * 10;
 				}
+				if (action_taker.talents['LETHALBL']) {
+					crit_boost += action_taker.talents['LETHALBL'] * 10;
+				}
 				hit_info.crit_boost = crit_boost;
+				$scope.addLogEntry(`${spent_log} spent to crit ${target.name}.`);
 			}
 		}
 
@@ -2184,47 +2245,34 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	
 	// Add Force Dice if the Enhance Force Power can be used
 	$scope.matchEnhanceDice = function(action_taker, skill_key) {
-		if (!action_taker.force_powers) {
-			return;
-		}
-		if (!action_taker.force_powers.enhance) {
-			return;
-		}
-		if (!action_taker.force_powers.enhance.unlocked) {
-			return;
-		}
-		// TODO: Add other Enhance skills if unlocked
-		switch(skill_key) {
-			case('ATHL'):
-				$scope.num_dice.num_force_dice = action_taker.force_rating;
-				break;
-			case('COORD'):
-				if (action_taker.force_powers.enhance.coordination) {
-					$scope.num_dice.num_force_dice = action_taker.force_rating;
-				}
-				break;
-			default:
-				break;
-		}
-	}
-	
-	// If the user was using a skill that matches an Enhance node
-	// They've unlocked, mark them as using Enhance
-	$scope.checkUsingEnhance = function(action_taker, skill_key) {
-		switch(skill_key) {
-			case('ATHL'):
-				break;
-			case('COORD'):
-				if (action_taker.force_powers.enhance.coordination) {
+		let using_enhance = false;
+		if (action_taker.force_powers && action_taker.force_powers.enhance && action_taker.force_powers.enhance.unlocked) {
+			// TODO: Add other Enhance skills if unlocked
+			switch(skill_key) {
+				case('ATHL'):
+					using_enhance = true;
 					break;
-				}
-				return false;
-			default:
-				return false;
+				case('COORD'):
+					if (action_taker.force_powers.enhance.coordination) {
+						using_enhance = true;
+					}
+					break;
+				default:
+					break;
+			}
 		}
-		$scope.action_tracker.force_roll_made = true;
-		$scope.enhance_power.using_enhance_basic = true;
-		return true;
+		
+		if (using_enhance) {
+			$scope.num_dice.num_force_dice = action_taker.force_rating;
+			$scope.action_tracker.force_roll_made = true;
+			$scope.enhance_power.using_enhance_basic = true;
+		} else {
+			$scope.num_dice.num_force_dice = 0;
+			$scope.action_tracker.force_roll_made = false;
+			$scope.enhance_power.using_enhance_basic = false;
+		}
+		
+		$scope.action_tracker.$save();
 	}
 	
 	$scope.upgradeDice = function(num_upgrades) {
@@ -2258,16 +2306,31 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	}
 	
 	$scope.matchCommonDice = function(action_taker, skill_key) {
+		let char_key = $scope.skill_info[skill_key].char_key;
+	
 		var skill_dice_needed = $scope.getSkillDice(action_taker, skill_key);
 		$scope.num_dice.num_ab_dice = skill_dice_needed[0];
 		$scope.num_dice.num_prof_dice = skill_dice_needed[1];
-		$scope.num_dice.num_boost_dice = action_taker.temp_boosts;
-		$scope.num_dice.num_boost_dice = $scope.num_dice.num_boost_dice + $scope.action_tracker.boost_any[action_taker.ally_or_enemy];
+		
+		let num_boost_dice = 0;
+		num_boost_dice += action_taker.temp_boosts;
+		num_boost_dice += $scope.action_tracker.boost_any[action_taker.ally_or_enemy];
+		if ($scope.using_genetically_engineered) {
+			if (char_key === 'BR' || char_key === 'AG') {
+				num_boost_dice++;
+			}
+		}		
+		
+		$scope.num_dice.num_boost_dice = num_boost_dice;
 		$scope.num_dice.num_setback_dice = action_taker.temp_setbacks;
 		$scope.num_dice.num_force_dice = 0;
 		// TODO: Add any setback removal to skill (separate icon/value in dice roller that removes the matching number of setbacks?)
 		
-		$scope.upgradeDice(action_taker.temp_upgrades);
+		let num_upgrades = action_taker.temp_upgrades;
+		if (action_taker.talents["FRENZ"] && $scope.frenzied_attack_upgrades) {
+			num_upgrades += $scope.frenzied_attack_upgrades;
+		}
+		$scope.upgradeDice(num_upgrades);
 		
 		$scope.matchEnhanceDice(action_taker, skill_key);
 	}
@@ -2283,24 +2346,45 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		});
 	}
 	
+	$scope.actionTakenEffects = function(action_taker, char_key, skill_key) {
+		$scope.resetTempDiceEffects(action_taker);
+		
+		if ($scope.using_genetically_engineered && action_taker.species === 'ARKANOFF') {
+			if (char_key === 'BR' || char_key === 'AG') {
+				$scope.using_genetically_engineered = false;
+				$scope.action_tracker.genetically_engineered_used = true;
+				action_taker.strain++;
+			}
+		}
+		
+		if (action_taker.talents["FRENZ"]) {
+			if (skill_key === 'MELEE' || skill_key === 'BRAWL') {
+				action_taker.strain += $scope.frenzied_attack_upgrades;
+				$scope.frenzied_attack_upgrades = 0;
+			}
+		}
+		
+	
+		$scope.action_tracker.$save();
+		$scope.characters_array.$save(action_taker);
+	}
+	
 	$scope.resetTempDiceEffects = function(action_taker) {
 		action_taker.temp_boosts = 0;
 		action_taker.temp_setbacks = 0;
 		action_taker.temp_upgrades = 0;
 		action_taker.temp_diff_upgrades = 0;
-		$scope.characters_array.$save(action_taker);
 		
 		$scope.action_tracker.boost_any[action_taker.ally_or_enemy] = 0;
-		$scope.action_tracker.$save();
 	}
 	
 	$scope.takeAction = function(action_taker, skill_key) {
 		// Account for out-of-turn actions, etc.
 		$scope.incrementActionsTaken();
 		
-		$scope.resetTempDiceEffects(action_taker);
+		let char_key = $scope.skill_info[skill_key].char_key;
+		$scope.actionTakenEffects(action_taker, char_key, skill_key);
 		$scope.removeAims(action_taker);
-		$scope.checkUsingEnhance(action_taker, skill_key);
 		
 		var skill_info = $scope.skill_info[skill_key];
 		var log_message = `${action_taker.name} uses ${skill_info.name} `;
@@ -2335,12 +2419,15 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	
 	$scope.healCritical = function(action_taker, crit_heal_target, crit_to_heal) {
 		$scope.incrementActionsTaken();
-		$scope.resetTempDiceEffects(action_taker);
 		
 		let heal_word = 'heal';
+		let heal_skill = 'MED';
 		if (crit_heal_target.species === 'DROID') {
 			let heal_world = 'repair'
+			let heal_skill = 'MECH';
 		}
+		
+		$scope.actionTakenEffects(action_taker, 'INT', heal_skill);
 	
 		if ($scope.die_pool.succ <= 0) {
 			$scope.addLogEntry(`${action_taker.name} failed to ${heal_word} ${crit_heal_target.name}\'s ${crit_to_heal.name} critical injury.`);
@@ -2472,78 +2559,67 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	
 	// Helper function for matching Ab, Proff, Boost, and Setback for any attack roll (including Force Hurl_
 	$scope.setSomeAttackDice = function(action_taker, target, skill_key, is_melee_attack, target_defense_zone, additional_setbacks) {
-		// Skill Dice
-		let skill_dice_needed = $scope.getSkillDice(action_taker, skill_key);
-		$scope.num_dice.num_ab_dice = skill_dice_needed[0];
-		$scope.num_dice.num_prof_dice = skill_dice_needed[1];
+		$scope.matchCommonDice(action_taker, skill_key);
 		
-		let num_boost_dice = 0;
-		let num_setback_dice = 0;
+		let extra_boost_dice = 0;
+		let extra_setback_dice = 0;
 		
-		// Temp Boosts
-		num_boost_dice = num_boost_dice + action_taker.temp_boosts;
-		num_boost_dice = num_boost_dice + $scope.action_tracker.boost_any[action_taker.ally_or_enemy];
-		// Temp Setbacks
-		num_setback_dice = num_setback_dice + action_taker.temp_setbacks;
-		// Other Setbacks
-		num_setback_dice += additional_setbacks;
+		// Setbacks
+		extra_setback_dice += additional_setbacks;
 		
 		// Aim
-		num_boost_dice = num_boost_dice + action_taker.aims;
+		extra_boost_dice += action_taker.aims;
 		
 		if (target.target_type === 'character') {
 			if (is_melee_attack) {
 				// Melee Defense
-				num_setback_dice = num_setback_dice + target.def_melee;
+				extra_setback_dice += target.def_melee;
 				// Melee against prone gets +1 boost
 				if (target.prone) {
-					num_boost_dice = num_boost_dice + 1;
+					extra_boost_dice += 1;
 				}
 			} else { // (Assume it is a ranged attack)
 				// Ranged Defense
-				num_setback_dice = num_setback_dice + target.def_ranged;
+				extra_setback_dice += target.def_ranged;
 				// Ranged against prone gets +1 setback
 				if (target.prone) {
-					num_setback_dice = num_setback_dice + 1;
+					extra_setback_dice += 1;
 				}
 				// Cover
-				num_setback_dice = num_setback_dice + target.cover_bonus;
+				extra_setback_dice += target.cover_bonus;
 			}
-			// TODO: Adjust difficulty dice for attacking a target larger/smaller than you
 			
 		} else { // if (target.target_type === 'vehicle') {
 			// Vehicle Defense Zones
 			switch (target_defense_zone) {
 				case 'fore':
-					num_setback_dice = num_setback_dice + target.def_fore;
+					extra_setback_dice += target.def_fore;
 					break;
 				case 'aft':
-					num_setback_dice = num_setback_dice + target.def_aft;
+					extra_setback_dice += target.def_aft;
 					break;
 				case 'port':
-					num_setback_dice = num_setback_dice + target.def_port;
+					extra_setback_dice += target.def_port;
 					break;
 				case 'starboard':
-					num_setback_dice = num_setback_dice + target.def_starboard;
+					extra_setback_dice += target.def_starboard;
 					break;
 				case 'least':
 					if (target.silhouette <= 4) {
-						num_setback_dice = num_setback_dice + Math.min(target.def_fore, target.def_aft);
+						extra_setback_dice += Math.min(target.def_fore, target.def_aft);
 					} else {
-						num_setback_dice = num_setback_dice + Math.min(target.def_fore, target.def_aft, target.def_port, target.def_starboard);
+						extra_setback_dice += Math.min(target.def_fore, target.def_aft, target.def_port, target.def_starboard);
 					}
 					break;
 				case 'most':
 				default:
-					num_setback_dice = num_setback_dice + Math.max(target.def_fore, target.def_aft, target.def_port, target.def_starboard);
+					extra_setback_dice += Math.max(target.def_fore, target.def_aft, target.def_port, target.def_starboard);
 					break;
 			}
 		}
 		
-		$scope.upgradeDice(action_taker.temp_upgrades);
-		
-		$scope.num_dice.num_boost_dice = num_boost_dice;
-		$scope.num_dice.num_setback_dice = num_setback_dice;
+		$scope.num_dice.num_boost_dice += extra_boost_dice;
+		$scope.num_dice.num_setback_dice += extra_setback_dice;
 	}
 	
 	$scope.matchAttackDice = function(action_taker, target, weapon, target_range, target_defense_zone) {
@@ -2615,16 +2691,19 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.matchEnhanceDice(action_taker, skill_key);
 		
 		$scope.num_dice.$save().then(function(ref) {
-			$scope.upgradeAttackDifficultyDice(target);
+			$scope.upgradeAttackDifficultyDice(action_taker, target, skill_key);
 		}, function(error) {
 			console.log("Error:", error);
 		});
 	}
 	
-	$scope.upgradeAttackDifficultyDice = function(target) {
+	$scope.upgradeAttackDifficultyDice = function(action_taker, target, attack_skill) {
 		let num_diff_upgrades = action_taker.temp_diff_upgrades;
 		if (target.talents['ADV']) {
 			num_diff_upgrades += target.talents['ADV'];
+		}
+		if ($scope.isMeleeSkill(attack_skill)) {
+			num_diff_upgrades += target.defensive_stance;
 		}
 		$scope.upgradeDiffDice(num_diff_upgrades);
 		$scope.num_dice.$save();
@@ -2644,13 +2723,48 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		}
 	}
 	
+	$scope.hitTarget = function(action_taker, target, base_damage, pierce, breach, damage_type, first_hit) {
+		let damage = base_damage;
+		damage += $scope.die_pool.succ;
+		
+		if (first_hit) {
+			if (action_taker.talents['FERSTR']) {
+				damage += action_taker.talents['FERSTR'];
+			}
+		}
+		
+		if (target.target_type === 'character') {
+			if (target.armor && target.armor.cortosis) {
+				pierce = 0;
+				breach = 0;
+			}
+			let hit_through_soak = $scope.applyDamageToCharacterTarget(target, damage, pierce, breach, damage_type);
+			if (hit_through_soak) {
+				$scope.addHit(target);
+			}
+		} else { // if (target.target_type === 'vehicle') {
+			$scope.applyDamageToVehicleTarget(target, damage, pierce, breach, damage_type);
+		}
+	}
+	
+	$scope.hitTargetWithWeapon = function(action_taker, target, weapon, first_hit) {
+		let base_damage = 0;
+		if (weapon.damage >= 1) {
+			base_damage = weapon.damage;
+		} else {
+			let char_brawn = action_taker.char_values["BR"];
+			base_damage = char_brawn + weapon.damage_add;
+		}
+		$scope.hitTarget(action_taker, target, base_damage, weapon.pierce, weapon.breach, weapon.damage_scale, first_hit);
+	}
+	
 	$scope.attackTarget = function(action_taker, target, weapon) {
 		$scope.incrementActionsTaken();
 	
 		
 		action_taker.aims = 0;
-		$scope.resetTempDiceEffects(action_taker);
-		$scope.checkUsingEnhance(action_taker, weapon.skill_key);
+		let char_key = $scope.skill_info[weapon.skill_key].char_key;
+		$scope.actionTakenEffects(action_taker, char_key, weapon.skill_key);
 	
 		var log_message = `${action_taker.name} attacks ${target.name} with their ${weapon.name} `;
 		if ($scope.die_pool.succ <= 0) {
@@ -2661,30 +2775,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			log_message = log_message + ' and hits.';
 			$scope.addLogEntry(log_message);
 			
-			var damage = $scope.die_pool.succ;
-			var weapon_damage = weapon.damage;
-			var damage_add = weapon.damage_add;
-			if (weapon_damage >= 1) {
-				damage = damage + weapon_damage;
-			} else {
-				var char_brawn = action_taker.char_values["BR"];
-				damage = damage + char_brawn + damage_add;
-			}
-			var pierce = weapon.pierce;
-			var breach = weapon.breach;
-			var damage_type = weapon.damage_scale;
-			if (target.target_type === 'character') {
-				if (target.armor && target.armor.cortosis) {
-					pierce = 0;
-					breach = 0;
-				}
-				let hit_through_soak = $scope.applyDamageToCharacterTarget(target, damage, pierce, breach, damage_type);
-				if (hit_through_soak) {
-					$scope.addHit(target);
-				}
-			} else { // if (target.target_type === 'vehicle') {
-				$scope.applyDamageToVehicleTarget(target, damage, pierce, breach, damage_type);
-			}
+			$scope.hitTargetWithWeapon(action_taker, target, weapon, true);
 		}
 		
 		$scope.action_tracker.$save();
@@ -2924,7 +3015,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.num_dice.num_force_dice = action_taker.force_rating;
 		
 		$scope.num_dice.$save().then(function(ref) {
-			$scope.upgradeAttackDifficultyDice(target);
+			$scope.upgradeAttackDifficultyDice(action_taker, target);
 		}, function(error) {
 			console.log("Error:", error);
 		});
@@ -2937,7 +3028,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.setSomeAttackDice(action_taker, target, 'DISC', false, 'most', 0);
 			
 		action_taker.aims = 0;
-		$scope.resetTempDiceEffects(action_taker);
+		$scope.actionTakenEffects(action_taker, 'WIL', 'DISC');
 		$scope.characters_array.$save(action_taker);
 		
 		$scope.action_tracker.roll_made = true;
@@ -2961,16 +3052,20 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			let object_silhouette = $scope.move_power.hurl_object_silhouette;
 			$scope.addLogEntry(`${action_taker.name} uses the Move force power to hurl an object of Silhouette ${object_silhouette} at ${hurl_target.name}`);
 		
-			let damage = 5;
+			let base_damage = 5;
 			if (object_silhouette > 0) {
-				damage = object_silhouette * 10;
+				base_damage = object_silhouette * 10;
 			}
-			damage = damage + $scope.die_pool.succ;
-			if (hurl_target.target_type === 'character') {
-				$scope.applyDamageToCharacterTarget(hurl_target, damage, 0, 0, 'personal');
-			} else { // if (target.target_type === 'vehicle') {
-				$scope.applyDamageToVehicleTarget(hurl_target, damage, 0, 0, 'personal');
-			}
+			
+			$scope.hitTarget(
+				action_taker,
+				hurl_target,
+				base_damage,
+				/* pierce = */ 0,
+				/* breach = */ 0,
+				/* damage_type = */ 'personal',
+				/* first_hit = */ true
+			);
 		}
 	}
 	
@@ -3114,6 +3209,23 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		action_taker.cover_bonus = 1;
 		$scope.characters_array.$save(action_taker);
 		$scope.addLogEntry(`${action_taker.name} takes cover.`);
+	}
+	
+	// Defensive Stance Talent Maneuver
+	$scope.takeDefensiveStance = function(action_taker, num_upgrades) {
+		$scope.incrementManeuversTaken();
+		$scope.action_tracker.defensive_stance_taken = true;
+	
+		action_taker.strain += num_upgrades;
+		action_taker.defensive_stance = num_upgrades;
+		let time_v_times = 'time';
+		if (num_upgrades > 1) {
+			time_v_times = 'times';
+		}
+		$scope.addLogEntry(`${action_taker.name} took the Defensive Stance maneuver, taking ${num_upgrades} strain to upgrade incoming melee attacks ${num_upgrades} ${time_v_times} until the start of their next turn.`);
+		
+		$scope.action_tracker.$save();
+		$scope.characters_array.$save(action_taker);
 	}
 	
 	// Incidentals
@@ -3285,6 +3397,9 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 					}
 				}
 				
+				$scope.startOfTurnResets(character);
+				$scope.endOfTurnResets(character);
+				
 				$scope.characters_array.$save(character).then(function(ref) {
 					endEncounterCharacter(index + 1);
 				});
@@ -3317,6 +3432,10 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		
 		$scope.action_tracker.hits_made = {};
 		
+		// Talent Maneuvers
+		$scope.action_tracker.defensive_stance_taken = false;
+		
+		// Adv/Triumph/Threat/Despair Options
 		$scope.action_tracker.boost_next_used = false;
 		$scope.action_tracker.boost_any_used = false;
 		$scope.action_tracker.setback_target_used = false;
@@ -3325,6 +3444,9 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.action_tracker.upgrade_target_diff_used = false;
 		$scope.action_tracker.upgrade_ally_used = false;
 		$scope.action_tracker.upgrade_any_diff_used = false;
+		
+		// Species Abilities
+		$scope.action_tracker.genetically_engineered_used = false;
 		
 		$scope.action_tracker.$save();
 		
@@ -3477,7 +3599,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				num_new_ranks += num_ranks;
 			}
 			if (num_new_ranks) {
-				if (talent_dict[num_new_ranks]) {
+				if (talent_dict[key]) {
 					talent_dict[key] += num_new_ranks;
 				} else {
 					talent_dict[key] = num_new_ranks;
@@ -3657,7 +3779,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			let skill_key = weapon_node.getElementsByTagName('SkillKey')[0].childNodes[0].nodeValue;
 			let damage = $scope.getXMLIntIfExists(weapon_node, 'Damage');
 			let damage_add = $scope.getXMLIntIfExists(weapon_node, 'DamageAdd');
-			// TODO: Crit Rating
+			let crit_rating = $scope.getXMLIntIfExists(weapon_node, 'Crit');
 			// TODO: Vicious
 			
 			
@@ -3680,6 +3802,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			weapon.damage_add = damage_add;
 			weapon.pierce = pierce;
 			weapon.breach = breach;
+			weapon.crit = crit_rating;
 			
 			new_char.weapons.push(weapon);
 		}
@@ -4134,6 +4257,30 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		return initiative_slots;
 	}
 	
+	$scope.needToStartOfTurnReset = function(action_taker) {
+		if (!action_taker) {
+			return false;
+		}
+		if ($scope.action_tracker.actions_taken > 0) {
+			return false;
+		}
+		if ($scope.action_tracker.maneuvers_taken > 0) {
+			return false;
+		}
+		if (action_taker.defensive_stance > 0) {
+			return true;
+		}
+		return false;
+	}
+	
+	$scope.startOfTurnResets = function(action_taker) {
+		action_taker.defensive_stance = 0;
+	}
+	
+	$scope.endOfTurnResets = function(action_taker) {
+	
+	}
+	
 	$scope.nextTurn = function() {
 		$scope.turn_number.turn_number += 1;
 		$scope.turn_number.$save();
@@ -4144,6 +4291,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		} else if ($scope.action_taker) {
 			// If it's not a new round, mark the current character's turn as taken
 			$scope.action_taker.turn_taken = true;
+			$scope.endOfTurnResets($scope.action_taker);
 			$scope.characters_array.$save($scope.action_taker);
 		}
 		
