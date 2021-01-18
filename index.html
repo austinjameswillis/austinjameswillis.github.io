@@ -1878,6 +1878,9 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				if (action_taker.talents['LETHALBL']) {
 					crit_boost += action_taker.talents['LETHALBL'] * 10;
 				}
+				if (target.talents['DURA']) {
+					crit_boost -= target.talents['DURA'] * 10;
+				}
 				hit_info.crit_boost = crit_boost;
 				$scope.addLogEntry(`${spent_log} spent to crit ${target.name}.`);
 			}
