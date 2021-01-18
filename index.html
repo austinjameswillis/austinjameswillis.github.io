@@ -2057,8 +2057,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.action_tracker.upgrade_target_diff_used = true;
 		$scope.spendRequiredAdvantageOrTriumph(1, false);
 		
-		ally.temp_diff_upgrades += 1;
-		$scope.characters_array.$save(ally);
+		target.temp_diff_upgrades += 1;
+		$scope.characters_array.$save(target);
 		
 		$scope.addLogEntry(`1 Triumph spent to upgrade difficulty of ${target.name}\'s next check.`);
 	}
@@ -2261,6 +2261,16 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 					break;
 				case('COORD'):
 					if (action_taker.force_powers.enhance.coordination) {
+						using_enhance = true;
+					}
+					break;
+				case('RESIL'):
+					if (action_taker.force_powers.enhance.resilience) {
+						using_enhance = true;
+					}
+					break;
+				case('BRAWL'):
+					if (action_taker.force_powers.enhance.brawl) {
 						using_enhance = true;
 					}
 					break;
@@ -3018,6 +3028,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.setSomeAttackDice(action_taker, target, 'DISC', false, 'most', 0);
 		
 		$scope.num_dice.num_diff_dice = object_silhouette;
+		$scope.num_dice.num_chal_dice = 0;
 		$scope.num_dice.num_force_dice = action_taker.force_rating;
 		$scope.num_dice.num_force_dice = action_taker.force_rating;
 		
@@ -3628,72 +3639,63 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		}
 		
 		// Force Powers
-		// TODO: Look into how this works for NPCs
-		let force_power_nodes = xmlDoc.getElementsByTagName("CharForcePower");
-		for (let i = 0; i < force_power_nodes.length; i++) {
-			let power_node = force_power_nodes[i];
-			let power_key = power_node.getElementsByTagName("Key")[0].childNodes[0].nodeValue;
-			// TODO: Refactor this
-			if (power_key === 'MOVE') {
-				let power_data = {
-					name: 'Move',
-					unlocked: false,
-					strength: 0,
-					range: 0,
-					hurl: false,
-					pull: false,
-				};
-				let force_ability_nodes = power_node.getElementsByTagName('CharForceAbility');
-				for (let j = 0; j < force_ability_nodes.length; j++) {
-					let ability_node = force_ability_nodes[j];
-					let ability_key = ability_node.getElementsByTagName("Key")[0].childNodes[0].nodeValue;
-					let purchased_nodes = ability_node.getElementsByTagName("Purchased");
-					if (purchased_nodes.length > 0) {
-						let purchased_value = purchased_nodes[0].childNodes[0].nodeValue;
-						if (purchased_value === 'true') {
-							// TODO: MOVEMAGNITUDE, the other controls, etc.
-							if (ability_key === 'MOVEBASIC') {
-								power_data.unlocked = true;
-							} else if (ability_key === 'MOVESTRENGTH') {
-								power_data.strength = power_data.strength + 1;
-							} else if (ability_key === 'MOVERANGE') {
-								power_data.range = power_data.range + 1;
-							} else if (ability_key === 'MOVECONTROL1') {
-								power_data.hurl = true;
-							} else if (ability_key === 'MOVECONTROL2') {
-								power_data.pull = true;
-							}
-						}
+		if (new_char.force_rating) {
+			let enhance_power_data = {
+				name: 'Enhance',
+				unlocked: false,
+				coordination: false,
+				resilience: false,
+				brawl: false,
+				force_leap: false,
+			}
+			new_char.force_powers['enhance'] = enhance_power_data;
+			let move_power_data = {
+				name: 'Move',
+				unlocked: false,
+				strength: 0,
+				range: 0,
+				hurl: false,
+				pull: false,
+			};
+			new_char.force_powers['move'] = move_power_data;
+			
+			let force_ability_nodes = xmlDoc.getElementsByTagName('CharForceAbility');
+			for (let j = 0; j < force_ability_nodes.length; j++) {
+				let ability_node = force_ability_nodes[j];
+				let ability_key = ability_node.getElementsByTagName("Key")[0].childNodes[0].nodeValue;
+				let upgrades = parseInt(getNodeValIfExists(ability_node, "Upgrades"));
+				if (isNaN(upgrades)) {
+					upgrades = 0;
+				}
+				let is_purchased = getNodeValIfExists(ability_node, "Purchased");
+				if (is_purchased === "true") {
+					upgrades++;
+				}
+				if (upgrades > 0) {
+					// Enhance Nodes
+					if (ability_key === 'ENHANCEBASIC') {
+						new_char.force_powers['enhance'].unlocked = true;
+					} else if (ability_key === 'ENHANCECONT1') {
+						new_char.force_powers['enhance'].coordination = true;
+					} else if (ability_key === 'ENHANCECONT2') {
+						new_char.force_powers['enhance'].resilience = true;
+					} else if (ability_key === 'ENHANCECONT5') {
+						new_char.force_powers['enhance'].brawl = true;
+					} else if (ability_key === 'ENHANCECONT3') {
+						new_char.force_powers['enhance'].force_leap = true;
+					// Move Nodes
+					} else if (ability_key === 'MOVEBASIC') {
+						new_char.force_powers['move'].unlocked = true;
+					} else if (ability_key === 'MOVESTRENGTH') {
+						new_char.force_powers['move'].strength += upgrades;
+					} else if (ability_key === 'MOVERANGE') {
+						new_char.force_powers['move'].range += upgrades;
+					} else if (ability_key === 'MOVECONTROL1') {
+						new_char.force_powers['move'].hurl = true;
+					} else if (ability_key === 'MOVECONTROL2') {
+						new_char.force_powers['move'].pull = true;
 					}
 				}
-				new_char.force_powers['move'] = power_data;
-			} else if (power_key === 'ENHANCE') {
-				let power_data = {
-					name: 'Enhance',
-					unlocked: false,
-					coordination: false,
-					force_leap: false,
-				}
-				let force_ability_nodes = power_node.getElementsByTagName('CharForceAbility');
-				for (let j = 0; j < force_ability_nodes.length; j++) {
-					let ability_node = force_ability_nodes[j];
-					let ability_key = ability_node.getElementsByTagName("Key")[0].childNodes[0].nodeValue;
-					let purchased_nodes = ability_node.getElementsByTagName("Purchased");
-					if (purchased_nodes.length > 0) {
-						let purchased_value = purchased_nodes[0].childNodes[0].nodeValue;
-						if (purchased_value === 'true') {
-							// TODO: MOVEMAGNITUDE, the other controls, etc.
-							if (ability_key === 'ENHANCEBASIC') {
-								power_data.unlocked = true;
-							} else if (ability_key === 'ENHANCECONT1') {
-								power_data.coordination = true;
-							} else if (ability_key === 'ENHANCECONT3') {
-								power_data.force_leap = true;
-							}
-						}
-					}
-				}
-				new_char.force_powers['enhance'] = power_data;
 			}
 		}
 		
