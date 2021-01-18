@@ -751,6 +751,10 @@
 							<input type="checkbox" class="custom-control-input" id="chars_in_other_vehicles_switch" ng-model='chars_in_other_vehicles'>
 							<label class="custom-control-label" for="chars_in_other_vehicles_switch">Show Characters in Other Vehicles</label>
 						</div>
+						<div class="custom-control custom-switch">
+							<input type="checkbox" class="custom-control-input" id="chars_of_same_type_switch" ng-model='chars_of_same_type'>
+							<label class="custom-control-label" for="chars_of_same_type_switch">Show Characters of Same Type (Ally/Adversary)</label>
+						</div>
 					</div>
 				</div>
 				<div class='row mt-2'>
@@ -758,7 +762,7 @@
 						Attack
 					</div>
 					<div class='col'>
-						<select ng-model="$parent.attack_target" ng-options='character as character.name for character in getPotentialTargetsToAttack(action_taker, (attack_weapon ? attack_weapon.damage_scale : ""), non_scale_matching_targets, chars_in_other_vehicles)'>
+						<select ng-model="$parent.attack_target" ng-options='character as character.name for character in getPotentialTargetsToAttack(action_taker, (attack_weapon ? attack_weapon.damage_scale : ""), non_scale_matching_targets, chars_in_other_vehicles, chars_of_same_type)'>
 						</select>
 					</div>
 				</div>
@@ -903,7 +907,7 @@
 							Hurl object of Silhouette
 							<input type="number" ng-model="hurl_object_silhouette" style="width:50px;" min=0 max=10>
 							at 
-							<select ng-model="$parent.$parent.attack_target" ng-options='character as character.name for character in getPotentialTargetsToAttack(action_taker, "personal", false, false)'>
+							<select ng-model="$parent.$parent.attack_target" ng-options='character as character.name for character in getPotentialTargetsToAttack(action_taker, "personal", false, false, false)'>
 							</select>
 						</div>
 					</div>
@@ -2473,7 +2477,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		return false;
 	}
 	
-	$scope.getPotentialTargetsToAttack = function(action_taker, damage_scale, show_non_scale_matching, chars_in_other_vehicles) {
+	$scope.getPotentialTargetsToAttack = function(action_taker, damage_scale, show_non_scale_matching, chars_in_other_vehicles, chars_of_same_type) {
 		if (!action_taker) {
 			return [];
 		}
@@ -2491,7 +2495,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				continue;
 			}
 			// TODO: Have a checkbox that allows for including allies (?)
-			if (potential_target.ally_or_enemy === action_taker.ally_or_enemy) {
+			if (!chars_of_same_type && potential_target.ally_or_enemy === action_taker.ally_or_enemy) {
 				continue;
 			}
 			if (potential_target.char_type === 'Minion') {
