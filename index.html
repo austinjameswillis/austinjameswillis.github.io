@@ -2726,12 +2726,13 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.num_dice.$save();
 	}
 	
-	$scope.addHit = function(target) {
+	$scope.addHit = function(target, skill) {
 		let base_hit_info = {
 			target_id: target.$id,
 			crit_made: false,
 			crit_boost: 0,
 			crit_applied: false,
+			hit_skill: skill,
 		}
 		if ($scope.action_tracker.hit_info) {
 			$scope.action_tracker.hits_made.push(base_hit_info);
@@ -2740,12 +2741,27 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		}
 	}
 	
-	$scope.hitTarget = function(action_taker, target, base_damage, pierce, breach, damage_type, first_hit) {
+	$scope.hitTarget = function(action_taker, target, attack_skill, base_damage, pierce, breach, damage_type) {
 		let damage = base_damage;
 		damage += $scope.die_pool.succ;
 		
+		let first_hit = true;
+		angular.forEach($scope.action_tracker.hits_made, function(value, key) {
+			if (key.hit_skill === attack_skill) {
+				first_hit = false;
+			}
+		});
+		
+		console.log(first_hit);
 		if (first_hit) {
-			if (action_taker.talents['FERSTR']) {
+			console.log('DEADACC-' + attack_skill);
+			console.log(action_taker.talents['DEADACC-RANGHVY']);
+			if (action_taker.talents['DEADACC-' + attack_skill]) {
+				console.log('Here');
+				console.log(action_taker.skill_values[attack_skill]);
+				damage += action_taker.skill_values[attack_skill];
+			}
+			if (attack_skill === 'BRAWL' && action_taker.talents['FERSTR']) {
 				damage += action_taker.talents['FERSTR'];
 			}
 		}
@@ -2757,14 +2773,14 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			}
 			let hit_through_soak = $scope.applyDamageToCharacterTarget(target, damage, pierce, breach, damage_type);
 			if (hit_through_soak) {
-				$scope.addHit(target);
+				$scope.addHit(target, attack_skill);
 			}
 		} else { // if (target.target_type === 'vehicle') {
 			$scope.applyDamageToVehicleTarget(target, damage, pierce, breach, damage_type);
 		}
 	}
 	
-	$scope.hitTargetWithWeapon = function(action_taker, target, weapon, first_hit) {
+	$scope.hitTargetWithWeapon = function(action_taker, target, weapon) {
 		let base_damage = 0;
 		if (weapon.damage >= 1) {
 			base_damage = weapon.damage;
@@ -2772,7 +2788,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			let char_brawn = action_taker.char_values["BR"];
 			base_damage = char_brawn + weapon.damage_add;
 		}
-		$scope.hitTarget(action_taker, target, base_damage, weapon.pierce, weapon.breach, weapon.damage_scale, first_hit);
+		$scope.hitTarget(action_taker, target, weapon.skill_key, base_damage, weapon.pierce, weapon.breach, weapon.damage_scale);
 	}
 	
 	$scope.attackTarget = function(action_taker, target, weapon) {
@@ -2792,7 +2808,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			log_message = log_message + ' and hits.';
 			$scope.addLogEntry(log_message);
 			
-			$scope.hitTargetWithWeapon(action_taker, target, weapon, true);
+			$scope.hitTargetWithWeapon(action_taker, target, weapon);
 		}
 		
 		$scope.action_tracker.$save();
@@ -3078,11 +3094,11 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			$scope.hitTarget(
 				action_taker,
 				hurl_target,
+				/* attack_skill = */ 'DISC',
 				base_damage,
 				/* pierce = */ 0,
 				/* breach = */ 0,
 				/* damage_type = */ 'personal',
-				/* first_hit = */ true
 			);
 		}
 	}
@@ -3607,6 +3623,10 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			let talent_node = talent_nodes[i];
 			let num_new_ranks = 0;
 			let key = talent_node.getElementsByTagName('Key')[0].childNodes[0].nodeValue;
+			let selected_skills_nodes = talent_node.getElementsByTagName('SelectedSkills');
+			if (selected_skills_nodes.length > 0) {
+				key = key + '-' + getNodeValIfExists(selected_skills_nodes[0], "Key");
+			}
 			let purchased_nodes = talent_node.getElementsByTagName('Purchased');
 			if (purchased_nodes.length > 0) {
 				num_new_ranks++;
