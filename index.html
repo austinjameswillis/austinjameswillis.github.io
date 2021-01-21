@@ -3844,7 +3844,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				var cortosis = false;
 				var armor_mod_nodes = armor_nodes[i].getElementsByTagName("Mod");
 				for (var j = 0; j < armor_mod_nodes.length; j++) {
-					var mod_key_value = armor_mod_nodes[j].getElementsByTagName("Key")[0].childNodes[0].nodeValue;
+					var mod_key_value = getNodeValIfExists(armor_mod_nodes[j], "Key");
 					if (mod_key_value === 'CORTOSIS') {
 						cortosis = true;
 					}
