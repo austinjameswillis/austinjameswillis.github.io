@@ -3770,7 +3770,18 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 							}
 							switch(mod_key) {
 								case 'DAMADD':
-									weapon.damage += count;
+									if (weapon.damage > 0) {
+										weapon.damage += count;
+									} else {
+										weapon.damage_add += count;
+									}
+									break;
+								case 'SUPERIOR':
+									if (weapon.damage > 0) {
+										weapon.damage += 1;
+									} else {
+										weapon.damage_add += 1;
+									}
 									break;
 								case 'SETBACKADD':
 									weapon.setback_adds += count;
