@@ -2308,6 +2308,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	}
 	
 	$scope.upgradeDiffDice = function(num_upgrades) {
+		
 		let num_diff_dice = $scope.num_dice.num_diff_dice;
 		let num_chal_dice = $scope.num_dice.num_chal_dice;
 		for (let i = 0; i < num_upgrades; i++) {
@@ -2719,7 +2720,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		if (target.talents['ADV']) {
 			num_diff_upgrades += target.talents['ADV'];
 		}
-		if ($scope.isMeleeSkill(attack_skill)) {
+		if ($scope.isMeleeSkill(attack_skill) && target.defensive_stance) {
 			num_diff_upgrades += target.defensive_stance;
 		}
 		$scope.upgradeDiffDice(num_diff_upgrades);
@@ -2752,13 +2753,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			}
 		});
 		
-		console.log(first_hit);
 		if (first_hit) {
-			console.log('DEADACC-' + attack_skill);
-			console.log(action_taker.talents['DEADACC-RANGHVY']);
 			if (action_taker.talents['DEADACC-' + attack_skill]) {
-				console.log('Here');
-				console.log(action_taker.skill_values[attack_skill]);
 				damage += action_taker.skill_values[attack_skill];
 			}
 			if (attack_skill === 'BRAWL' && action_taker.talents['FERSTR']) {
