@@ -659,6 +659,66 @@
 					</div>
 				</div>
 			</div>
+			<div class='container' ng-if='getWoundedAlliedOrganics(action_taker).length > 0'>
+				<div class='row mt-2'>
+					<div class='col'>
+						<h5>Heal Wounds</h5>
+					</div>
+				</div>
+				<div class='row mt-2'>
+					<div class='col'>
+						Heal Wounds From:
+						<select ng-model="$parent.heal_wounds_target" ng-options='character as character.name disable when character.healed_this_encounter for character in getWoundedAlliedOrganics(action_taker)'>
+						</select>
+					</div>
+				</div>
+				<div class='row mt-2'>
+					<div class='col'>
+						<input type="checkbox" ng-model="$parent.equipment_for_wound_heal">
+						Have Proper Equipment
+					</div>
+				</div>
+				<div class='row mt-2'>
+					<div class='col'>
+						<button ng-click='matchWoundHealDice(action_taker, heal_wounds_target, equipment_for_wound_heal)' class='btn-block'>Match Dice</button>
+					</div>
+					<div class='col'>
+						<button ng-click='rollNewDiePool()' class='btn-block'>Roll Dice</button>
+					</div>
+					<div class='col'>
+						<button ng-click='healWoundsCheck(action_taker, heal_wounds_target)' ng-disabled='!canTakeAction(action_taker)' class='btn-block'>
+							Heal Wounds
+						</button>
+					</div>
+				</div>
+			</div>
+			<div class='container' ng-if='getWoundedAlliedDroids(action_taker).length > 0'>
+				<div class='row mt-2'>
+					<div class='col'>
+						<h5>Repair Wounds from Droid</h5>
+					</div>
+				</div>
+				<div class='row mt-2'>
+					<div class='col'>
+						Repair Wounds From:
+						<select ng-model="$parent.droid_heal_wounds_target" ng-options='character as character.name disable when character.healed_this_encounter for character in getWoundedAlliedDroids(action_taker)'>
+						</select>
+					</div>
+				</div>
+				<div class='row mt-2'>
+					<div class='col'>
+						<button ng-click='matchDroidWoundHealDice(action_taker, droid_heal_wounds_target)' class='btn-block'>Match Dice</button>
+					</div>
+					<div class='col'>
+						<button ng-click='rollNewDiePool()' class='btn-block'>Roll Dice</button>
+					</div>
+					<div class='col'>
+						<button ng-click='healWoundsCheck(action_taker, heal_wounds_target)' ng-disabled='!canTakeAction(action_taker)' class='btn-block'>
+							Heal Wounds
+						</button>
+					</div>
+				</div>
+			</div>
 			<div class='container' ng-if='getAlliedOrganicsWithCriticals(action_taker).length > 0'>
 				<div class='row mt-2'>
 					<div class='col'>
@@ -738,7 +798,7 @@
 			<div ng-if='general_info.in_combat' class='container'>
 				<div class='row mt-2'>
 					<div class='col'>
-						<h5>Combat Actions</h5>
+						<h4>Combat Actions</h4>
 					</div>
 				</div>
 				<div class='row mt-2'>
@@ -942,7 +1002,7 @@
 				<div class='container mt-3'>
 					<div class='row'>
 						<div class='col'>
-							<h5>General Maneuvers</h5>
+							<h4>General Maneuvers</h4>
 						</div>
 					</div>
 				</div>
@@ -976,7 +1036,7 @@
 				<div class='container mt-3'>
 					<div class='row'>
 						<div class='col'>
-							<h5>Combat Maneuvers</h5>
+							<h4>Combat Maneuvers</h4>
 						</div>
 					</div>
 					<div class='row'>
@@ -1548,11 +1608,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			this.damage_add = 0;
 			this.crit = 0;
 			
-			// TODO: Migrate this to being in a qualities dict rather than seperate fields
-			this.pierce = 0;
-			this.breach = 0;
-			
-			this.setback_adds = 0;
+			this.qualities = {};
 			
 			this.damage_scale = 'personal';
 			this.vehicle_weapon = false;
@@ -1745,16 +1801,49 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		return all_active_allies;
 	}
 	
+	$scope.isDroid = function(character) {
+		switch (character.species) {
+			case 'DROID':
+			case 'CYMPROTO':
+				return true;
+			default:
+				break;
+		}
+		return false;
+	}
+	
 	$scope.getAlliedOrganics = function(character) {
 		let all_allies = $scope.getAllies(character, true);
 		let all_organic_allies = [];
 		for (let i = 0; i < all_allies.length; i++) {
-			if (all_allies[i].species === 'DROID') {
+			if ($scope.isDroid(all_allies[i])) {
 				continue;
 			}
 			all_organic_allies.push(all_allies[i]);
 		}
 		return all_organic_allies;
+	}
+	
+	$scope.getWoundedAlliedOrganics = function(character) {
+		let potential_allies = $scope.getAlliedOrganics(character);
+		let wounded_allies = [];
+		for (let i = 0; i < potential_allies.length; i++) {
+			if (potential_allies[i].wounds > 0) {
+				wounded_allies.push(potential_allies[i]);
+			}
+		}
+		return wounded_allies;
+	}
+	
+	$scope.getWoundedAlliedDroids = function(character) {
+		let potential_allies = $scope.getAlliedDroids(character);
+		let wounded_allies = [];
+		for (let i = 0; i < potential_allies.length; i++) {
+			if (potential_allies[i].wounds > 0) {
+				wounded_allies.push(potential_allies[i]);
+			}
+		}
+		return wounded_allies;
 	}
 	
 	$scope.getAlliedOrganicsWithCriticals = function(character) {
@@ -1783,7 +1872,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		let all_allies = $scope.getAllies(character, true);
 		let all_droid_allies = [];
 		for (let i = 0; i < all_allies.length; i++) {
-			if (all_allies[i].species != 'DROID') {
+			if (!$scope.isDroid(all_allies[i])) {
 				continue;
 			}
 			all_droid_allies.push(all_allies[i]);
@@ -1879,6 +1968,9 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				if (target.criticals) {
 					crit_boost += target.criticals.length * 10;
 				}
+				if (weapon.qualities['VICIOUS']) {
+					crit_boost += weapon.qualities['VICIOUS'] * 10;
+				}
 				if (action_taker.talents['LETHALBL']) {
 					crit_boost += action_taker.talents['LETHALBL'] * 10;
 				}
@@ -1967,7 +2059,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			critical.description = "One of the target's limbs (selected by the GM) is crippled until healed or replaced. Increase difficulty of all checks that require use of that limb by one. <UNIMPLEMENTED>";
 		} else if (crit_roll <= 105) {
 			critical = new Critical('Maimed', 3);
-			critical.description = "One of the target's limbs (selected by the GM) is permanently logs. Unless the target has a cybernetic replacement, the target cannot perform actions that would require the use of that limb. All other actions gain [SETBACK]. <UNIMPLEMENTED>";
+			critical.description = "One of the target's limbs (selected by the GM) is permanently lost. Unless the target has a cybernetic replacement, the target cannot perform actions that would require the use of that limb. All other actions gain [SETBACK]. <UNIMPLEMENTED>";
 		} else if (crit_roll <= 110) {
 			critical = new Critical('Horrific Injury', 3);
 			critical.description = "Roll 1d10 to determine which of the target's characteristics is affected: 1-3 for Brawn, 4-6 for Agility, 7 for Intellect, 8 for Cunning, 9 for Presence, and 10 for Willpower. Until this Critical Injury is healed, treat that characteristic as 1 ponit lower. <UNIMPLEMENTED>";
@@ -2416,6 +2508,81 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		}
 	}
 	
+	$scope.matchWoundHealDice = function(action_taker, heal_target, equipment_for_heal) {
+		$scope.matchCommonDice(action_taker, 'MED');
+		let num_diff_dice = 1;
+		if (heal_target.wounds > heal_target.wound_threshold) {
+			num_diff_dice = 3;
+		} else if (heal_target.wounds > heal_target.wound_threshold / 2) {
+			num_diff_dice = 2;
+		}
+		if (!equipment_for_heal) {
+			num_diff_dice++;
+		}
+		if (heal_target === action_taker) {
+			num_diff_dice += 2;
+		}
+		$scope.num_dice.num_diff_dice = num_diff_dice;
+		$scope.num_dice.num_chal_dice = 0;
+		
+		$scope.num_dice.$save().then(function(ref) {
+			$scope.upgradeDiffDice(action_taker.temp_diff_upgrades);
+			$scope.num_dice.$save();
+		}, function(error) {
+			console.log("Error:", error);
+		});
+	}
+	
+	$scope.healWoundsCheck = function(action_taker, heal_target) {
+		$scope.incrementActionsTaken();
+		
+		let heal_word = 'heal';
+		let heal_skill = 'MED';
+		if ($scope.isDroid(heal_target)) {
+			let heal_world = 'repair'
+			let heal_skill = 'MECH';
+		}
+		
+		$scope.actionTakenEffects(action_taker, 'INT', heal_skill);
+		
+		if ($scope.die_pool.succ > 0) {
+			let wounds_healed = $scope.die_pool.succ;
+			if (action_taker.talents['SURG']) {
+				wounds_healed += action_taker.talents['SURG'];
+			}
+			let strain_healed = $scope.die_pool.adv;
+			heal_target.wounds = Math.max(0, heal_target.wounds - wounds_healed);
+			heal_target.strain = Math.max(0, heal_target.strain - strain_healed);
+			$scope.addLogEntry(`${action_taker.name} ${heal_word}ed ${wounds_healed} wounds and ${strain_healed} strain from ${heal_target.name} (new wounds: ${heal_target.wounds}/${heal_target.wound_threshold}, new strain: ${heal_target.strain}/${heal_target.strain_threshold})`);
+		} else {
+			$scope.addLogEntry(`${action_taker.name} failed to ${heal_word} wounds from ${heal_target.name}.`);
+		}
+		heal_target.healed_this_encounter = true;
+		$scope.characters_array.$save(heal_target);
+	}
+	
+	$scope.matchDroidWoundHealDice = function(action_taker, heal_target) {
+		$scope.matchCommonDice(action_taker, 'MECH');
+		let num_diff_dice = 1;
+		if (heal_target.wounds > heal_target.wound_threshold) {
+			num_diff_dice = 3;
+		} else if (heal_target.wounds > heal_target.wound_threshold / 2) {
+			num_diff_dice = 2;
+		}
+		if (heal_target === action_taker) {
+			num_diff_dice += 1;
+		}
+		$scope.num_dice.num_diff_dice = num_diff_dice;
+		$scope.num_dice.num_chal_dice = 0;
+		
+		$scope.num_dice.$save().then(function(ref) {
+			$scope.upgradeDiffDice(action_taker.temp_diff_upgrades);
+			$scope.num_dice.$save();
+		}, function(error) {
+			console.log("Error:", error);
+		});
+	}
+	
 	$scope.matchCritHealDice = function(action_taker, crit_heal_target, crit_to_heal, equipment_for_crit_heal) {
 		$scope.matchCommonDice(action_taker, 'MED');
 		$scope.num_dice.num_diff_dice = crit_to_heal.severity;
@@ -2440,7 +2607,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		
 		let heal_word = 'heal';
 		let heal_skill = 'MED';
-		if (crit_heal_target.species === 'DROID') {
+		if ($scope.isDroid(crit_heal_target)) {
 			let heal_world = 'repair'
 			let heal_skill = 'MECH';
 		}
@@ -2644,7 +2811,11 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		// Skill Dice
 		let skill_key = weapon.skill_key;
 		let is_melee_attack = $scope.isMeleeSkill(skill_key)
-		$scope.setSomeAttackDice(action_taker, target, skill_key, is_melee_attack, target_defense_zone, weapon.setback_adds);
+		let setback_adds = 0;
+		if (weapon.qualities["SETBACKADD"]) {
+			setback_adds += weapon.qualities["SETBACKADD"];
+		}
+		$scope.setSomeAttackDice(action_taker, target, skill_key, is_melee_attack, target_defense_zone, setback_adds);
 				
 		let target_silhouette = target.silhouette;
 		if (weapon.vehicle_weapon) {
@@ -2784,7 +2955,15 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			let char_brawn = action_taker.char_values["BR"];
 			base_damage = char_brawn + weapon.damage_add;
 		}
-		$scope.hitTarget(action_taker, target, weapon.skill_key, base_damage, weapon.pierce, weapon.breach, weapon.damage_scale);
+		let pierce = 0;
+		let breach = 0;
+		if (weapon.qualities["PIERCE"]) {
+			pierce = weapon.qualities["PIERCE"];
+		}
+		if (weapon.qualities["BREACH"]) {
+			breach = weapon.qualities["BREACH"];
+		}
+		$scope.hitTarget(action_taker, target, weapon.skill_key, base_damage, pierce, breach, weapon.damage_scale);
 	}
 	
 	$scope.attackTarget = function(action_taker, target, weapon) {
@@ -3305,6 +3484,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				let character = $scope.characters_array[i];
 				
 				character.stim_packs_used = 0;
+				character.healed_this_encounter = false;
 				character.strain = 0;
 				// Heal Wounds
 				if (character.wounds > 0) {
@@ -3542,8 +3722,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		weapon.damage = weapon_info.damage;
 		weapon.damage_add = weapon_info.damage_add;
 		weapon.crit_rating = weapon_info.crit_rating;
-		weapon.pierce = weapon_info.pierce;
-		weapon.breach = weapon_info.breach;
+		weapon.qualities = weapon_info.qualities;
 	}
 	
 	$scope.readCharacterFiles = function(num_char_copies) {
@@ -3752,18 +3931,25 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				// TODO: Refactor this and also apply to custom weapons (double-check NPC XML first)
 				// Attachments + Attachment Mods
 				let all_mods_nodes = weapon_node.getElementsByTagName('AllMods');
-				if (all_mods_nodes.length > 0) {
-					let mod_nodes = all_mods_nodes[0].getElementsByTagName('Mod');
+				for (let j = 0; j < all_mods_nodes.length; j++) {
+					let mod_nodes = all_mods_nodes[j].getElementsByTagName('Mod');
 					for (let j = 0; j < mod_nodes.length; j++) {
 						let mod = mod_nodes[j];
 						let mod_key_nodes = mod.getElementsByTagName('Key');
 						if (mod_key_nodes.length > 0) {
 							let mod_key = mod_key_nodes[0].childNodes[0].nodeValue;
-							let count = 0;
+							let count = 1;
 							let count_nodes = mod.getElementsByTagName('Count');
 							if (count_nodes.length > 0) {
 								count = parseInt(count_nodes[0].childNodes[0].nodeValue);
 							}
+							// Modify Qualities based off Mods
+							if (weapon.qualities[mod_key]) {
+								weapon.qualities[mod_key] += count;
+							} else {
+								weapon.qualities[mod_key] = count;
+							}
+							
 							switch(mod_key) {
 								case 'DAMADD':
 									if (weapon.damage > 0) {
@@ -3778,9 +3964,6 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 									} else {
 										weapon.damage_add += 1;
 									}
-									break;
-								case 'SETBACKADD':
-									weapon.setback_adds += count;
 									break;
 								default:
 									break;
@@ -3816,29 +3999,21 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			let damage = $scope.getXMLIntIfExists(weapon_node, 'Damage');
 			let damage_add = $scope.getXMLIntIfExists(weapon_node, 'DamageAdd');
 			let crit_rating = $scope.getXMLIntIfExists(weapon_node, 'Crit');
-			// TODO: Vicious
 			
-			
-			let pierce = 0;
-			let breach = 0;
+			let qualities = {};
 			let descriptor_nodes = weapon_node.getElementsByTagName('Descriptor');
 			for (let j = 0; j < descriptor_nodes.length; j++) {
 				let descriptor_node = descriptor_nodes[j];
 				let descriptor_key = descriptor_node.getElementsByTagName('Key')[0].childNodes[0].nodeValue;
 				let count = $scope.getXMLIntIfExists(descriptor_node, 'Count');
-				if (descriptor_key === 'PIERCE') {
-					pierce = count;
-				} else if (descriptor_key === 'BREACH') {
-					breach = count;
-				}
+				qualities[descriptor_key] = count;
 			}
 			
 			let weapon = new WeaponEntry(name, skill_key);
 			weapon.damage = damage;
 			weapon.damage_add = damage_add;
-			weapon.pierce = pierce;
-			weapon.breach = breach;
 			weapon.crit = crit_rating;
+			weapon.qualities = qualities;
 			
 			new_char.weapons.push(weapon);
 		}
@@ -4061,9 +4236,17 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			
 			var pierce = 0;
 			var breach = 0;
+			let qualities = {};
 			var quality_nodes = weapon_nodes[i].getElementsByTagName("Quality");
 			for (var j = 0; j < quality_nodes.length; j++) {
 				var quality_key = quality_nodes[j].getElementsByTagName("Key")[0].childNodes[0].nodeValue;
+				var count = parseInt(getNodeValIfExists(quality_nodes[j], "Count"));
+				if (isNaN(count)) {
+					count = 1;
+				}
+				qualities[quality_key] = count;
+				
+				
 				if (quality_key === "PIERCE") {
 					var num_pierce = parseInt(quality_nodes[j].getElementsByTagName("Count")[0].childNodes[0].nodeValue);
 					pierce = pierce + num_pierce;
@@ -4081,6 +4264,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				"pierce": pierce,
 				"breach": breach,
 				"skill_key": skill_key,
+				"qualities": qualities,
 			}
 		}
 		
@@ -4231,6 +4415,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		return base_percent - lowered_amount;
 	}
 	
+	// aka 'startEncounter = function()'
 	$scope.rollInitiative = function() {
 		$scope.newLog();
 	
@@ -4240,6 +4425,10 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		let temp_init_order = [];
 		for (var i = 0; i < $scope.characters_array.length; i++) {
 			let character = $scope.characters_array[i];
+			// Start of Encounter Effects
+			character.healed_this_encounter = false;
+			
+			// Initiative Roll
 			var num_ab_dice = 0;
 			var num_prof_dice = 0;
 			if (character.initiative_type === "cool") {
