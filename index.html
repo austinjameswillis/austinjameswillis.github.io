@@ -1968,7 +1968,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				if (target.criticals) {
 					crit_boost += target.criticals.length * 10;
 				}
-				if (weapon.qualities['VICIOUS']) {
+				if (weapon.qualities && weapon.qualities['VICIOUS']) {
 					crit_boost += weapon.qualities['VICIOUS'] * 10;
 				}
 				if (action_taker.talents['LETHALBL']) {
@@ -2812,7 +2812,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		let skill_key = weapon.skill_key;
 		let is_melee_attack = $scope.isMeleeSkill(skill_key)
 		let setback_adds = 0;
-		if (weapon.qualities["SETBACKADD"]) {
+		if (weapon.qualities && weapon.qualities["SETBACKADD"]) {
 			setback_adds += weapon.qualities["SETBACKADD"];
 		}
 		$scope.setSomeAttackDice(action_taker, target, skill_key, is_melee_attack, target_defense_zone, setback_adds);
@@ -2957,10 +2957,10 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		}
 		let pierce = 0;
 		let breach = 0;
-		if (weapon.qualities["PIERCE"]) {
+		if (weapon.qualities && weapon.qualities["PIERCE"]) {
 			pierce = weapon.qualities["PIERCE"];
 		}
-		if (weapon.qualities["BREACH"]) {
+		if (weapon.qualities && weapon.qualities["BREACH"]) {
 			breach = weapon.qualities["BREACH"];
 		}
 		$scope.hitTarget(action_taker, target, weapon.skill_key, base_damage, pierce, breach, weapon.damage_scale);
@@ -3722,7 +3722,9 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		weapon.damage = weapon_info.damage;
 		weapon.damage_add = weapon_info.damage_add;
 		weapon.crit_rating = weapon_info.crit_rating;
-		weapon.qualities = weapon_info.qualities;
+		if (weapon_info.qualities) {
+			weapon.qualities = weapon_info.qualities;
+		}
 	}
 	
 	$scope.readCharacterFiles = function(num_char_copies) {
@@ -4006,6 +4008,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				let descriptor_node = descriptor_nodes[j];
 				let descriptor_key = descriptor_node.getElementsByTagName('Key')[0].childNodes[0].nodeValue;
 				let count = $scope.getXMLIntIfExists(descriptor_node, 'Count');
+				// TODO: Make qualities the same as for Regular Weapons; Refactor the code so it's shraed in character_import.js
 				qualities[descriptor_key] = count;
 			}
 			
