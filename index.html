@@ -1030,6 +1030,18 @@
 						</div>
 					</div>
 				</div>
+				<div class='container'>
+					<div class='row'>
+						<div class='col'>
+							<select ng-model="weapon_to_pick_up">
+								<option ng-repeat="(key, weapon_info) in weapon_info" value="{{key}}">{{weapon_info.name}}</option>
+							</select>
+							<button ng-click="pickUpWeapon(action_taker, weapon_to_pick_up)" ng-disabled="!canTakeManeuver(action_taker)">
+								Add Copies
+							</button>
+						</div>
+					</div>
+				</div>
 			</div>
 			<!-- Combat Maneuvers -->
 			<div ng-if='general_info.in_combat'>
@@ -3390,6 +3402,17 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		}
 		
 		$scope.healWounds(patch_target, 3);
+	}
+	
+	$scope.pickUpWeapon = function(action_taker, weapon_entry_key) {
+		$scope.incrementManeuversTaken();
+		
+		let weapon_info = $scope.weapon_info[weapon_entry_key];
+		let weapon = new WeaponEntry(weapon_info.name, weapon_info.skill_key);
+		$scope.applyStatsFromWeaponInfo(weapon, weapon_info);
+		
+		action_taker.weapons.push(weapon);
+		$scope.characters_array.$save(action_taker);
 	}
 	
 	$scope.aim = function(action_taker) {
