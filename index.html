@@ -2618,8 +2618,11 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		
 		if ($scope.die_pool.succ > 0) {
 			let wounds_healed = $scope.die_pool.succ;
-			if (action_taker.talents['SURG']) {
+			if (action_taker.talents['SURG'] && !$scope.isDroid(heal_target)) {
 				wounds_healed += action_taker.talents['SURG'];
+			}
+			if (action_taker.talents['MACHMEND'] && $scope.isDroid(heal_target)) {
+				wounds_healed += action_taker.talents['MACHMEND'];
 			}
 			heal_target.wounds = Math.max(0, heal_target.wounds - wounds_healed);
 			
