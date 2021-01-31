@@ -183,6 +183,9 @@
 			<button ng-click='passOneDay()'>Pass One Day</button>
 		</td>
 		<td class="align-middle">
+			<button ng-click='endSession()'>End Session</button>
+		</td>
+		<td class="align-middle">
 			<button ng-click='endEncounter()'>End Encounter</button>
 		</td>
 		<td class="align-middle">
@@ -347,6 +350,23 @@
 						<td>
 							Boost Any Ally
 							<select ng-model='any_boost_target' ng-options='character as character.name for character in getActiveAllies(action_taker, true)' >
+						</td>
+					</tr>
+					<tr ng-repeat='(hit_id, hit_info) in action_tracker.hits_made' ng-if='using_autofire && attack_weapon.qualities["AUTOFIRE"]'>
+						<td>
+							<button ng-click='extraAutofireHit(action_taker, attack_target, attack_weapon, hit_info, true)' ng-disabled='!canExtraAutofireHit(hit_info, true)' class='btn-block pb-1' style="white-space: nowrap;">
+								<img ng-repeat='x in [].constructor(2) track by $index' src="./dice_images/advantage.png" width=20>
+							</button>
+						</td>
+						<td>
+							<button ng-click='extraAutofireHit(action_taker, attack_target, attack_weapon, hit_info, false)' ng-disabled='!canExtraAutofireHit(hit_info, false)' class='btn-block pb-1' style="white-space: nowrap;">
+								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
+							</button>
+						</td>
+						<td class='align-middle'>
+							Extra Hit On 
+							<select ng-model="extra_attack_target" ng-options='character as character.name for character in getPotentialTargetsToAttack(action_taker, (attack_weapon ? attack_weapon.damage_scale : ""), non_scale_matching_targets, chars_in_other_vehicles, chars_of_same_type)'>
+							</select>
 						</td>
 					</tr>
 					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
@@ -866,6 +886,12 @@
 						</select>
 					</div>
 				</div>
+				<div class='row mt-2' ng-if='$parent.attack_weapon.qualities["AUTOFIRE"]'>
+					<div class='col'>
+						<input type="checkbox" ng-model="$parent.$parent.using_autofire">
+						Autofire
+					</div>
+				</div>
 				<div class='row mt-2' ng-if='action_taker.talents["FRENZ"] && ($parent.attack_weapon.skill_key === "BRAWL" || $parent.attack_weapon.skill_key === "MELEE")'>
 					<div class='col-4'>
 						Frenzied Attack ({{action_taker.talents["FRENZ"]}})
@@ -1117,6 +1143,24 @@
 				<div class='row'>
 					<div class='col'>
 						<h5>Other</h5>
+					</div>
+				</div>
+			</div>
+			<div class='container' ng-if='action_taker.force_rating > 0'>
+				<div class='row'>
+					<div class='col'>
+						<h6>Add Conflict</h6>
+					</div>
+				</div>
+				<div class='row'>
+					<div class='col'>
+						Current Conflict: {{action_taker.conflict}}
+					</div>
+					<div class='col'>
+						<input type="number" ng-model="conflict_add" min=1>
+					</div>
+					<div class='col'>
+						<button ng-click='addConflict(action_taker, conflict_add)'>Add Conflict</button>
 					</div>
 				</div>
 			</div>
@@ -1628,8 +1672,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	}
 	
 	class ArmorEntry {
-		constructor(cortosis) {
-			this.cortosis = false;
+		constructor() {
+			this.qualities = {};
 		}
 	}
 	
@@ -2152,6 +2196,21 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.addLogEntry(`${spent_log} spent to boost ${ally.name}.`);
 	}
 	
+	$scope.canExtraAutofireHit = function(hit_info, using_adv) {
+		return !hit_info.extra_hit_made && $scope.hasRequiredAdvantageOrTriumph(2, using_adv);
+	}
+	
+	// Extra Hit with Autofire
+	$scope.extraAutofireHit = function(action_taker, target, weapon, hit_info, using_adv) {
+		hit_info.extra_hit_made = true;
+		
+		let spent_log = $scope.spendRequiredAdvantageOrTriumph(2, using_adv);
+		$scope.addLogEntry(`${spent_log} spent for an extra autofire hit against ${target.name}.`);
+		
+		$scope.hitTargetWithWeapon(action_taker, target, weapon);
+		$scope.action_tracker.$save();
+	}
+	
 	// Upgrade Target's Difficulty Triumph
 	$scope.canUpgradeTargetDiff = function() {
 		return !$scope.action_tracker.upgrade_target_diff_used && $scope.hasRequiredAdvantageOrTriumph(1, false);
@@ -2562,13 +2621,19 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			if (action_taker.talents['SURG']) {
 				wounds_healed += action_taker.talents['SURG'];
 			}
-			let strain_healed = $scope.die_pool.adv;
 			heal_target.wounds = Math.max(0, heal_target.wounds - wounds_healed);
-			heal_target.strain = Math.max(0, heal_target.strain - strain_healed);
-			$scope.addLogEntry(`${action_taker.name} ${heal_word}ed ${wounds_healed} wounds and ${strain_healed} strain from ${heal_target.name} (new wounds: ${heal_target.wounds}/${heal_target.wound_threshold}, new strain: ${heal_target.strain}/${heal_target.strain_threshold})`);
+			
+			$scope.addLogEntry(`${action_taker.name} ${heal_word}ed ${wounds_healed} wounds and ${strain_healed} strain from ${heal_target.name} (new wounds: ${heal_target.wounds}/${heal_target.wound_threshold})`);
 		} else {
 			$scope.addLogEntry(`${action_taker.name} failed to ${heal_word} wounds from ${heal_target.name}.`);
 		}
+		
+		if ($scope.die_pool.adv > 0 && heal_target.strain > 0) {
+			let strain_healed = $scope.die_pool.adv;
+			heal_target.strain = Math.max(0, heal_target.strain - strain_healed);
+			$scope.addLogEntry(`${heal_target.name} healed ${strain_healed} from the medicine check (new strain: ${heal_target.strain}/${heal_target.strain_threshold})`);
+		}
+		
 		heal_target.healed_this_encounter = true;
 		$scope.characters_array.$save(heal_target);
 	}
@@ -2887,6 +2952,11 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			}
 		}
 		
+		// Autofire adds 1 Purple
+		if (weapon.qualities && weapon.qualities['AUTOFIRE'] && $scope.using_autofire) {
+			$scope.num_dice.num_diff_dice += 1;
+		}
+		
 		$scope.num_dice.num_chal_dice = 0;
 		$scope.num_dice.num_force_dice = 0;
 		$scope.matchEnhanceDice(action_taker, skill_key);
@@ -2917,8 +2987,9 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			crit_boost: 0,
 			crit_applied: false,
 			hit_skill: skill,
+			extra_hit_made: false,
 		}
-		if ($scope.action_tracker.hit_info) {
+		if ($scope.action_tracker.hits_made) {
 			$scope.action_tracker.hits_made.push(base_hit_info);
 		} else {
 			$scope.action_tracker.hits_made = [base_hit_info];
@@ -2946,7 +3017,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		}
 		
 		if (target.target_type === 'character') {
-			if (target.armor && target.armor.cortosis) {
+			if (target.armor && target.armor.qualities && target.armor.qualities['CORTOSIS']) {
 				pierce = 0;
 				breach = 0;
 			}
@@ -3120,13 +3191,28 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.action_tracker.$save();
 		// TODO: Also flip a destiny
 		action_taker.strain = action_taker.strain + 1;
+		let conflict_message = '';
+		if (action_taker.lightside_user) {
+			action_taker.conflict += 1;
+			conflict_message = ` and 1 conflict (Current Conflict: ${action_taker.conflict}, Current Morality: ${action_taker.morality})`;
+		}
 		$scope.characters_array.$save(action_taker);
 		// TODO: Make very verbose
-		$scope.addLogEntry(`${action_taker.name} converted a force point for 1 strain (${action_taker.strain}/${action_taker.strain_threshold}).`);
+		$scope.addLogEntry(`${action_taker.name} converted a force point for 1 strain (${action_taker.strain}/${action_taker.strain_threshold})` + conflict_message + '.');
 	}
 	
 	$scope.canSpendFP = function(action_taker, num_fp) {
 		return $scope.getRemainingForcePoints(action_taker) >= num_fp;
+	}
+	
+	// Spends Force Points; Does not save spending; Saves adding Conflict if Darkside User
+	$scope.spendFP = function(action_taker, num_fp) {
+		$scope.force_powers.fp_spent = $scope.force_powers.fp_spent + num_fp;
+		if (!action_taker.lightside_user) {
+			action_taker.conflict += num_fp;
+			$scope.characters_array.$save(action_taker);
+			$scope.addLogEntry(`${action_taker.name} gained ${num_fp} from spending ${num_fp} DSP. (Current Conflict: ${action_taker.conflict}, Current Morality: ${action_taker.morality})`);
+		}		
 	}
 	
 	$scope.getRangeString = function(range_int) {
@@ -3172,18 +3258,16 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	////Enhance
 	// TODO: Simplify these two args to just one boolean?
 	$scope.activateEnhanceBasic = function(action_taker, adding_succ) {
-		$scope.force_powers.fp_spent = $scope.force_powers.fp_spent + 1;
-		$scope.force_powers.$save().then(function(ref) {
-			// TODO: Make these helper functions that add succ or adv to the die pool, cancelling out fails and threats rather than blindly adding
-			if (adding_succ) {
-				$scope.addSuccToResults(1);
-				$scope.addLogEntry(`${action_taker.name} activated the Enhance force power to add [SUCC] to their roll.`);
-			} else {
-				$scope.addAdvToResults(1);
-				$scope.addLogEntry(`${action_taker.name} activated the Enhance force power to add [ADV] to their roll.`);
-			}
-			$scope.die_pool.$save();
-		});
+		$scope.spendFP($scope.action_taker, 1);
+		if (adding_succ) {
+			$scope.addSuccToResults(1);
+			$scope.addLogEntry(`${action_taker.name} activated the Enhance force power to add [SUCC] to their roll.`);
+		} else {
+			$scope.addAdvToResults(1);
+			$scope.addLogEntry(`${action_taker.name} activated the Enhance force power to add [ADV] to their roll.`);
+		}
+		$scope.die_pool.$save();
+		$scope.force_powers.$save();
 	}
 	
 	// Init Force Leap
@@ -3206,13 +3290,9 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	
 	// Activate the Force Leap
 	$scope.activateEnhanceForceLeap = function() {
-		$scope.force_powers.fp_spent = $scope.force_powers.fp_spent + 1;
-		$scope.force_powers.$save().then(function(ref) {
-			$scope.enhance_power.enhance_force_leap_activated = true;
-			$scope.enhance_power.$save();
-		}, function(error) {
-			console.log("Error:", error);
-		});
+		$scope.spendFP($scope.action_taker, 1);
+		$scope.enhance_power.enhance_force_leap_activated = true;
+		$scope.force_powers.$save();
 	}
 	
 	//// Move
@@ -3302,35 +3382,23 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	// Activate the Power
 	
 	$scope.activateMoveBasic = function() {
-		$scope.force_powers.fp_spent = $scope.force_powers.fp_spent + 1;
-		$scope.force_powers.$save().then(function(ref) {
-			$scope.move_power.move_basic_activated = true;
-			$scope.move_power.$save();
-		}, function(error) {
-			console.log("Error:", error);
-		});
+		$scope.spendFP($scope.action_taker, 1);
+		$scope.move_power.move_basic_activated = true;
+		$scope.force_powers.$save();
 	}
 	
 	// Use Strength to Increase the Silhouette
 	$scope.strengthMove = function(action_taker) {
-		$scope.force_powers.fp_spent = $scope.force_powers.fp_spent + 1;
-		$scope.force_powers.$save().then(function(ref) {
-			$scope.move_power.strength = $scope.move_power.strength + action_taker.force_powers.move.strength;
-			$scope.move_power.$save();
-		}, function(error) {
-			console.log("Error:", error);
-		});
+		$scope.spendFP(action_taker, 1);
+		$scope.move_power.strength = $scope.move_power.strength + action_taker.force_powers.move.strength;
+		$scope.force_powers.$save();
 	}
 	
 	// Use Range to Increase the Range
 	$scope.rangeMove = function(action_taker) {
-		$scope.force_powers.fp_spent = $scope.force_powers.fp_spent + 1;
-		$scope.force_powers.$save().then(function(ref) {
-			$scope.move_power.range = $scope.move_power.range + action_taker.force_powers.move.range;
-			$scope.move_power.$save();
-		}, function(error) {
-			console.log("Error:", error);
-		});
+		$scope.spendFP(action_taker, 1);
+		$scope.move_power.range = $scope.move_power.range + action_taker.force_powers.move.range;
+		$scope.force_powers.$save();
 	}
 	
 	// Maneuvers
@@ -3468,6 +3536,15 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.addLogEntry(`${action_taker.name} goes prone.`);
 	}
 	
+	// Other
+	
+	$scope.addConflict = function(action_taker, conflict_add) {
+		action_taker.conflict += conflict_add;
+		$scope.characters_array.$save(action_taker);
+		
+		$scope.addLogEntry(`${action_taker.name} added ${conflict_add} conflict. (Current Conflict: ${action_taker.conflict}, Current Morality: ${action_taker.morality})`);
+	}
+	
 	// Get Potential Vehicles a Person Can Be In
 	$scope.getPotentialVehicles = function() {
 		// .$id : .name
@@ -3560,6 +3637,49 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 						}
 					}
 				}
+				
+				$scope.characters_array.$save(character);
+			}
+			$scope.newLog();
+		});
+	}
+	
+	$scope.endSession = function() {
+		$scope.remote_logs.$add(new Log()).then(function(ref) {
+			$scope.addLogEntry('--- End of Session ---');
+			for (let i = 0; i < $scope.characters_array.length; i++) {
+				let character = $scope.characters_array[i];
+				
+				character.strain = 0;
+				
+				if (character.force_rating > 0) {
+					let conflict_roll = Math.floor(Math.random() * 10) + 1; // Random number 1-10
+					let net_morality_gain = conflict_roll - character.conflict;
+					character.morality += net_morality_gain;
+					if (character.morality > 100) {
+						character.morality = 100;
+					} else if (character.morality < 1) {
+						character.morality = 1;
+					}
+					let morality_changed_word = 'gain';
+					if (net_morality_gain < 0) {
+						morality_changed_word = 'lose';
+					}
+					$scope.addLogEntry(`${character.name} rolled a ${conflict_roll} for their conflict roll. They had ${character.conflict} conflict. They ${morality_changed_word} ${net_morality_gain} morality (New Morality: ${character.morality}).`);
+					if (character.lightside_user) {
+						if (character.morality < 30) {
+							character.lightside_user = false;
+							$scope.addLogEntry(`${character.name} has fallen to the Darkside and is now a Darkside force user.`);
+						}
+					} else {
+						if (character.morality > 70) {
+							character.lightside_user = true;
+							$scope.addLogEntry(`${character.name} has been redeemed and is now a Lightside force user.`);
+						}
+					}
+				}
+				// Reset conflict between sessions
+				character.conflict = 0;
 				
 				$scope.characters_array.$save(character);
 			}
@@ -3858,6 +3978,9 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			new_char.force_rating = $scope.sumAttrNodeValues(force_rating_nodes[0]);
 		}
 		
+		// Morality
+		new_char.morality = $scope.getXMLIntIfExists(xmlDoc, "MoralityValue");
+		
 		// Force Powers
 		if (new_char.force_rating) {
 			let enhance_power_data = {
@@ -4044,22 +4167,38 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			new_char.weapons.push(weapon);
 		}
 		
-		var armor = null;
+		let armor = null;
 		var armor_nodes = xmlDoc.getElementsByTagName("CharArmor");
 		for (var i = 0; i < armor_nodes.length; i++) {
-			var equipped_nodes = weapon_nodes[i].getElementsByTagName("Equipped");
+			var equipped_nodes = armor_nodes[i].getElementsByTagName("Equipped");
 			if (equipped_nodes.length != 0 && equipped_nodes[0].childNodes[0].nodeValue === "true") {
-				var cortosis = false;
-				var armor_mod_nodes = armor_nodes[i].getElementsByTagName("Mod");
-				for (var j = 0; j < armor_mod_nodes.length; j++) {
-					var mod_key_value = getNodeValIfExists(armor_mod_nodes[j], "Key");
-					if (mod_key_value === 'CORTOSIS') {
-						cortosis = true;
+				armor = new ArmorEntry();
+
+				let all_mods_nodes = armor_nodes[i].getElementsByTagName('AllMods');
+				for (let j = 0; j < all_mods_nodes.length; j++) {
+					let mod_nodes = all_mods_nodes[j].getElementsByTagName('Mod');
+					for (let j = 0; j < mod_nodes.length; j++) {
+						let mod = mod_nodes[j];
+						let mod_key_nodes = mod.getElementsByTagName('Key');
+						if (mod_key_nodes.length > 0) {
+							let mod_key = mod_key_nodes[0].childNodes[0].nodeValue;
+							let count = 1;
+							let count_nodes = mod.getElementsByTagName('Count');
+							if (count_nodes.length > 0) {
+								count = parseInt(count_nodes[0].childNodes[0].nodeValue);
+							}
+							// Modify Qualities based off Mods
+							if (armor.qualities[mod_key]) {
+								armor.qualities[mod_key] += count;
+							} else {
+								armor.qualities[mod_key] = count;
+							}
+						}
 					}
 				}
-				new_char.armor = new ArmorEntry(cortosis);
 			}
 		}
+		new_char.armor = armor;
 		
 		$scope.$apply(function () {
 			$scope.characters_array.$add(new_char);
@@ -4266,19 +4405,16 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			var quality_nodes = weapon_nodes[i].getElementsByTagName("Quality");
 			for (var j = 0; j < quality_nodes.length; j++) {
 				var quality_key = quality_nodes[j].getElementsByTagName("Key")[0].childNodes[0].nodeValue;
-				var count = parseInt(getNodeValIfExists(quality_nodes[j], "Count"));
-				if (isNaN(count)) {
-					count = 1;
+				
+				let count = 1;
+				let qual_count = $scope.getXMLIntIfExists(quality_nodes[j], 'Count');
+				if (qual_count > 0) {
+					count = qual_count;
 				}
-				qualities[quality_key] = count;
-				
-				
-				if (quality_key === "PIERCE") {
-					var num_pierce = parseInt(quality_nodes[j].getElementsByTagName("Count")[0].childNodes[0].nodeValue);
-					pierce = pierce + num_pierce;
-				} else if (quality_key == "BREACH") {
-					var num_breach = parseInt(quality_nodes[j].getElementsByTagName("Count")[0].childNodes[0].nodeValue);
-					breach = breach + num_breach;
+				if (qualities[quality_key]) {
+					qualities[quality_key] += count;
+				} else {
+					qualities[quality_key] = count;
 				}
 			}
 			
