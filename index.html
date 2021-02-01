@@ -3189,6 +3189,15 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		return $scope.getAvailableForcePoints(action_taker) - $scope.force_powers.fp_spent;
 	}
 	
+	// Adds Conflict to a Character (Does not Save)
+	$scope.addConflict = function(character, conflict_num) {
+		if (!character.conflict || character.conflict < 0) {
+			character.conflict = conflict_num;
+			return;
+		}
+		character.conflict += conflict_num;
+	}
+	
 	$scope.convertForcePoint = function(action_taker) {
 		$scope.force_powers.fp_converted = $scope.force_powers.fp_converted + 1;
 		$scope.action_tracker.$save();
@@ -3196,7 +3205,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		action_taker.strain = action_taker.strain + 1;
 		let conflict_message = '';
 		if (action_taker.lightside_user) {
-			action_taker.conflict += 1;
+			$scope.addConflict(action_taker, 1);
 			conflict_message = ` and 1 conflict (Current Conflict: ${action_taker.conflict}, Current Morality: ${action_taker.morality})`;
 		}
 		$scope.characters_array.$save(action_taker);
@@ -3212,7 +3221,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	$scope.spendFP = function(action_taker, num_fp) {
 		$scope.force_powers.fp_spent = $scope.force_powers.fp_spent + num_fp;
 		if (!action_taker.lightside_user) {
-			action_taker.conflict += num_fp;
+			$scope.addConflict(action_taker, num_fp);
 			$scope.characters_array.$save(action_taker);
 			$scope.addLogEntry(`${action_taker.name} gained ${num_fp} from spending ${num_fp} DSP. (Current Conflict: ${action_taker.conflict}, Current Morality: ${action_taker.morality})`);
 		}		
@@ -3542,7 +3551,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	// Other
 	
 	$scope.addConflict = function(action_taker, conflict_add) {
-		action_taker.conflict += conflict_add;
+		$scope.addConflict(action_taker, conflict_add);
 		$scope.characters_array.$save(action_taker);
 		
 		$scope.addLogEntry(`${action_taker.name} added ${conflict_add} conflict. (Current Conflict: ${action_taker.conflict}, Current Morality: ${action_taker.morality})`);
