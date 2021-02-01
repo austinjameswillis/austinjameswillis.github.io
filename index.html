@@ -3869,7 +3869,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		weapon.damage_add = weapon_info.damage_add;
 		weapon.crit_rating = weapon_info.crit_rating;
 		if (weapon_info.qualities) {
-			weapon.qualities = weapon_info.qualities;
+			Object.assign(weapon.qualities, weapon_info.qualities);
 		}
 	}
 	
@@ -4074,7 +4074,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 					weapon_name = rename_nodes[0].childNodes[0].nodeValue;
 				}
 				
-				let weapon = new WeaponEntry(weapon_name, weapon_info.skill_key);
+				var weapon = new WeaponEntry(weapon_name, weapon_info.skill_key);
 				$scope.applyStatsFromWeaponInfo(weapon, weapon_info);
 				// TODO: Check if it's planetary damage
 				weapon.damage_scale = 'personal';
