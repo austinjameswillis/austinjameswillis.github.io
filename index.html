@@ -1662,7 +1662,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			
 			this.damage = 0;
 			this.damage_add = 0;
-			this.crit = 0;
+			this.crit_rating = 0;
 			
 			this.qualities = {};
 			
@@ -3005,7 +3005,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		
 		let first_hit = true;
 		angular.forEach($scope.action_tracker.hits_made, function(value, key) {
-			if (key.hit_skill === attack_skill) {
+			if (value.hit_skill === attack_skill) {
 				first_hit = false;
 			}
 		});
@@ -4173,7 +4173,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			let weapon = new WeaponEntry(name, skill_key);
 			weapon.damage = damage;
 			weapon.damage_add = damage_add;
-			weapon.crit = crit_rating;
+			weapon.crit_rating = crit_rating;
 			weapon.qualities = qualities;
 			
 			new_char.weapons.push(weapon);
