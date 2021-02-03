@@ -3551,7 +3551,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	// Other
 	
 	$scope.addConflict = function(action_taker, conflict_add) {
-		$scope.addConflict(action_taker, conflict_add);
+		action_taker.conflict += conflict_add;
 		$scope.characters_array.$save(action_taker);
 		
 		$scope.addLogEntry(`${action_taker.name} added ${conflict_add} conflict. (Current Conflict: ${action_taker.conflict}, Current Morality: ${action_taker.morality})`);
