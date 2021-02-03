@@ -317,6 +317,9 @@
 								<span ng-if='hit_info.crit_boost > 0'>
 									+ {{hit_info.crit_boost}} 
 								</span>
+								<span ng-if='hit_info.crit_boost < 0'>
+									{{hit_info.crit_boost}}
+								</span>
 								Crit to {{characters_dict[hit_info.target_id].name}}
 							</button>
 						</td>
@@ -3551,7 +3554,11 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	// Other
 	
 	$scope.addConflict = function(action_taker, conflict_add) {
-		action_taker.conflict += conflict_add;
+		if (action_taker.conflict) {
+			action_taker.conflict += conflict_add;
+		} else {
+			action_taker.conflict = conflict_add;
+		}
 		$scope.characters_array.$save(action_taker);
 		
 		$scope.addLogEntry(`${action_taker.name} added ${conflict_add} conflict. (Current Conflict: ${action_taker.conflict}, Current Morality: ${action_taker.morality})`);
