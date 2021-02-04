@@ -2629,7 +2629,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			}
 			heal_target.wounds = Math.max(0, heal_target.wounds - wounds_healed);
 			
-			$scope.addLogEntry(`${action_taker.name} ${heal_word}ed ${wounds_healed} wounds and ${strain_healed} strain from ${heal_target.name} (new wounds: ${heal_target.wounds}/${heal_target.wound_threshold})`);
+			$scope.addLogEntry(`${action_taker.name} ${heal_word}ed ${wounds_healed} wounds from ${heal_target.name} (new wounds: ${heal_target.wounds}/${heal_target.wound_threshold})`);
 		} else {
 			$scope.addLogEntry(`${action_taker.name} failed to ${heal_word} wounds from ${heal_target.name}.`);
 		}
