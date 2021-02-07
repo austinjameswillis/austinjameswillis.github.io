@@ -297,12 +297,12 @@
 					</tr>
 					<tr ng-repeat='(hit_id, hit_info) in action_tracker.hits_made'>
 						<td>
-							<button ng-click='critTarget(action_taker, attack_target, attack_weapon, true, hit_id)' ng-disabled='!canCritTarget(attack_weapon, true, hit_info)' class='btn-block pb-1' style="white-space: nowrap;">
-								<img ng-repeat='x in [].constructor(attack_weapon.crit_rating) track by $index' src="./dice_images/advantage.png" width=20>
+							<button ng-click='critTarget(action_taker, attack_target, attack_weapon, true, hit_id)' ng-disabled='!canCritTarget(action_taker, attack_weapon, true, hit_info)' class='btn-block pb-1' style="white-space: nowrap;">
+								<img ng-repeat='x in [].constructor(getCritRating(attack_weapon, action_taker)) track by $index' src="./dice_images/advantage.png" width=20>
 							</button>
 						</td>
 						<td>
-							<button ng-click='critTarget(action_taker, attack_target, attack_weapon, false, hit_id)' ng-disabled='!canCritTarget(attack_weapon, false, hit_info)' class='btn-block pb-1' style="white-space: nowrap;">
+							<button ng-click='critTarget(action_taker, attack_target, attack_weapon, false, hit_id)' ng-disabled='!canCritTarget(action_taker, attack_weapon, false, hit_info)' class='btn-block pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
 							</button>
 						</td>
@@ -1991,20 +1991,30 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.addLogEntry(`${spent_log} spent to boost next ally.`);
 	}
 	
+	$scope.getCritRating = function(weapon, wielder) {
+		let crit_rating = weapon.crit_rating;
+		if (weapon.skill_key === 'BRAWL') {
+			if (wielder.talents && wielder.talents['IRONBODY']) {
+				crit_rating = Math.max(1, crit_rating - wielder.talents['IRONBODY']);
+			}
+		}
+		return crit_rating;
+	}
+	
 	// Crit Target w/ X Addv (or 1 Triumph) (Repeatable; Each Repeat adds +10 to roll)
-	$scope.canCritTarget = function(weapon, using_adv, hit_info) {
+	$scope.canCritTarget = function(action_taker, weapon using_adv, hit_info) {
 		if (!weapon) {
 			return false;
 		}
 		if (hit_info.crit_applied) {
 			return false;
 		}
-		let crit_rating = weapon.crit_rating;
+		let crit_rating = $scope.getCritRating(weapon, action_taker);
 		return $scope.hasRequiredAdvantageOrTriumph(crit_rating, using_adv);
 	}
 	
 	$scope.critTarget = function(action_taker, target, weapon, using_adv, hit_id) {
-		let crit_rating = weapon.crit_rating;
+		let crit_rating = $scope.getCritRating(weapon, action_taker);
 		let spent_log = $scope.spendRequiredAdvantageOrTriumph(crit_rating, using_adv);
 		
 		let hit_info = $scope.action_tracker.hits_made[hit_id];
