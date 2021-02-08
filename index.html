@@ -3013,7 +3013,11 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.num_dice.num_setback_dice += extra_setback_dice;
 	}
 	
-	$scope.matchAttackDice = function(action_taker, target, weapon, target_range, target_defense_zone) {				
+	$scope.matchAttackDice = function(action_taker, target, weapon, target_range, target_defense_zone) {
+		// Skill Dice & Common Dice
+		let skill_key = weapon.skill_key;
+		let is_melee_attack = $scope.isMeleeSkill(skill_key);
+	
 		let target_silhouette = target.silhouette;
 		if (weapon.vehicle_weapon) {
 			let attacker_silhouette = $scope.vehicles_dict[action_taker.vehicle].silhouette;
@@ -3081,9 +3085,6 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.num_dice.num_force_dice = 0;
 		$scope.matchEnhanceDice(action_taker, skill_key);
 		
-		// Skill Dice & Common Dice
-		let skill_key = weapon.skill_key;
-		let is_melee_attack = $scope.isMeleeSkill(skill_key)
 		let setback_adds = 0;
 		if (weapon.qualities && weapon.qualities["SETBACKADD"]) {
 			setback_adds += weapon.qualities["SETBACKADD"];
