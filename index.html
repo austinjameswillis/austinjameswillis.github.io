@@ -2389,10 +2389,12 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			return 2;
 		}
 	
-		for (let i = 0; i < action_taker.criticals.length; i++) {
-			let critical = action_taker.criticals[i];
-			if (critical.name === 'Temporarily Lame' && critical.received_this_encounter) {
-				return 1;
+		if (action_taker.criticals) {
+			for (let i = 0; i < action_taker.criticals.length; i++) {
+				let critical = action_taker.criticals[i];
+				if (critical.name === 'Temporarily Lame' && critical.received_this_encounter) {
+					return 1;
+				}
 			}
 		}
 		
@@ -2596,24 +2598,26 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.matchEnhanceDice(action_taker, skill_key);
 		
 		$scope.num_diff_dice += action_taker.temp_diff_increase;
-		for (let i = 0; i < action_taker.criticals.length; i++) {
-			let critical = action_taker.criticals[i];
-			if (critical.name === 'Compromised' && critical.received_this_encounter) {
-				$scope.num_dice.num_diff_dice += 1;
-			} else if (critical.name === 'Head Ringer' && critical.received_this_encounter) {
-				if (char_key === 'CUN' || char_key === 'INT') {
+		if (action_taker.criticals) {
+			for (let i = 0; i < action_taker.criticals.length; i++) {
+				let critical = action_taker.criticals[i];
+				if (critical.name === 'Compromised' && critical.received_this_encounter) {
 					$scope.num_dice.num_diff_dice += 1;
+				} else if (critical.name === 'Head Ringer' && critical.received_this_encounter) {
+					if (char_key === 'CUN' || char_key === 'INT') {
+						$scope.num_dice.num_diff_dice += 1;
+					}
+				} else if (critical.name === 'Fearsome Wound' && critical.received_this_encounter) {
+					if (char_key === 'PR' || char_key === 'WIL') {
+						$scope.num_dice.num_diff_dice += 1;
+					}
+				} else if (critical.name === 'Agonizing Wound' && critical.received_this_encounter) {
+					if (char_key === 'BR' || char_key === 'AG') {
+						$scope.num_dice.num_diff_dice += 1;
+					}
+				} else if (critical.name === 'Scattered Senses' && critical.received_this_encounter) {
+					$scope.num_dice.num_boost_dice = 0;
 				}
-			} else if (critical.name === 'Fearsome Wound' && critical.received_this_encounter) {
-				if (char_key === 'PR' || char_key === 'WIL') {
-					$scope.num_dice.num_diff_dice += 1;
-				}
-			} else if (critical.name === 'Agonizing Wound' && critical.received_this_encounter) {
-				if (char_key === 'BR' || char_key === 'AG') {
-					$scope.num_dice.num_diff_dice += 1;
-				}
-			} else if (critical.name === 'Scattered Senses' && critical.received_this_encounter) {
-				$scope.num_dice.num_boost_dice = 0;
 			}
 		}
 		
@@ -2648,10 +2652,12 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			}
 		}
 		
-		for (let i = 0; i < action_taker.criticals.length; i++) {
-			let critical = action_taker.criticals[i];
-			if (critical.name === 'At the Brink') {
-				action_taker.strain += 1;
+		if (action_taker.criticals) {
+			for (let i = 0; i < action_taker.criticals.length; i++) {
+				let critical = action_taker.criticals[i];
+				if (critical.name === 'At the Brink') {
+					action_taker.strain += 1;
+				}
 			}
 		}
 		
@@ -4790,12 +4796,14 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		if (action_taker.defensive_stance > 0) {
 			return true;
 		}
-		for (let i = 0; i < action_taker.criticals; i++) {
-			let critical = action_taker.criticals[i];
-			if (critical.name === 'Hamstrung' && critical.received_this_encounter) {
-				return true;
-			} else if (critical.name === 'Bleeding Out') {
-				return true;
+		if (action_taker.criticals) {
+			for (let i = 0; i < action_taker.criticals; i++) {
+				let critical = action_taker.criticals[i];
+				if (critical.name === 'Hamstrung' && critical.received_this_encounter) {
+					return true;
+				} else if (critical.name === 'Bleeding Out') {
+					return true;
+				}
 			}
 		}
 		return false;
@@ -4809,17 +4817,19 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	
 	$scope.startOfTurnResets = function(action_taker) {
 		action_taker.defensive_stance = 0;
-		for (let i = 0; i < action_taker.criticals.length; i++) {
-			let critical = action_taker.criticals[i];
-			if (critical.name === 'Hamstrung' && critical.received_this_encounter) {
-				$scope.action_tracker.maneuvers_available -= 1;
-			} else if (critical.name === 'Bleeding Out') {
-				action_taker.wounds += 1;
-				action_taker.strain += 1;
-				if (action_taker.wounds > action_taker.wound_threshold) {
-					let wound_diff = action_taker.wounds - action_taker.wound_threshold;
-					if (wound_diff % 5 == 0) {
-						$scope.applyCriticalBleedingOut(action_taker);
+		if (action_taker.criticals) {
+			for (let i = 0; i < action_taker.criticals.length; i++) {
+				let critical = action_taker.criticals[i];
+				if (critical.name === 'Hamstrung' && critical.received_this_encounter) {
+					$scope.action_tracker.maneuvers_available -= 1;
+				} else if (critical.name === 'Bleeding Out') {
+					action_taker.wounds += 1;
+					action_taker.strain += 1;
+					if (action_taker.wounds > action_taker.wound_threshold) {
+						let wound_diff = action_taker.wounds - action_taker.wound_threshold;
+						if (wound_diff % 5 == 0) {
+							$scope.applyCriticalBleedingOut(action_taker);
+						}
 					}
 				}
 			}
