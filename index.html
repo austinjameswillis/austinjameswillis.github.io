@@ -1992,6 +1992,9 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	}
 	
 	$scope.getCritRating = function(weapon, wielder) {
+		if (!weapon || !wielder) {
+			return 5;
+		}
 		let crit_rating = weapon.crit_rating;
 		if (weapon.skill_key === 'BRAWL') {
 			if (wielder.talents && wielder.talents['IRONBODY']) {
