@@ -2002,7 +2002,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	}
 	
 	// Crit Target w/ X Addv (or 1 Triumph) (Repeatable; Each Repeat adds +10 to roll)
-	$scope.canCritTarget = function(action_taker, weapon using_adv, hit_info) {
+	$scope.canCritTarget = function(action_taker, weapon, using_adv, hit_info) {
 		if (!weapon) {
 			return false;
 		}
