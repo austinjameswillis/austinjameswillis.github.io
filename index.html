@@ -2440,10 +2440,12 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			return false;
 		}
 	
-		for (let i = 0; i < character.criticals.length; i++) {
-			let critical = character.criticals[i];
-			if (critical.name === 'Knocked Senseless' && critical.received_this_encounter) {
-				return true;
+		if (character.criticals) {
+			for (let i = 0; i < character.criticals.length; i++) {
+				let critical = character.criticals[i];
+				if (critical.name === 'Knocked Senseless' && critical.received_this_encounter) {
+					return true;
+				}
 			}
 		}
 		return false;
@@ -3888,8 +3890,10 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				}
 				
 				// Mark all criticals as not having been earned this encounter
-				for (let i = 0; i < character.criticals.length; i++) {
-					character.criticals[i].received_this_encounter = false;
+				if (character.criticals) {
+					for (let i = 0; i < character.criticals.length; i++) {
+						character.criticals[i].received_this_encounter = false;
+					}
 				}
 				
 				$scope.startOfTurnResets(character);
