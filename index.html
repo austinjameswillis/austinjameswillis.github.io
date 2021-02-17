@@ -5122,6 +5122,9 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			this.def_port = def_port;
 			this.def_starboard = def_starboard;
 			this.weapons = weapons;
+			if (!this.weapons) {
+				this.weapons = [];
+			}
 			this.silhouette = silhouette;
 			this.speed = speed;
 			this.handling = handling;
