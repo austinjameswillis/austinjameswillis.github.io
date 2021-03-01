@@ -216,7 +216,7 @@
 			<thead>
 				<th>Character Taking Action</th>
 				<th>Wounds</th>
-				<th ng-if='action_taker.char_type != "Minion"'>Strain</th>
+				<th ng-if='action_taker.char_type != "Minion" && action_taker.char_type != "Rival"'>Strain</th>
 				<th ng-if='action_taker.char_type === "Minion"'># in Group</th>
 			<thead>
 		</tr>
@@ -237,7 +237,7 @@
 		<td ng-if='action_taker.char_type === "Minion"'>
 			{{action_taker.wounds}} / {{getMinionGroupWT(action_taker)}}
 		</td>
-		<td ng-if='action_taker.char_type != "Minion"'>
+		<td ng-if='action_taker.char_type != "Minion" && action_taker.char_type != "Rival"'>
 			{{action_taker.strain}} / {{action_taker.strain_threshold}}
 		</td>
 		<td ng-if='action_taker.char_type === "Minion"'>
@@ -840,6 +840,38 @@
 						</div>
 					</div>
 				</div>
+				<div class='row mt-2 text-primary' ng-if='$parent.attack_weapon.qualities && $parent.attack_weapon.qualities["STUNDAMAGE"]'>
+					<div class='col'>
+						This weapon deals strain damage.
+					</div>
+				</div>
+				<div class='row mt-2' ng-if='$parent.attack_weapon.qualities && $parent.attack_weapon.qualities["STUNSETTING"]'>
+					<div ng-if='$parent.attack_weapon.stun_setting_on'>
+						<div class='col text-primary'>
+							Stun Setting: ON
+						</div>
+						<div class='col'>
+							<button ng-click='changeStunSetting(action_taker, $parent.attack_weapon, false)' class='btn-block'>
+								Turn Stun Setting Off
+							</button>
+						</div>
+					</div>
+					<div ng-if='!$parent.attack_weapon.stun_setting_on'>
+						<div class='col text-seconary'>
+							Stun Setting: OFF
+						</div>
+						<div class='col'>
+							<button ng-click='changeStunSetting(action_taker, $parent.attack_weapon, true)' class='btn-block'>
+								Turn Stun Setting On
+							</button>
+						</div>
+					</div>
+				</div>
+				<div class='row mt-2 text-primary' ng-if='$parent.attack_weapon.qualities && $parent.attack_weapon.qualities["ION"]'>
+					<div class='col'>
+						This weapon deals ION damage (strain to vehicles, droids, and cyborgs). It should not be used against organics.
+					</div>
+				</div>
 				<div class='row mt-2'>
 					<div class='col-4'>
 						Attack
@@ -1283,19 +1315,24 @@ Num Copies: <input type="number" ng-model="read_char_copies" min=1>
 				</span>
 			</td>
 			<td ng-class="{'table-warning': character.strain > character.strain_threshold}" style="white-space: nowrap;">
-				<span>
-					<button ng-click="character.strain = character.strain - 1; characters_array.$save(character)">
-						-
-					</button>
-				</span>
-				<span>
-					{{character.strain}} / {{character.strain_threshold}}
-				</span>
-				<span>
-					<button ng-click="character.strain = character.strain + 1; characters_array.$save(character);">
-						+
-					</button>
-				</span>
+				<div ng-if='character.char_type != "Rival"'>
+					<span>
+						<button ng-click="character.strain = character.strain - 1; characters_array.$save(character)">
+							-
+						</button>
+					</span>
+					<span>
+						{{character.strain}} / {{character.strain_threshold}}
+					</span>
+					<span>
+						<button ng-click="character.strain = character.strain + 1; characters_array.$save(character);">
+							+
+						</button>
+					</span>
+				</div>
+				<div ng-if='character.char_type === "Rival"'>
+					N/A
+				</div>
 			</td>
 			<td>
 				<input type="radio" ng-model="character.ally_or_enemy" value="ally" ng-change='characters_array.$save(character)'> Ally<br>
@@ -1671,6 +1708,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			
 			this.damage_scale = 'personal';
 			this.vehicle_weapon = false;
+			
+			this.stun_setting_on = true;
 		}
 	}
 	
@@ -1768,7 +1807,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			if ($scope.general_info.in_combat && potential_taker.initiative_type === 'none') {
 				continue;
 			}
-			// TODO: Refacotr with getPotentialTargetsToAttack
+			// TODO: Refacactor with getPotentialTargetsToAttack
 			if (potential_taker.char_type === 'Minion') {
 				if (potential_taker.wounds > $scope.getMinionGroupWT(potential_taker)) {
 					continue;
@@ -2322,6 +2361,23 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 					$scope.addLogEntry(`Minion group ${character.name} has been destroyed.`);
 				}
 			}
+		} else if (action_taker.char_type === 'Rival') {
+			action_taker.wounds += 1;
+			
+			$scope.addLogEntry(`${spent_log} spent to inflict 1 strain (wound). (${action_taker.wounds}/${action_taker.wound_threshold}.`);
+			
+			if (action_taker.wounds > action_taker.wound_threshold) {
+				$scope.addLogEntry(`${character.name} passes out.`);
+			}
+			
+			let num_new_minions = $scope.getNumActiveMinions(action_taker);
+			let num_minions_lost = num_starting_minions - num_new_minions;
+			if (num_minions_lost > 0) {
+				$scope.addLogEntry(`${character.name} loses ${num_minions_lost} minions. (${$scope.getNumActiveMinions(target)}/${target.num_in_group} minions remaining)`);
+				if (new_minions_in_group <= 0) {
+					$scope.addLogEntry(`Minion group ${character.name} has been destroyed.`);
+				}
+			}
 		} else {
 			action_taker.strain = action_taker.strain + 1;
 			// TODO: Make verbose?
@@ -2847,6 +2903,16 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		});
 	}
 	
+	$scope.changeStunSetting = function(action_taker, weapon, stun_setting) {
+		let on_off = 'off';
+		if (stun_setting) {
+			on_off = 'on';
+		}
+		$scope.addLogEntry(`${action_taker.name} turns the stun setting on their ${weapon.name} ${on_off}`);
+		weapon.stun_setting_on = stun_setting;
+		$scope.characters_array.$save(action_taker);
+	}
+	
 	$scope.isMeleeSkill = function(skill_key) {
 		if (skill_key === 'BRAWL' || skill_key === 'MELEE' || skill_key === 'LTSABER') {
 			return true;
@@ -3126,7 +3192,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		}
 	}
 	
-	$scope.hitTarget = function(action_taker, target, attack_skill, base_damage, pierce, breach, damage_type) {
+	$scope.hitTarget = function(action_taker, target, attack_skill, base_damage, pierce, breach, damage_type, stun_damage, ion_damage) {
 		let damage = base_damage;
 		damage += $scope.die_pool.succ;
 		
@@ -3151,7 +3217,13 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				pierce = 0;
 				breach = 0;
 			}
-			let hit_through_soak = $scope.applyDamageToCharacterTarget(target, damage, pierce, breach, damage_type);
+			if (ion_damage) {
+				// TODO: Check if droid or cyborg
+				// Also just disable the button if it's an ion weapon and the target isn't a droid or cyborg
+				// Just make a function that we can also call here?
+				 stun_damage = true;
+			}
+			let hit_through_soak = $scope.applyDamageToCharacterTarget(target, damage, pierce, breach, damage_type, stun_damage);
 			if (hit_through_soak) {
 				$scope.addHit(target, attack_skill);
 			}
@@ -3176,7 +3248,18 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		if (weapon.qualities && weapon.qualities["BREACH"]) {
 			breach = weapon.qualities["BREACH"];
 		}
-		$scope.hitTarget(action_taker, target, weapon.skill_key, base_damage, pierce, breach, weapon.damage_scale);
+		let stun_damage = false;
+		if (weapon.qualities && weapon.qualities["STUNDAMAGE"]) {
+			stun_damage = true;
+		}
+		if (weapon.qualities && weapon.qualities["STUNSETTING"] && weapon.stun_setting_on) {
+			stun_damage = true;
+		}
+		let ion_damage = false;
+		if (weapon.qualities && weapon.qualities["ION"]) {
+			ion_damage = true;
+		}
+		$scope.hitTarget(action_taker, target, weapon.skill_key, base_damage, pierce, breach, weapon.damage_scale, stun_damage, ion_damage);
 	}
 	
 	$scope.attackTarget = function(action_taker, target, weapon) {
@@ -3203,7 +3286,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	}
 	
 	// Returns true if the damage goes through the soak, false otherwise
-	$scope.applyDamageToCharacterTarget = function(character, damage, pierce, breach, damage_type) {
+	$scope.applyDamageToCharacterTarget = function(character, damage, pierce, breach, damage_type, stun_damage) {
 		let starting_minions_in_group = 0;
 		if (character.char_type === 'Minion') {
 			starting_minions_in_group = $scope.getNumActiveMinions(character);
@@ -3221,10 +3304,14 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			$scope.addLogEntry('But the attack fails to go through their soak.');
 			return false;
 		}
-		character.wounds = character.wounds + wounds_taken;
 		
+		let wounds_or_strain = 'wounds';
+		if (stun_damage) {
+			wounds_or_strain = 'strain (as wounds)';
+		}
 		if (character.char_type === 'Minion') {
-			$scope.addLogEntry(`${character.name} takes ${wounds_taken} wounds (${character.wounds}/${$scope.getMinionGroupWT(character)}).`);
+			character.wounds = character.wounds + wounds_taken;
+			$scope.addLogEntry(`${character.name} takes ${wounds_taken} ${wounds_or_strain} (${character.wounds}/${$scope.getMinionGroupWT(character)}).`);
 			let new_minions_in_group = $scope.getNumActiveMinions(character);
 			let num_minions_lost = starting_minions_in_group - new_minions_in_group;
 			if (num_minions_lost > 0) {
@@ -3233,8 +3320,28 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 					$scope.addLogEntry(`Minion group ${character.name} has been destroyed.`);
 				}
 			}
+			if (new_minions_in_group > 0) {
+				$scope.removeAims(character);
+			}
+		} else if (character.char_type === 'Rival') {
+			character.wounds = character.wounds + wounds_taken;
+			$scope.addLogEntry(`${character.name} takes ${wounds_taken} ${wounds_or_strain} (${character.wounds}/${character.wound_threshold}).`);
+			if (character.wounds > character.wound_threshold) {
+				$scope.addLogEntry(`${character.name} passes out.`);
+				// TODO: Move this to a 'go unconscious' function
+				character.prone = true;
+				character.aims = 0;
+			} else {
+				$scope.removeAims(character);
+			}
 		} else {
-			$scope.addLogEntry(`${character.name} takes ${wounds_taken} wounds (${character.wounds}/${character.wound_threshold}).`);
+			if (stun_damage) {
+				character.strain = character.strain + wounds_taken;
+				$scope.addLogEntry(`${character.name} takes ${wounds_taken} strain (${character.strain}/${character.strain_threshold}).`);
+			} else {
+				character.wounds = character.wounds + wounds_taken;
+				$scope.addLogEntry(`${character.name} takes ${wounds_taken} wounds (${character.wounds}/${character.wound_threshold}).`);
+			}
 			if (character.wounds > character.wound_threshold) {
 				$scope.addLogEntry(`${character.name} passes out.`);
 				// TODO: Move this to a 'go unconscious' function
@@ -3502,6 +3609,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				/* pierce = */ 0,
 				/* breach = */ 0,
 				/* damage_type = */ 'personal',
+				/* stun_damage = */ false,
+				/* ion_damage = */ false,
 			);
 		}
 	}
@@ -4075,6 +4184,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		let new_char = null;
 		if (character_type === 'Minion') {
 			new_char = new Minion(name);
+		} else if (character_type === 'Rival') {
+			new_char = new Rival(name);
 		} else {
 			new_char = new Character(name);
 		}

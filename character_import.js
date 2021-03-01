@@ -28,8 +28,9 @@ class Character extends Target {
 		
 		this.force_rating = 0;
 		this.force_powers = {};
-		
 		this.lightside_user = true;
+		this.morality = 50;
+		this.conflict = 0;
 		
 		this.species = '';
 		
@@ -39,8 +40,10 @@ class Character extends Target {
 		this.left_fist = null;
 		
 		this.criticals = [];
+		this.blinded = false;
 		
 		this.stim_packs_used = 0;
+		this.healed_this_encounter = false;
 		
 		this.ally_or_enemy = 'ally';
 		this.initiative_type = 'none';
@@ -52,10 +55,13 @@ class Character extends Target {
 		this.cover_bonus = 0;
 		
 		this.aims = 0;
+		// Defensive Stance Talent
+		this.defensive_stance = 0;
 		
 		this.temp_boosts = 0;
 		this.temp_setbacks = 0;
 		this.temp_upgrades = 0;
+		this.temp_diff_increase = 0;
 		this.temp_diff_upgrades = 0;
 		
 		this.turn_taken = false;
@@ -70,6 +76,13 @@ class Minion extends Character {
 			this.group_skills = {};
 			
 			this.num_in_group = 1;
+		}
+}
+
+class Rival extends Character {
+		constructor(name) {
+			super(name);
+			this.char_type = 'Rival';
 		}
 }
 
