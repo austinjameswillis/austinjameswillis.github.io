@@ -4916,7 +4916,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			return true;
 		}
 		if (action_taker.criticals) {
-			for (let i = 0; i < action_taker.criticals; i++) {
+			for (let i = 0; i < action_taker.criticals.length; i++) {
 				let critical = action_taker.criticals[i];
 				if (critical.name === 'Hamstrung' && critical.received_this_encounter) {
 					return true;
