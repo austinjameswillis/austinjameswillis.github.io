@@ -193,6 +193,10 @@
 			  <input type="checkbox" class="custom-control-input" id="in_combat_switch" ng-model='general_info.in_combat' ng-change='general_info.$save()'>
 			  <label class="custom-control-label" for="in_combat_switch">In Combat</label>
 			</div>
+			<div class="custom-control custom-switch">
+				<input type="checkbox" class="custom-control-input" id="play_next_turn_beep_switch" ng-model='play_next_turn_beep'>
+				<label class="custom-control-label" for="play_next_turn_beep_switch">🔊</label>
+			</div>
 		</td>
 		<td class="align-middle">
 			<button ng-click="rollInitiative()">
@@ -243,6 +247,7 @@
 		<td ng-if='action_taker.char_type === "Minion"'>
 			<img ng-if='action_taker.ally_or_enemy === "ally"' ng-repeat='x in [].constructor(getNumActiveMinions(action_taker)) track by $index' ng-src='./dice_images/pc.png' height=25>
 			<img ng-if='action_taker.ally_or_enemy === "enemy"' ng-repeat='x in [].constructor(getNumActiveMinions(action_taker)) track by $index' ng-src='./dice_images/npc.png' height=25>
+			<img ng-if='action_taker.ally_or_enemy === "neutral"' ng-repeat='x in [].constructor(getNumActiveMinions(action_taker)) track by $index' ng-src='./dice_images/neutral_npc.png' height=25>
 			<img ng-repeat='x in [].constructor(action_taker.num_in_group - getNumActiveMinions(action_taker)) track by $index' ng-src='./dice_images/dead.png' height=25>
 		</td>
 	</table>
@@ -1336,7 +1341,8 @@ Num Copies: <input type="number" ng-model="read_char_copies" min=1>
 			</td>
 			<td>
 				<input type="radio" ng-model="character.ally_or_enemy" value="ally" ng-change='characters_array.$save(character)'> Ally<br>
-				<input type="radio" ng-model="character.ally_or_enemy" value="enemy" ng-change='characters_array.$save(character)'> Enemy
+				<input type="radio" ng-model="character.ally_or_enemy" value="enemy" ng-change='characters_array.$save(character)'> Enemy<br>
+				<input type="radio" ng-model="character.ally_or_enemy" value="neutral" ng-change='characters_array.$save(character)'> Neutral
 			</td>
 			<td>
 				<input type="radio" ng-model="character.initiative_type" value="cool" ng-change='characters_array.$save(character)'> Cool<br>
@@ -1414,6 +1420,7 @@ Num Copies: <input type="number" ng-model="read_char_copies" min=1>
 						<div class='col'>
 							<img ng-if='character.ally_or_enemy === "ally"' ng-repeat='x in [].constructor(getNumActiveMinions(character)) track by $index' ng-src='./dice_images/pc.png' height=25>
 							<img ng-if='character.ally_or_enemy === "enemy"' ng-repeat='x in [].constructor(getNumActiveMinions(character)) track by $index' ng-src='./dice_images/npc.png' height=25>
+							<img ng-if='character.ally_or_enemy === "neutral"' ng-repeat='x in [].constructor(getNumActiveMinions(character)) track by $index' ng-src='./dice_images/neutral_npc.png' height=25>
 							<img ng-repeat='x in [].constructor(character.num_in_group - getNumActiveMinions(character)) track by $index' ng-src='./dice_images/dead.png' height=25>
 						</div>
 					</div>
@@ -1421,7 +1428,8 @@ Num Copies: <input type="number" ng-model="read_char_copies" min=1>
 			</td>
 			<td>
 				<input type="radio" ng-model="character.ally_or_enemy" value="ally" ng-change='characters_array.$save(character)'> Ally<br>
-				<input type="radio" ng-model="character.ally_or_enemy" value="enemy" ng-change='characters_array.$save(character)'> Enemy
+				<input type="radio" ng-model="character.ally_or_enemy" value="enemy" ng-change='characters_array.$save(character)'> Enemy<br>
+				<input type="radio" ng-model="character.ally_or_enemy" value="neutral" ng-change='characters_array.$save(character)'> Neutral
 			</td>
 			<td>
 				<input type="radio" ng-model="character.initiative_type" value="cool" ng-change='characters_array.$save(character)'> Cool<br>
@@ -1739,6 +1747,14 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			super(succ, adv);
 			this.image = "./dice_images/npc.png";
 			this.type = 'enemy';
+		}
+	}
+	
+	class NeutralSlot extends InitiativeSlot {
+		constructor(succ, adv) {
+			super(succ, adv);
+			this.image = "./dice_images/neutral_npc.png";
+			this.type = 'neutral';
 		}
 	}
 	
@@ -4019,6 +4035,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.action_tracker.boost_any = {
 			'ally': 0,
 			'enemy': 0,
+			'neutral': 0,
 		}
 		$scope.action_tracker.$save();
 		
@@ -4870,8 +4887,10 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			
 			if (character.ally_or_enemy === "ally") {
 				slot = new AllySlot(dice_pool.succ, dice_pool.adv);
-			} else {
+			} else if (character.ally_or_enemy === "enemy") {
 				slot = new EnemySlot(dice_pool.succ, dice_pool.adv);
+			} else {
+			    slot = new NeutralSlot(dice_pool.succ, dice_pool.adv);
 			}
 			temp_init_order.push(slot);
 		}
@@ -5004,6 +5023,16 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.newTurnResets();
 	}
 	
+	function _GetAllyOrEnemyComparatorValue(ally_or_enemy) {
+	    if (ally_or_enemy === "ally") {
+			return 0;
+		}
+		if (ally_or_enemy === "enemy") {
+			return 1;
+		}
+		return 2;
+	}
+	
 	$scope.initiativeCompator = function(a, b) {
 		var succ_diff = b.succ - a.succ;
 		if (succ_diff != 0) {
@@ -5013,13 +5042,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		if (adv_diff != 0) {
 			return adv_diff;
 		}
-		if (a.ally_or_enemy === "ally" && b.ally_or_enemy === "enemy") {
-			return -1;
-		}
-		if (a.ally_or_enemy === "enemy" && b.ally_or_enemy === "ally") {
-			return 1;
-		}
-		return 0;
+		return (_GetAllyOrEnemyComparatorValue(a.ally_or_enemy) - _GetAllyOrEnemyComparatorValue(b.ally_or_enemy));
 	}
 	
 	function download(content, fileName, contentType) {
@@ -5080,10 +5103,13 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	// Turn Number
 	var turn_number_ref = action_tracker_ref.child("round_tracker");
 	$scope.turn_number = $firebaseObject(turn_number_ref);
+	$scope.play_next_turn_beep = true
 	var stopNextTurnBeep = $scope.turn_number.$watch(function() {
-		let x = document.getElementById("nextTurnBeep");
-		x.volume = 0.8;
-		x.play();
+		if ($scope.play_next_turn_beep) {
+			let x = document.getElementById("nextTurnBeep");
+			x.volume = 0.8;
+			x.play();
+		}
 	});
 	
 	// Day
