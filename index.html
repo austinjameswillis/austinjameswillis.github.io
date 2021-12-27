@@ -2141,9 +2141,6 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	$scope.applyCritical = function(target, crit_boost) {
 		let crit_roll = Math.floor(Math.random() * 100) + 1; // Random number 1-100
 		crit_roll = crit_roll + crit_boost;
-		if (target.criticals) {
-			crit_roll = crit_roll + target.criticals.length * 10;
-		}
 		let critical = null;
 		
 		if (crit_roll <= 5) {
@@ -2467,7 +2464,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		if (action_taker.criticals) {
 			for (let i = 0; i < action_taker.criticals.length; i++) {
 				let critical = action_taker.criticals[i];
-				if (critical.name === 'Temporarily Lame' && critical.received_this_encounter) {
+				if (critical.name === 'Temporarily Lame') {
 					return 1;
 				}
 			}
@@ -2829,7 +2826,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		if ($scope.die_pool.adv > 0 && heal_target.strain > 0) {
 			let strain_healed = $scope.die_pool.adv;
 			heal_target.strain = Math.max(0, heal_target.strain - strain_healed);
-			$scope.addLogEntry(`${heal_target.name} healed ${strain_healed} from the medicine check (new strain: ${heal_target.strain}/${heal_target.strain_threshold})`);
+			$scope.addLogEntry(`${heal_target.name} healed ${strain_healed} strain from the medicine check (new strain: ${heal_target.strain}/${heal_target.strain_threshold})`);
 		}
 		
 		heal_target.healed_this_encounter = true;
@@ -4224,12 +4221,12 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			}
 			let purchased_nodes = talent_node.getElementsByTagName('Purchased');
 			if (purchased_nodes.length > 0) {
-				num_new_ranks++;
-			}
-			let ranks_nodes = talent_node.getElementsByTagName('Ranks');
-			if (ranks_nodes.length > 0) {
-				let num_ranks = parseInt(ranks_nodes[0].childNodes[0].nodeValue);
-				num_new_ranks += num_ranks;
+				let ranks_nodes = talent_node.getElementsByTagName('Ranks');
+				if (ranks_nodes.length > 0) {
+					num_new_ranks = parseInt(ranks_nodes[0].childNodes[0].nodeValue);
+				} else {
+					num_new_ranks = 1;
+				}
 			}
 			if (num_new_ranks) {
 				if (talent_dict[key]) {
