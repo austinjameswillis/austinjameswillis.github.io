@@ -2,11 +2,11 @@
 <html>
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.0/angular.min.js"></script>
 <!-- CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
 
 <!-- jQuery and JS bundle w/ Popper.js -->
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 
 <!-- The core Firebase JS SDK is always required and must be listed first -->
 <script src="https://www.gstatic.com/firebasejs/8.2.0/firebase-app.js"></script>
@@ -189,14 +189,15 @@
 			<button ng-click='endEncounter()'>End Encounter</button>
 		</td>
 		<td class="align-middle">
-			<div class="custom-control custom-switch">
-			  <input type="checkbox" class="custom-control-input" id="in_combat_switch" ng-model='general_info.in_combat' ng-change='general_info.$save()'>
-			  <label class="custom-control-label" for="in_combat_switch">In Combat</label>
+			<div class="form-check form-switch">
+				<input class="form-check-input" type="checkbox" id="in_combat_switch" ng-model='general_info.in_combat' ng-change='general_info.$save()'>
+				<label class="form-check-label" for="in_combat_switch">In Combat</label>
 			</div>
-			<div class="custom-control custom-switch">
-				<input type="checkbox" class="custom-control-input" id="play_next_turn_beep_switch" ng-model='play_next_turn_beep'>
-				<label class="custom-control-label" for="play_next_turn_beep_switch">🔊</label>
+			<div class="form-check form-switch">
+			  <input class="form-check-input" type="checkbox" id="play_next_turn_beep_switch" ng-model='play_next_turn_beep'>
+			  <label class="form-check-label" for="play_next_turn_beep_switch">🔊</label>
 			</div>
+			
 		</td>
 		<td class="align-middle">
 			<button ng-click="rollInitiative()">
@@ -230,9 +231,9 @@
 			<button ng-click='startOfTurnResetButton(action_taker)' ng-disabled='!needToStartOfTurnReset(action_taker)' ng-class="{'btn-danger': needToStartOfTurnReset(action_taker)}" class='btn'>
 				Start of Turn
 			</button>
-			<div class="custom-control custom-switch">
-				<input type="checkbox" class="custom-control-input" id="show_turn_taken_chars_switch" ng-model='show_turn_taken_chars'>
-				<label class="custom-control-label" for="show_turn_taken_chars_switch">Show Characters Who Have Already Gone</label>
+			<div class="form-check form-switch">
+			  <input class="form-check-input" type="checkbox" id="show_turn_taken_chars_switch" ng-model='show_turn_taken_chars'>
+			  <label class="form-check-label" for="show_turn_taken_chars_switch">Show Characters Who Have Already Gone</label>
 			</div>
 		</td>
 		<td ng-if='action_taker.char_type != "Minion"'>
@@ -271,13 +272,13 @@
 				</thead>
 				<tbody>
 					<tr ng-if='action_tracker.roll_made && general_info.in_combat && action_taker.char_type != "Minion"'>
-						<td>
-							<button ng-click='healStrain(action_taker, true)' ng-disabled='!canHealStrain(true) || action_taker.strain <= 0' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='healStrain(action_taker, true)' ng-disabled='!canHealStrain(true) || action_taker.strain <= 0' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/advantage.png" width=20>
 							</button>
 						</td>
-						<td>
-							<button ng-click='healStrain(action_taker, false)' ng-disabled='!canHealStrain(false) || action_taker.strain <= 0' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='healStrain(action_taker, false)' ng-disabled='!canHealStrain(false) || action_taker.strain <= 0' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
 							</button>
 						</td>
@@ -286,13 +287,13 @@
 						</td>
 					</tr>
 					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
-						<td>
-							<button ng-click='boostNextAlly(action_taker, true)' ng-disabled='!canBoostNextAlly(true)' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='boostNextAlly(action_taker, true)' ng-disabled='!canBoostNextAlly(true)' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/advantage.png" width=20>
 							</button>
 						</td>
-						<td>
-							<button ng-click='boostNextAlly(action_taker, false)' ng-disabled='!canBoostNextAlly(false)' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='boostNextAlly(action_taker, false)' ng-disabled='!canBoostNextAlly(false)' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
 							</button>
 						</td>
@@ -301,13 +302,13 @@
 						</td>
 					</tr>
 					<tr ng-repeat='(hit_id, hit_info) in action_tracker.hits_made'>
-						<td>
-							<button ng-click='critTarget(action_taker, attack_target, attack_weapon, true, hit_id)' ng-disabled='!canCritTarget(action_taker, attack_weapon, true, hit_info)' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='critTarget(action_taker, attack_target, attack_weapon, true, hit_id)' ng-disabled='!canCritTarget(action_taker, attack_weapon, true, hit_info)' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(getCritRating(attack_weapon, action_taker)) track by $index' src="./dice_images/advantage.png" width=20>
 							</button>
 						</td>
-						<td>
-							<button ng-click='critTarget(action_taker, attack_target, attack_weapon, false, hit_id)' ng-disabled='!canCritTarget(action_taker, attack_weapon, false, hit_info)' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='critTarget(action_taker, attack_target, attack_weapon, false, hit_id)' ng-disabled='!canCritTarget(action_taker, attack_weapon, false, hit_info)' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
 							</button>
 						</td>
@@ -316,8 +317,8 @@
 						</td>
 					</tr>
 					<tr ng-repeat='(hit_id, hit_info) in action_tracker.hits_made' ng-if='hit_info.crit_made'>
-						<td class='align-middle' colspan=2>
-							<button ng-click='applyCriticalNormal(characters_dict[hit_info.target_id], hit_info)' ng-disabled='hit_info.crit_applied' class='btn-block pb-1'>
+						<td class='align-middle d-grid' colspan=2>
+							<button ng-click='applyCriticalNormal(characters_dict[hit_info.target_id], hit_info)' ng-disabled='hit_info.crit_applied' class='pb-1'>
 								Apply d100 
 								<span ng-if='hit_info.crit_boost > 0'>
 									+ {{hit_info.crit_boost}} 
@@ -330,13 +331,13 @@
 						</td>
 					</tr>
 					<tr ng-if='action_tracker.roll_made && attack_target.target_type === "character" && general_info.in_combat'>
-						<td>
-							<button ng-click='setbackTarget(attack_target, true)' ng-disabled='!canSetbackTarget(true)' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='setbackTarget(attack_target, true)' ng-disabled='!canSetbackTarget(true)' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(2) track by $index' src="./dice_images/advantage.png" width=20>
 							</button>
 						</td>
-						<td>
-							<button ng-click='setbackTarget(attack_target, false)' ng-disabled='!canSetbackTarget(false)' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='setbackTarget(attack_target, false)' ng-disabled='!canSetbackTarget(false)' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
 							</button>
 						</td>
@@ -345,13 +346,13 @@
 						</td>
 					</tr>
 					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
-						<td>
-							<button ng-click='boostAlly(any_boost_target, true)' ng-disabled='!canBoostAlly(true)' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='boostAlly(any_boost_target, true)' ng-disabled='!canBoostAlly(true)' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(2) track by $index' src="./dice_images/advantage.png" width=20>
 							</button>
 						</td>
-						<td>
-							<button ng-click='boostAlly(any_boost_target, false)' ng-disabled='!canBoostAlly(false)' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='boostAlly(any_boost_target, false)' ng-disabled='!canBoostAlly(false)' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
 							</button>
 						</td>
@@ -361,13 +362,13 @@
 						</td>
 					</tr>
 					<tr ng-repeat='(hit_id, hit_info) in action_tracker.hits_made' ng-if='using_autofire && attack_weapon.qualities["AUTOFIRE"]'>
-						<td>
-							<button ng-click='extraAutofireHit(action_taker, attack_target, attack_weapon, hit_info, true)' ng-disabled='!canExtraAutofireHit(hit_info, true)' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='extraAutofireHit(action_taker, attack_target, attack_weapon, hit_info, true)' ng-disabled='!canExtraAutofireHit(hit_info, true)' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(2) track by $index' src="./dice_images/advantage.png" width=20>
 							</button>
 						</td>
-						<td>
-							<button ng-click='extraAutofireHit(action_taker, attack_target, attack_weapon, hit_info, false)' ng-disabled='!canExtraAutofireHit(hit_info, false)' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='extraAutofireHit(action_taker, attack_target, attack_weapon, hit_info, false)' ng-disabled='!canExtraAutofireHit(hit_info, false)' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
 							</button>
 						</td>
@@ -380,8 +381,8 @@
 					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
 						<td>
 						</td>
-						<td>
-							<button ng-click='upgradeTargetDiff(attack_target)' ng-disabled='!canUpgradeTargetDiff()' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='upgradeTargetDiff(attack_target)' ng-disabled='!canUpgradeTargetDiff()' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
 							</button>
 						</td>
@@ -392,8 +393,8 @@
 					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
 						<td>
 						</td>
-						<td>
-							<button ng-click='upgradeAlly(any_upgrade_target)' ng-disabled='!canUpgradeAlly()' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='upgradeAlly(any_upgrade_target)' ng-disabled='!canUpgradeAlly()' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/triumph.png" width=20>
 							</button>
 						</td>
@@ -419,13 +420,13 @@
 				</thead>
 				<tbody>
 					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
-						<td>
-							<button ng-click='inflictStrain(action_taker, true)' ng-disabled='!canInflictStrain(true)' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='inflictStrain(action_taker, true)' ng-disabled='!canInflictStrain(true)' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/threat.png" width=20>
 							</button>
 						</td>
-						<td>
-							<button ng-click='inflictStrain(action_taker, false)' ng-disabled='!canInflictStrain(false)' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='inflictStrain(action_taker, false)' ng-disabled='!canInflictStrain(false)' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/despair.png" width=20>
 							</button>
 						</td>
@@ -434,13 +435,13 @@
 						</td>
 					</tr>
 					<tr ng-if='action_tracker.roll_made && attack_target.target_type === "character" && general_info.in_combat'>
-						<td>
-							<button ng-click='boostTarget(attack_target, true)' ng-disabled='!canBoostTarget(true)' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='boostTarget(attack_target, true)' ng-disabled='!canBoostTarget(true)' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(2) track by $index' src="./dice_images/threat.png" width=20>
 							</button>
 						</td>
-						<td>
-							<button ng-click='boostTarget(attack_target, false)' ng-disabled='!canBoostTarget(false)' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='boostTarget(attack_target, false)' ng-disabled='!canBoostTarget(false)' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/despair.png" width=20>
 							</button>
 						</td>
@@ -449,13 +450,13 @@
 						</td>
 					</tr>
 					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
-						<td>
-							<button ng-click='setbackAlly(any_setback_target, true)' ng-disabled='!canSetbackAlly(true)' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='setbackAlly(any_setback_target, true)' ng-disabled='!canSetbackAlly(true)' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(2) track by $index' src="./dice_images/threat.png" width=20>
 							</button>
 						</td>
-						<td>
-							<button ng-click='setbackAlly(any_setback_target, false)' ng-disabled='!canSetbackAlly(false)' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='setbackAlly(any_setback_target, false)' ng-disabled='!canSetbackAlly(false)' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/despair.png" width=20>
 							</button>
 						</td>
@@ -467,8 +468,8 @@
 					<tr ng-if='action_tracker.roll_made && general_info.in_combat'>
 						<td>
 						</td>
-						<td>
-							<button ng-click='upgradeAllyDiff(any_diff_upgrade_target)' ng-disabled='!canUpgradeAllyDiff()' class='btn-block pb-1' style="white-space: nowrap;">
+						<td class='d-grid'>
+							<button ng-click='upgradeAllyDiff(any_diff_upgrade_target)' ng-disabled='!canUpgradeAllyDiff()' class='pb-1' style="white-space: nowrap;">
 								<img ng-repeat='x in [].constructor(1) track by $index' src="./dice_images/despair.png" width=20>
 							</button>
 						</td>
@@ -512,15 +513,15 @@
 						</div>
 						<!-- Enhance Basic -->
 						<div ng-if='enhance_power.using_enhance_basic' class='row mt-2'>
-							<div class='col'>
-								<button ng-click='activateEnhanceBasic(action_taker, true)' ng-disabled='!canSpendFP(action_taker, 1)' class='btn-block'>
+							<div class='col d-grid'>
+								<button ng-click='activateEnhanceBasic(action_taker, true)' ng-disabled='!canSpendFP(action_taker, 1)'>
 									<img ng-src='{{getFPImage(action_taker.lightside_user, false)}}' width=25>
 									Add 
 									<img ng-src='./dice_images/success.png' width=25>
 								</button>
 							</div>
-							<div class='col'>
-								<button ng-click='activateEnhanceBasic(action_taker, false)' ng-disabled='!canSpendFP(action_taker, 1)' class='btn-block'>
+							<div class='col d-grid'>
+								<button ng-click='activateEnhanceBasic(action_taker, false)' ng-disabled='!canSpendFP(action_taker, 1)'>
 									<img ng-src='{{getFPImage(action_taker.lightside_user, false)}}' width=25>
 									Add 
 									<img ng-src='./dice_images/advantage.png' width=25>
@@ -536,20 +537,20 @@
 							</div>
 							<!-- Force Leap Use/Fail Buttons -->
 							<div class='row mt-2'>
-								<div class='col'>
-									<button ng-click='useEnhanceForceLeap(action_taker)' ng-disabled='!enhance_power.enhance_force_leap_activated' class='btn-block'>
+								<div class='col d-grid'>
+									<button ng-click='useEnhanceForceLeap(action_taker)' ng-disabled='!enhance_power.enhance_force_leap_activated'>
 										Make Force Leap
 									</button>
 								</div>
-								<div class='col'>
-									<button ng-click='failEnhanceForceLeap(action_taker)' class='btn-block'>
+								<div class='col d-grid'>
+									<button ng-click='failEnhanceForceLeap(action_taker)'>
 										Fail Force Leap
 									</button>
 								</div>
 							</div>
 							<div class='row mt-2'>
-								<div class='col'>
-									<button class='btn-block py-1' ng-click='activateEnhanceForceLeap()' ng-disabled='!canSpendFP(action_taker, 1) || enhance_power.enhance_force_leap_activated'>
+								<div class='col d-grid'>
+									<button class='py-1' ng-click='activateEnhanceForceLeap()' ng-disabled='!canSpendFP(action_taker, 1) || enhance_power.enhance_force_leap_activated'>
 										<img ng-src='{{getFPImage(action_taker.lightside_user, false)}}' width=25>
 										 Activate Power
 									</button>
@@ -591,32 +592,32 @@
 							</div>
 							<!-- Move Use/Fail Buttons -->
 							<div class='row mt-2'>
-								<div class='col'>
-									<button ng-click='useMoveBasic(action_taker, attack_target)' ng-disabled='!move_power.move_basic_activated || (move_power.using_move_hurl && move_power.strength < move_power.hurl_object_silhouette)' class='btn-block'>Use Move Power</button>
+								<div class='col d-grid'>
+									<button ng-click='useMoveBasic(action_taker, attack_target)' ng-disabled='!move_power.move_basic_activated || (move_power.using_move_hurl && move_power.strength < move_power.hurl_object_silhouette)'>Use Move Power</button>
 								</div>
-								<div class='col'>
-									<button ng-click='failMoveBasic(action_taker, attack_target)' class='btn-block'>Fail Move Power</button>
+								<div class='col d-grid'>
+									<button ng-click='failMoveBasic(action_taker, attack_target)'>Fail Move Power</button>
 								</div>
 							</div>
 							<div class='row mt-2'>
-								<div class='col'>
-									<button class='btn-block py-1' ng-click='activateMoveBasic()' ng-disabled='!canSpendFP(action_taker, 1) || move_power.move_basic_activated'>
+								<div class='col d-grid'>
+									<button class='py-1' ng-click='activateMoveBasic()' ng-disabled='!canSpendFP(action_taker, 1) || move_power.move_basic_activated'>
 										<img ng-src='{{getFPImage(action_taker.lightside_user, false)}}' width=25>
 										 Activate Power
 									</button>
 								</div>
 							</div>
 							<div class='row mt-2' ng-if='action_taker.force_powers.move.strength'>
-								<div class='col'>
-									<button class='btn-block py-1' ng-click='strengthMove(action_taker)', ng-disabled='!canSpendFP(action_taker, 1) || !move_power.move_basic_activated'>
+								<div class='col d-grid'>
+									<button class='py-1' ng-click='strengthMove(action_taker)', ng-disabled='!canSpendFP(action_taker, 1) || !move_power.move_basic_activated'>
 										<img ng-src='{{getFPImage(action_taker.lightside_user, false)}}' width=25>
 										Increase Object Silhouette to {{move_power.strength + action_taker.force_powers.move.strength}}
 									</button>
 								</div>
 							</div>
 							<div class='row mt-2' ng-if='action_taker.force_powers.move.range'>
-								<div class='col'>
-									<button class='btn-block py-1' ng-click='rangeMove(action_taker)', ng-disabled='!canSpendFP(action_taker, 1) || !move_power.move_basic_activated || move_power.range + action_taker.force_powers.move.range > 4'>
+								<div class='col d-grid'>
+									<button class='py-1' ng-click='rangeMove(action_taker)', ng-disabled='!canSpendFP(action_taker, 1) || !move_power.move_basic_activated || move_power.range + action_taker.force_powers.move.range > 4'>
 										<img ng-src='{{getFPImage(action_taker.lightside_user, false)}}' width=25>
 										Increase Range to {{getRangeString(move_power.range + action_taker.force_powers.move.range)}}.
 									</button>
@@ -646,11 +647,11 @@
 					</div>
 				</div>
 				<div class='row mt-2'>
-					<div class='col'>
-						<button ng-click='convertActionToManeuver(action_taker)' ng-disabled='action_tracker.actions_available <= 0 || action_tracker.maneuvers_available >= maneuverLimit(action_taker)' class='btn-block'>Convert Action to Maneuver</button>
+					<div class='col d-grid'>
+						<button ng-click='convertActionToManeuver(action_taker)' ng-disabled='action_tracker.actions_available <= 0 || action_tracker.maneuvers_available >= maneuverLimit(action_taker)'>Convert Action to Maneuver</button>
 					</div>
-					<div class='col'>
-						<button ng-click='strainForManeuver(action_taker)' ng-disabled='action_taker.strain > action_taker.strain_threshold - 2 || action_tracker.maneuvers_available >= maneuverLimit(action_taker) || action_taker.char_type === "Minion"' class='btn-block'>Strain for Maneuver</button>
+					<div class='col d-grid'>
+						<button ng-click='strainForManeuver(action_taker)' ng-disabled='action_taker.strain > action_taker.strain_threshold - 2 || action_tracker.maneuvers_available >= maneuverLimit(action_taker) || action_taker.char_type === "Minion"'>Strain for Maneuver</button>
 					</div>
 				</div>
 			</div>
@@ -676,14 +677,14 @@
 					</div>
 				</div>
 				<div class='row mt-2'>
-					<div class='col'>
-						<button ng-click='matchActionDice(action_taker, action_take_skill)' class='btn-block'>Match Dice</button>
+					<div class='col d-grid'>
+						<button ng-click='matchActionDice(action_taker, action_take_skill)'>Match Dice</button>
 					</div>
-					<div class='col'>
-						<button ng-click='rollNewDiePool()' class='btn-block'>Roll Dice</button>
+					<div class='col d-grid'>
+						<button ng-click='rollNewDiePool()'>Roll Dice</button>
 					</div>
-					<div class='col'>
-						<button ng-click='takeAction(action_taker, action_take_skill)' ng-disabled='!canTakeAction(action_taker)' class='btn-block'>Take Action</button>
+					<div class='col d-grid'>
+						<button ng-click='takeAction(action_taker, action_take_skill)' ng-disabled='!canTakeAction(action_taker)'>Take Action</button>
 					</div>
 				</div>
 			</div>
@@ -707,14 +708,14 @@
 					</div>
 				</div>
 				<div class='row mt-2'>
-					<div class='col'>
-						<button ng-click='matchWoundHealDice(action_taker, heal_wounds_target, equipment_for_wound_heal)' class='btn-block'>Match Dice</button>
+					<div class='col d-grid'>
+						<button ng-click='matchWoundHealDice(action_taker, heal_wounds_target, equipment_for_wound_heal)'>Match Dice</button>
 					</div>
-					<div class='col'>
-						<button ng-click='rollNewDiePool()' class='btn-block'>Roll Dice</button>
+					<div class='col d-grid'>
+						<button ng-click='rollNewDiePool()'>Roll Dice</button>
 					</div>
-					<div class='col'>
-						<button ng-click='healWoundsCheck(action_taker, heal_wounds_target)' ng-disabled='!canTakeAction(action_taker)' class='btn-block'>
+					<div class='col d-grid'>
+						<button ng-click='healWoundsCheck(action_taker, heal_wounds_target)' ng-disabled='!canTakeAction(action_taker)'>
 							Heal Wounds
 						</button>
 					</div>
@@ -734,14 +735,14 @@
 					</div>
 				</div>
 				<div class='row mt-2'>
-					<div class='col'>
-						<button ng-click='matchDroidWoundHealDice(action_taker, droid_heal_wounds_target)' class='btn-block'>Match Dice</button>
+					<div class='col d-grid'>
+						<button ng-click='matchDroidWoundHealDice(action_taker, droid_heal_wounds_target)'>Match Dice</button>
 					</div>
-					<div class='col'>
-						<button ng-click='rollNewDiePool()' class='btn-block'>Roll Dice</button>
+					<div class='col d-grid'>
+						<button ng-click='rollNewDiePool()'>Roll Dice</button>
 					</div>
-					<div class='col'>
-						<button ng-click='healWoundsCheck(action_taker, droid_heal_wounds_target)' ng-disabled='!canTakeAction(action_taker)' class='btn-block'>
+					<div class='col d-grid'>
+						<button ng-click='healWoundsCheck(action_taker, droid_heal_wounds_target)' ng-disabled='!canTakeAction(action_taker)'>
 							Heal Wounds
 						</button>
 					</div>
@@ -775,14 +776,14 @@
 					</div>
 				</div>
 				<div class='row mt-2'>
-					<div class='col'>
-						<button ng-click='matchCritHealDice(action_taker, crit_heal_target, crit_to_heal, equipment_for_crit_heal)' class='btn-block'>Match Dice</button>
+					<div class='col d-grid'>
+						<button ng-click='matchCritHealDice(action_taker, crit_heal_target, crit_to_heal, equipment_for_crit_heal)'>Match Dice</button>
 					</div>
-					<div class='col'>
-						<button ng-click='rollNewDiePool()' class='btn-block'>Roll Dice</button>
+					<div class='col d-grid'>
+						<button ng-click='rollNewDiePool()'>Roll Dice</button>
 					</div>
-					<div class='col'>
-						<button ng-click='healCritical(action_taker, crit_heal_target, crit_to_heal)' ng-disabled='!canTakeAction(action_taker)' class='btn-block'>
+					<div class='col d-grid'>
+						<button ng-click='healCritical(action_taker, crit_heal_target, crit_to_heal)' ng-disabled='!canTakeAction(action_taker)'>
 							Heal Critical
 						</button>
 					</div>
@@ -810,14 +811,14 @@
 					</div>
 				</div>
 				<div class='row mt-2'>
-					<div class='col'>
-						<button ng-click='matchDroidCritHealDice(action_taker, droid_crit_heal_target, droid_crit_to_heal)' class='btn-block'>Match Dice</button>
+					<div class='col d-grid'>
+						<button ng-click='matchDroidCritHealDice(action_taker, droid_crit_heal_target, droid_crit_to_heal)'>Match Dice</button>
 					</div>
-					<div class='col'>
-						<button ng-click='rollNewDiePool()' class='btn-block'>Roll Dice</button>
+					<div class='col d-grid'>
+						<button ng-click='rollNewDiePool()'>Roll Dice</button>
 					</div>
-					<div class='col'>
-						<button ng-click='healCritical(action_taker, droid_crit_heal_target, droid_crit_to_heal)' ng-disabled='!canTakeAction(action_taker)' class='btn-block'>
+					<div class='col d-grid'>
+						<button ng-click='healCritical(action_taker, droid_crit_heal_target, droid_crit_to_heal)' ng-disabled='!canTakeAction(action_taker)'>
 							Repair Critical
 						</button>
 					</div>
@@ -855,8 +856,8 @@
 						<div class='col text-primary'>
 							Stun Setting: ON
 						</div>
-						<div class='col'>
-							<button ng-click='changeStunSetting(action_taker, $parent.attack_weapon, false)' class='btn-block'>
+						<div class='col d-grid'>
+							<button ng-click='changeStunSetting(action_taker, $parent.attack_weapon, false)'>
 								Turn Stun Setting Off
 							</button>
 						</div>
@@ -865,8 +866,8 @@
 						<div class='col text-seconary'>
 							Stun Setting: OFF
 						</div>
-						<div class='col'>
-							<button ng-click='changeStunSetting(action_taker, $parent.attack_weapon, true)' class='btn-block'>
+						<div class='col d-grid'>
+							<button ng-click='changeStunSetting(action_taker, $parent.attack_weapon, true)'>
 								Turn Stun Setting On
 							</button>
 						</div>
@@ -941,14 +942,14 @@
 					</div>
 				</div>
 				<div class='row mt-2'>
-					<div class='col'>
-						<button ng-click='matchAttackDice(action_taker, attack_target, attack_weapon, target_range, target_defense_zone)' class='btn-block'>Match Dice</button>
+					<div class='col d-grid'>
+						<button ng-click='matchAttackDice(action_taker, attack_target, attack_weapon, target_range, target_defense_zone)'>Match Dice</button>
 					</div>
-					<div class='col'>
-						<button ng-click='rollNewDiePool()' class='btn-block'>Roll Dice</button>
+					<div class='col d-grid'>
+						<button ng-click='rollNewDiePool()'>Roll Dice</button>
 					</div>
-					<div class='col'>
-						<button ng-click='attackTarget(action_taker, attack_target, attack_weapon)' ng-disabled='!canTakeAction(action_taker)' class='btn-block'>Make Attack</button>
+					<div class='col d-grid'>
+						<button ng-click='attackTarget(action_taker, attack_target, attack_weapon)' ng-disabled='!canTakeAction(action_taker)'>Make Attack</button>
 					</div>
 				</div>
 			</div>
@@ -988,14 +989,14 @@
 						</div>
 					</div>
 					<div class='row mt-2'>
-						<div class='col'>
-							<button ng-click='matchForceDice(action_taker)' class='btn-block'>Match Dice</button>
+						<div class='col d-grid'>
+							<button ng-click='matchForceDice(action_taker)'>Match Dice</button>
 						</div>
-						<div class='col'>
-							<button class='btn-block' ng-click='rollNewDiePool()'>Roll Dice</button>
+						<div class='col d-grid'>
+							<button ng-click='rollNewDiePool()'>Roll Dice</button>
 						</div>
-						<div class='col'>
-							<button ng-click='forceLeap(action_taker)' ng-disabled='!canTakeAction(action_taker)' class='btn-block'>
+						<div class='col d-grid'>
+							<button ng-click='forceLeap(action_taker)' ng-disabled='!canTakeAction(action_taker)'>
 								Force Leap
 							</button>
 						</div>
@@ -1010,14 +1011,14 @@
 					</div>
 				</div>
 				<div class='row'>
-					<div class='col'>
-						<button ng-click='matchForceDice(action_taker)' class='btn-block'>Match Dice</button>
+					<div class='col d-grid'>
+						<button ng-click='matchForceDice(action_taker)'>Match Dice</button>
 					</div>
-					<div class='col'>
-						<button class='btn-block' ng-click='rollNewDiePool()'>Roll Dice</button>
+					<div class='col d-grid'>
+						<buttonng-click='rollNewDiePool()'>Roll Dice</button>
 					</div>
-					<div class='col'>
-						<button ng-click='forceMoveObject(action_taker)' ng-disabled='!canTakeAction(action_taker)' class='btn-block'>
+					<div class='col d-grid'>
+						<button ng-click='forceMoveObject(action_taker)' ng-disabled='!canTakeAction(action_taker)'>
 							Move Object
 						</button>
 					</div>
@@ -1047,16 +1048,16 @@
 						</div>
 					</div>
 					<div class='row mt-2'>
-						<div class='col'>
-							<button class='btn-block' ng-click='matchForceHurl(action_taker, $parent.$parent.attack_target, hurl_object_silhouette)'>
+						<div class='col d-grid'>
+							<button ng-click='matchForceHurl(action_taker, $parent.$parent.attack_target, hurl_object_silhouette)'>
 								Match Dice
 							</button>
 						</div>
-						<div class='col'>
-							<button class='btn-block' ng-click='rollNewDiePool()'>Roll Dice</button>
+						<div class='col d-grid'>
+							<button ng-click='rollNewDiePool()'>Roll Dice</button>
 						</div>
-						<div class='col'>
-							<button ng-click='forceMoveHurl(action_taker, $parent.$parent.attack_target, hurl_object_silhouette)' ng-disabled='!canTakeAction(action_taker)' class='btn-block'>
+						<div class='col d-grid'>
+							<button ng-click='forceMoveHurl(action_taker, $parent.$parent.attack_target, hurl_object_silhouette)' ng-disabled='!canTakeAction(action_taker)'>
 								Hurl Object (Attack)
 							</button>
 						</div>
@@ -1135,14 +1136,14 @@
 						</div>
 					</div>
 					<div class='row mt-2'>
-						<div class='col'>
-							<button ng-click='aim(action_taker)' ng-disabled='action_taker.aims >= 2 || !canTakeManeuver(action_taker)' class='btn-block'>Aim</button>
+						<div class='col d-grid'>
+							<button ng-click='aim(action_taker)' ng-disabled='action_taker.aims >= 2 || !canTakeManeuver(action_taker)'>Aim</button>
 						</div>
-						<div class='col'>
-							<button ng-click='standUp(action_taker)' ng-disabled='!action_taker.prone || !canTakeManeuver(action_taker)' class='btn-block'>Stand Up</button>
+						<div class='col d-grid'>
+							<button ng-click='standUp(action_taker)' ng-disabled='!action_taker.prone || !canTakeManeuver(action_taker)'>Stand Up</button>
 						</div>
-						<div class='col'>
-							<button ng-click='takeCover(action_taker)' ng-disabled='action_taker.cover_bonus > 0 || !canTakeManeuver(action_taker) || action_taker.prone' class='btn-block'>Take Cover</button>
+						<div class='col d-grid'>
+							<button ng-click='takeCover(action_taker)' ng-disabled='action_taker.cover_bonus > 0 || !canTakeManeuver(action_taker) || action_taker.prone'>Take Cover</button>
 						</div>
 					</div>
 				</div>
@@ -1230,15 +1231,13 @@
 				<button ng-click="clearLogs()">
 					Clear Logs
 				</button>
-				<div class="custom-control custom-switch row">
-					<div class='col'>
-						<input type="checkbox" class="custom-control-input" id="reverse_logs_switch" ng-model='reverse_logs'>
-						<label class="custom-control-label" for="reverse_logs_switch">Reverse Logs</label>
-					</div>
-					<div class='col'>
-						<input type="checkbox" class="custom-control-input" id="hide_dice_logs_switch" ng-model='hide_dice_roll_logs'>
-						<label class="custom-control-label" for="hide_dice_logs_switch">Hide Dice Rolls in Logs</label>
-					</div>
+				<div class="form-check form-switch">
+				  <input class="form-check-input" type="checkbox" id="reverse_logs_switch" ng-model='reverse_logs'>
+				  <label class="form-check-label" for="reverse_logs_switch">Reverse Logs</label>
+				</div>
+				<div class="form-check form-switch">
+				  <input class="form-check-input" type="checkbox" id="hide_dice_logs_switch" ng-model='hide_dice_roll_logs'>
+				  <label class="form-check-label" for="hide_dice_logs_switch">Hide Dice Rolls</label>
 				</div>
 				<div class="overflow-auto" style="max-height: 500px">
 					<table class="table table-striped">
@@ -1276,95 +1275,169 @@
 <hr>
 
 <p>
-<b>Import Characters:</b>
-<input type="file" id="character-file-input" multiple/>
-<button ng-click="readCharacterFiles(read_char_copies)">
-	Add Character(s)
-</button>
-Num Copies: <input type="number" ng-model="read_char_copies" min=1>
+	<b>Import Characters:</b>
+	<input type="file" id="character-file-input" multiple/>
+	<button ng-click="readCharacterFiles(read_char_copies)">
+		Add Character(s)
+	</button>
+	Num Copies: <input type="number" ng-model="read_char_copies" min=1>
 </p>
 
-
-<table class="table table-hover">
-	<thead>
-		<tr>
-			<th>Name</th>
-			<th>Soak</th>
-			<th>Defense <span style="white-space: nowrap;">Melee / Ranged</span></th>
-			<th>Wounds</th>
-			<th>Strain</th>
-			<th>Ally / Enemy</th>
-			<th>Initiative Type</th>
-			<th>Vehicle</th>
-		</tr>
-	</thead>
-	
-	<tbody>		
-		<tr ng-repeat="character in getNonMinions()">
-			<td>{{character.name}}</td>
-			<td>{{character.soak}}</td>
-			<td style="white-space: nowrap;">{{character.def_ranged}} / {{character.def_melee}}</td>
-			<td ng-class="{'table-danger': character.wounds > character.wound_threshold}" style="white-space: nowrap;">
-				<span>
-					<button ng-click="character.wounds = character.wounds - 1; characters_array.$save(character)">
-						-
-					</button>
-				</span>
-				<span>
-					{{character.wounds}} / {{character.wound_threshold}}
-				</span>
-				<span>
-					<button ng-click="character.wounds = character.wounds + 1; characters_array.$save(character)">
-						+
-					</button>
-				</span>
-			</td>
-			<td ng-class="{'table-warning': character.strain > character.strain_threshold}" style="white-space: nowrap;">
-				<div ng-if='character.char_type != "Rival"'>
-					<span>
-						<button ng-click="character.strain = character.strain - 1; characters_array.$save(character)">
-							-
+<nav>
+	<div class="nav nav-tabs" id="nav-tab" role="tablist">
+		<button class="nav-link active" id="nav-characters-all-tab" data-bs-toggle="tab" data-bs-target="#characters-all" type="button" role="tab" aria-controls="characters-all" aria-selected="true">All</button>
+		<button
+			ng-repeat="character in getNonMinions()"
+			class="nav-link"
+			ng-attr-id="nav-characters-{{characters_array.$keyAt(character)}}-tab"
+			data-bs-toggle="tab"
+			data-bs-target="#characters-{{characters_array.$keyAt(character)}}"
+			type="button"
+			role="tab"
+			aria-controls="characters-{{characters_array.$keyAt(character)}}"
+			aria-selected="false">{{character.name}}</button>
+	</div>
+</nav>
+<div class="tab-content" id="nav-tabContent">
+    <div class="tab-pane fade show active" id="characters-all" role="tabpanel" aria-labelledby="nav-characters-all-tab">
+	    <table class="table table-hover">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Soak</th>
+					<th>Defense <span style="white-space: nowrap;">Melee / Ranged</span></th>
+					<th>Wounds</th>
+					<th>Strain</th>
+					<th>Ally / Enemy</th>
+					<th>Initiative Type</th>
+					<th>Vehicle</th>
+				</tr>
+			</thead>
+			
+			<tbody>		
+				<tr ng-repeat="character in getNonMinions()">
+					<td>{{character.name}}</td>
+					<td>{{character.soak}}</td>
+					<td style="white-space: nowrap;">{{character.def_ranged}} / {{character.def_melee}}</td>
+					<td ng-class="{'table-danger': character.wounds > character.wound_threshold}" style="white-space: nowrap;">
+						<span>
+							<button ng-click="character.wounds = character.wounds - 1; characters_array.$save(character)">
+								-
+							</button>
+						</span>
+						<span>
+							{{character.wounds}} / {{character.wound_threshold}}
+						</span>
+						<span>
+							<button ng-click="character.wounds = character.wounds + 1; characters_array.$save(character)">
+								+
+							</button>
+						</span>
+					</td>
+					<td ng-class="{'table-warning': character.strain > character.strain_threshold}" style="white-space: nowrap;">
+						<div ng-if='character.char_type != "Rival"'>
+							<span>
+								<button ng-click="character.strain = character.strain - 1; characters_array.$save(character)">
+									-
+								</button>
+							</span>
+							<span>
+								{{character.strain}} / {{character.strain_threshold}}
+							</span>
+							<span>
+								<button ng-click="character.strain = character.strain + 1; characters_array.$save(character);">
+									+
+								</button>
+							</span>
+						</div>
+						<div ng-if='character.char_type === "Rival"'>
+							N/A
+						</div>
+					</td>
+					<td>
+						<input type="radio" ng-model="character.ally_or_enemy" value="ally" ng-change='characters_array.$save(character)'> Ally<br>
+						<input type="radio" ng-model="character.ally_or_enemy" value="enemy" ng-change='characters_array.$save(character)'> Enemy<br>
+						<input type="radio" ng-model="character.ally_or_enemy" value="neutral" ng-change='characters_array.$save(character)'> Neutral
+					</td>
+					<td>
+						<input type="radio" ng-model="character.initiative_type" value="cool" ng-change='characters_array.$save(character)'> Cool<br>
+						<input type="radio" ng-model="character.initiative_type" value="vigilance" ng-change='characters_array.$save(character)'> Vigilance<br>
+						<input type="radio" ng-model="character.initiative_type" value="custom" ng-change='characters_array.$save(character)'> Custom<br>
+						<input type="radio" ng-model="character.initiative_type" value="none" ng-change='characters_array.$save(character)'> None<br>
+						<img ng-repeat='die_image in character.initiative_roll.image_urls track by $index' ng-src='{{die_image}}' height=20><br>
+					</td>
+					<td>
+						<!-- <select ng-model="character.vehicle" ng-options='vehicle.$id as vehicle.name for vehicle in vehicles_array' ng-change='characters_array.$save(character)'>
+						<select> -->
+						<select ng-model="character.vehicle" ng-options='id as name for (id, name) in getPotentialVehicles()' ng-change='characters_array.$save(character)'>
+						<select>
+					</td>
+					<td>
+						<button ng-click="characters_array.$remove(character)">
+							Remove Character
 						</button>
-					</span>
-					<span>
-						{{character.strain}} / {{character.strain_threshold}}
-					</span>
-					<span>
-						<button ng-click="character.strain = character.strain + 1; characters_array.$save(character);">
-							+
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<div ng-repeat="character in getNonMinions()" class="tab-pane fade" id="characters-{{characters_array.$keyAt(character)}}" role="tabpanel" aria-labelledby="nav-characters-{{characters_array.$keyAt(character)}}-tab">
+		<h4>{{character.name}}</h4>
+		<h5>Critical Injuries</h5>
+		<select ng-model="num_val_of_crit_to_add">
+			<option ng-repeat="crit_entry_info in critical_injury_list" value="{{crit_entry_info.max_roll}}">
+				<!-- Don't show severity for Death -->
+				{{crit_entry_info.name}} ({{crit_entry_info.severity}})
+			</option>
+		</select>
+		<button ng-click="giveCriticalFromNum(character, num_val_of_crit_to_add); characters_array.$save(character)">
+			Add Critical Injury
+		</button>
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Critical</th>
+					<th>Severity</th>
+					<th>Day Received</th>
+					<th>Tried Healing?</th>
+					<th>This Encounter?</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="(crit_id, crit_info) in character.criticals">
+					<td>
+						<b>{{crit_info.name}}</b><br />
+						{{crit_info.description}}							
+					</td>
+					<td>
+						<img ng-repeat='x in [].constructor(crit_info.severity) track by $index' ng-src='./dice_images/purple.png' height=20>
+					</td>
+					<td>
+						<input type="number" id="{{crit_id}}-day_received" min="1" ng-model='character.criticals[crit_id].day_received' ng-change='characters_array.$save(character)'>
+					</td>
+					<td>
+						<div class="form-check form-switch">
+							<input class="form-check-input" type="checkbox" id="tried_healing_switch-{{crit_id}}" ng-model='character.criticals[crit_id].heal_attempt_made' ng-change='characters_array.$save(character)'>
+							<label class="form-check-label invisible" for="tried_healing_switch-{{crit_id}}">Heal Attempt Made</label>
+						</div>
+					</td>
+					<td>
+						<div class="form-check form-switch">
+							<input class="form-check-input" type="checkbox" id="received_this_encounter-{{crit_id}}" ng-model='character.criticals[crit_id].received_this_encounter' ng-change='characters_array.$save(character)'>
+							<label class="form-check-label invisible" for="received_this_encounter-{{crit_id}}">Heal Attempt Made</label>
+						</div>
+					</td>
+					<td>
+						<button ng-click="character.criticals[crit_id] = null; characters_array.$save(character)">
+							Remove Critical
 						</button>
-					</span>
-				</div>
-				<div ng-if='character.char_type === "Rival"'>
-					N/A
-				</div>
-			</td>
-			<td>
-				<input type="radio" ng-model="character.ally_or_enemy" value="ally" ng-change='characters_array.$save(character)'> Ally<br>
-				<input type="radio" ng-model="character.ally_or_enemy" value="enemy" ng-change='characters_array.$save(character)'> Enemy<br>
-				<input type="radio" ng-model="character.ally_or_enemy" value="neutral" ng-change='characters_array.$save(character)'> Neutral
-			</td>
-			<td>
-				<input type="radio" ng-model="character.initiative_type" value="cool" ng-change='characters_array.$save(character)'> Cool<br>
-				<input type="radio" ng-model="character.initiative_type" value="vigilance" ng-change='characters_array.$save(character)'> Vigilance<br>
-				<input type="radio" ng-model="character.initiative_type" value="custom" ng-change='characters_array.$save(character)'> Custom<br>
-				<input type="radio" ng-model="character.initiative_type" value="none" ng-change='characters_array.$save(character)'> None<br>
-				<img ng-repeat='die_image in character.initiative_roll.image_urls track by $index' ng-src='{{die_image}}' height=20><br>
-			</td>
-			<td>
-				<!-- <select ng-model="character.vehicle" ng-options='vehicle.$id as vehicle.name for vehicle in vehicles_array' ng-change='characters_array.$save(character)'>
-				<select> -->
-				<select ng-model="character.vehicle" ng-options='id as name for (id, name) in getPotentialVehicles()' ng-change='characters_array.$save(character)'>
-				<select>
-			</td>
-			<td>
-				<button ng-click="characters_array.$remove(character)">
-					Remove Character
-				</button>
-			</td>
-		</tr>
-	</tbody>
-</table>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
 
 <h4>Minion Groups</h4>
 
@@ -2138,104 +2211,215 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		$scope.action_tracker.$save();
 	}
 	
-	$scope.applyCritical = function(target, crit_boost) {
-		let crit_roll = Math.floor(Math.random() * 100) + 1; // Random number 1-100
-		crit_roll = crit_roll + crit_boost;
+	$scope.critical_injury_list = [
+		{
+			'name': 'Minor Nick',
+			'description': "The target suffers 1 strain.",
+			'severity': 1,
+			'max_roll': 5,
+			
+		},
+		{
+			'name': 'Slowed Down',
+			'description': "The target can only act during the last allied initiative slot on his next turn. <UNIMPLEMENTED>",
+			'severity': 1,
+			'max_roll': 10,
+		},
+		{
+			'name': 'Sudden Jolt',
+			'description': "The target drops whatever is in hand. <UNIMPLEMENTED>",
+			'severity': 1,
+			'max_roll': 15,
+		},
+		{
+			'name': 'Distracted',
+			'description': "The target cannot perform a free maneuver during his next turn. <UNIMPLEMENTED>",
+			'severity': 1,
+			'max_roll': 20,
+		},
+		{
+			'name': 'Off-Balance',
+			'description': "Add [SETBACK] to the target's next skill check.",
+			'severity': 1,
+			'max_roll': 25,
+		},
+		{
+			'name': 'Discouraging Wound',
+			'description': "Flip one light side Destiny Point to a dark side Destiny Point (reverse if NPC). <UNIMPLEMENTED>",
+			'severity': 1,
+			'max_roll': 30,
+		},
+		{
+			'name': 'Stunned',
+			'description': "The target is staggered until the end of the next round. <UNIMPLEMENTED>",
+			'severity': 1,
+			'max_roll': 35,
+		},
+		{
+			'name': 'Stinger',
+			'description': "Increase difficulty of next check by one.",
+			'severity': 1,
+			'max_roll': 40,
+		},
+		{
+			'name': 'Bowled Over',
+			'description': "The target is knocked prone and suffers 1 strain.",
+			'severity': 2,
+			'max_roll': 45,
+		},
+		{
+			'name': 'Head Ringer',
+			'description': "The target increases the difficulty of all Intellect and Cunning checks by one until the end of the encounter.",
+			'severity': 2,
+			'max_roll': 50,
+		},
+		{
+			'name': 'Fearsome Wound',
+			'description': "The target increases the difficulty of all Presence and Willpower checks by one until the end of the encounter.",
+			'severity': 2,
+			'max_roll': 55,
+		},
+		{
+			'name': 'Agonizing Wound',
+			'description': "The target increases the difficulty of all Brawn and Agility checks by one until the end of the encounter.",
+			'severity': 2,
+			'max_roll': 60,
+		},
+		{
+			'name': 'Slightly Dazed',
+			'description': "The target is disoriented until the end of the encounter. <UNIMPLEMENTED>",
+			'severity': 2,
+			'max_roll': 65,
+		},
+		{
+			'name': 'Scattered Senses',
+			'description': "The target removes all [BOOST] from skill checks until the end of the encounter.",
+			'severity': 2,
+			'max_roll': 70,
+		},
+		{
+			'name': 'Hamstrung',
+			'description': "The target loses his free maneuver until the end of the encounter.",
+			'severity': 2,
+			'max_roll': 75,
+		},
+		{
+			'name': 'Overpowered',
+			'description': "The target leaves himself open, and the attacker may make immediately attempt another free attack against him, using the exact same pool as the original attack. <UNIMPLEMENTED>",
+			'severity': 2,
+			'max_roll': 80,
+		},
+		{
+			'name': 'Winded',
+			'description': "Until the end of the encounter, the target cannot voluntarily suffer strain to activate any abilities or gain additional maneuvers. <UNIMPLEMENTED>",
+			'severity': 2,
+			'max_roll': 85,
+		},
+		{
+			'name': 'Compromised',
+			'description': "Increase the difficulty of all skill checks by one until the end of the encounter.",
+			'severity': 2,
+			'max_roll': 90,
+		},
+		{
+			'name': 'At the Brink',
+			'description': "The target suffers 1 strain each time he performs an action.",
+			'severity': 3,
+			'max_roll': 95,
+		},
+		{
+			'name': 'Crippled',
+			'description': "One of the target's limbs (selected by the GM) is crippled until healed or replaced. Increase difficulty of all checks that require use of that limb by one. <UNIMPLEMENTED>",
+			'severity': 3,
+			'max_roll': 100,
+		},
+		{
+			'name': 'Maimed',
+			'description': "One of the target's limbs (selected by the GM) is permanently lost. Unless the target has a cybernetic replacement, the target cannot perform actions that would require the use of that limb. All other actions gain [SETBACK]. <UNIMPLEMENTED>",
+			'severity': 3,
+			'max_roll': 105,
+		},
+		{
+			'name': 'Horrific Injury',
+			'description': "Roll 1d10 to determine which of the target's characteristics is affected: 1-3 for Brawn, 4-6 for Agility, 7 for Intellect, 8 for Cunning, 9 for Presence, and 10 for Willpower. Until this Critical Injury is healed, treat that characteristic as 1 point lower. <UNIMPLEMENTED>",
+			'severity': 3,
+			'max_roll': 110,
+		},
+		{
+			'name': 'Temporarily Lame',
+			'description': "Until this Critical Injury is healed, the target cannot perform more than one maneuver during his turn.",
+			'severity': 3,
+			'max_roll': 115,
+		},
+		{
+			'name': 'Blinded',
+			'description': "The target can no longer see. Upgrade the difficulty of all checks twice. Upgrade the difficulty of Perception and Vigilance checks three times.",
+			'severity': 3,
+			'max_roll': 120,
+		},
+		{
+			'name': 'Knocked Senseless',
+			'description': "The target is staggered for the remainder of the encounter.",
+			'severity': 3,
+			'max_roll': 125,
+		},
+		{
+			'name': 'Gruesome Injury',
+			'description': "Roll 1d10 to determine which of the target's characteristics is affected: 1-3 for Brawn, 4-6 for Agility, 7 for Intellect, 8 for Cunning, 9 for Presence, 10 for Willpower. That characteristic is permanently reduced by 1 to a minimum of 1. <UNIMPLEMENTED>",
+			'severity': 4,
+			'max_roll': 130,
+		},
+		{
+			'name': 'Bleeding Out',
+			'description': "Every round, the target suffers 1 wound and 1 strain at the beginning of his turn. For every 5 wounds he suffers beyond his wound thershold, he suffers 1 additional Critical Injury. Roll on the chart, suffering the injury (if he suffers this result a second time due to this, roll again).",
+			'severity': 4,
+			'max_roll': 140,
+		},
+		{
+			'name': 'The End is Nigh',
+			'description': "The target will die after the last initiative slot during the next round. <UNIMPLEMENTED>",
+			'severity': 4,
+			'max_roll': 140,
+		},
+		{
+			'name': 'Dead',
+			'description': "Complete, obliterated death. <UNIMPLEMENTED>",
+			'severity': 0,
+			'max_roll': 150,
+		},
+	]
+	
+	$scope.giveCriticalFromNum = function(target, crit_roll_num) {
 		let critical = null;
-		
-		if (crit_roll <= 5) {
-			critical = new Critical('Minor Nick', 1);
-			critical.description = "The target suffers 1 strain.";
-			target.strain = target.strain + 1;
-		} else if (crit_roll <= 10) {
-			critical = new Critical('Slowed Down', 1);
-			critical.description = "The target can only act during the last allied initiative slot on his next turn. <UNIMPLEMENTED>";
-		} else if (crit_roll <= 15) {
-			critical = new Critical('Sudden Jolt', 1);
-			critical.description = "The target drops whatever is in hand. <UNIMPLEMENTED>";
-		} else if (crit_roll <= 20) {
-			critical = new Critical('Distracted', 1)
-			critical.description = "The target cannot perform a free maneuver during his next turn. <UNIMPLEMENTED>";
-		} else if (crit_roll <= 25) {
-			critical = new Critical('Off-Balance', 1);
-			critical.description = "Add [SETBACK] to the target's next skill check.";
-			target.temp_setbacks = target.temp_setbacks + 1;
-		} else if (crit_roll <= 30) {
-			critical = new Critical('Discouraging Wound', 1);
-			critical.description = "Flip one light side Destiny Point to a dark side Destiny Point (reverse if NPC). <UNIMPLEMENTED>";
-		} else if (crit_roll <= 35) {
-			critical = new Critical('Stunned', 1);
-			critical.description = "The target is staggered until the end of the next round. <UNIMPLEMENTED>";
-		} else if (crit_roll <= 40) {
-			critical = new Critical('Stinger', 1);
-			critical.description = "Increase difficulty of next check by one.";
-			target.temp_diff_increase += 1;
-		} else if (crit_roll <= 45) {
-			critical = new Critical('Bowled Over', 2);
-			critical.description = "The target is knocked prone and suffers 1 strain.";
-			target.strain = target.strain + 1;
-			target.prone = true;
-		} else if (crit_roll <= 50) {
-			critical = new Critical('Head Ringer', 2);
-			critical.description = "The target increases the difficulty of all Intellect and Cunning checks by one until the end of the encounter.";
-		} else if (crit_roll <= 55) {
-			critical = new Critical('Fearsome Wound', 2);
-			critical.description = "The target increases the difficulty of all Presence and Willpower checks by one until the end of the encounter.";
-		} else if (crit_roll <= 60) {
-			critical = new Critical('Agonizing Wound', 2);
-			critical.description = "The target increases the difficulty of all Brawn and Agility checks by one until the end of the encounter.";
-		} else if (crit_roll <= 65) {
-			critical = new Critical('Slightly Dazed', 2);
-			critical.description = "The target is disoriented until the end of the encounter. <UNIMPLEMENTED>";
-		} else if (crit_roll <= 70) {
-			critical = new Critical('Scattered Senses', 2);
-			critical.description = "The target removes all [BOOST] from skill checks until the end of the encounter.";
-		} else if (crit_roll <= 75) {
-			critical = new Critical('Hamstrung', 2);
-			critical.description = "The target loses his free maneuver until the end of the encounter.";
-		} else if (crit_roll <= 80) {
-			critical = new Critical('Overpowered', 2);
-			critical.description = "The target leaves himself open, and the attacker may make immediately attempt another free attack against him, using the exact same pool as the original attack. <UNIMPLEMENTED>";
-		} else if (crit_roll <= 85) {
-			critical = new Critical('Winded', 2);
-			critical.description = "Until the end of the encounter, the target cannot voluntarily suffer strain to activate any abilities or gain additional maneuvers. <UNIMPLEMENTED>";
-		} else if (crit_roll <= 90) {
-			critical = new Critical('Compromised', 2);
-			critical.description = "Increase the difficulty of all skill checks by one until the end of the encounter.";
-		} else if (crit_roll <= 95) {
-			critical = new Critical('At the Brink', 3);
-			critical.description = "The target suffers 1 strain each time he performs an action.";
-		} else if (crit_roll <= 100) {
-			critical = new Critical('Crippled', 3);
-			critical.description = "One of the target's limbs (selected by the GM) is crippled until healed or replaced. Increase difficulty of all checks that require use of that limb by one. <UNIMPLEMENTED>";
-		} else if (crit_roll <= 105) {
-			critical = new Critical('Maimed', 3);
-			critical.description = "One of the target's limbs (selected by the GM) is permanently lost. Unless the target has a cybernetic replacement, the target cannot perform actions that would require the use of that limb. All other actions gain [SETBACK]. <UNIMPLEMENTED>";
-		} else if (crit_roll <= 110) {
-			critical = new Critical('Horrific Injury', 3);
-			critical.description = "Roll 1d10 to determine which of the target's characteristics is affected: 1-3 for Brawn, 4-6 for Agility, 7 for Intellect, 8 for Cunning, 9 for Presence, and 10 for Willpower. Until this Critical Injury is healed, treat that characteristic as 1 point lower. <UNIMPLEMENTED>";
-		} else if (crit_roll <= 115) {
-			critical = new Critical('Temporarily Lame', 3);
-			critical.description = "Until this Critical Injury is healed, the target cannot perform more than one maneuver during his turn.";
-		} else if (crit_roll <= 120) {
-			critical = new Critical('Blinded', 3);
-			critical.description = "The target can no longer see. Upgrade the difficulty of all checks twice. Upgrade the difficulty of Perception and Vigilance checks three times.";
-			target.blinded = true;
-		} else if (crit_roll <= 125) {
-			critical = new Critical('Knocked Senseless', 3);
-			critical.description = "The target is staggered for the remainder of the encounter.";
-		} else if (crit_roll <= 130) {
-			critical = new Critical('Gruesome Injury', 4);
-			critical.description = "Roll 1d10 to determine which of the target's characteristics is affected: 1-3 for Brawn, 4-6 for Agility, 7 for Intellect, 8 for Cunning, 9 for Presence, 10 for Willpower. That characteristic is permanently reduced by 1 to a minimum of 1. <UNIMPLEMENTED>";
-		} else if (crit_roll <= 140) {
-			critical = new Critical('Bleeding Out', 4);
-			critical.description = "Every round, the target suffers 1 wound and 1 strain at the beginning of his turn. For every 5 wounds he suffers beyond his wound thershold, he suffers 1 additional Critical Injury. Roll on the chart, suffering the injury (if he suffers this result a second time due to this, roll again).";
-		} else if (crit_roll <= 150) {
-			critical = new Critical('The End is Nigh', 4);
-			critical.description = "The target will die after the last initiative slot during the next round. <UNIMPLEMENTED>";
-		} else {
-			critical = new Critical('Dead', 10000000);
-			critical.description = "Complete, obliterated death. <UNIMPLEMENTED>";
+		console.log(crit_roll_num);
+		for (var i = 0; i < $scope.critical_injury_list.length; i++) {
+			crit_entry = $scope.critical_injury_list[i];
+			if (crit_roll_num <= crit_entry.max_roll) {
+				critical = new Critical(crit_entry.name, crit_entry.severity);
+				critical.description = crit_entry.description;
+				
+				// TODO: Make this a switch-case block
+				switch (critical.name) {
+					case 'Minor Nick':
+						target.strain = target.strain + 1;
+						break;
+					case 'Off-Balance':
+						target.temp_setbacks = target.temp_setbacks + 1;
+						break;
+					case 'Stinger':
+						target.temp_diff_increase += 1;
+						break;
+					case 'Bowled Over':
+						target.strain = target.strain + 1;
+						target.prone = true;
+						break;
+					case 'Blinded':
+						target.blinded = true;
+						break;
+				}
+				
+				break;
+			}
 		}
 		
 		critical.day_received = $scope.day.$value;
@@ -2245,12 +2429,19 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		} else {
 			target.criticals = [critical];
 		}
+	}
+	
+	
+	
+	$scope.applyCritical = function(target, crit_boost) {
+		let crit_roll = Math.floor(Math.random() * 100) + 1; // Random number 1-100
+		crit_roll = crit_roll + crit_boost;
+		
+		$scope.giveCriticalFromNum(target, crit_roll);
 		
 		let log_message = `${crit_roll} rolled. ${target.name} suffers the following critical injury. ` +
 			`${critical.name}: ${critical.description}`;
 		$scope.addLogEntry(log_message);
-		
-		return critical;
 	}
 	
 	// Setback Target w/ 2 Adv (TODO: Or Triumph)
