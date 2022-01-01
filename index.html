@@ -5284,10 +5284,16 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	
 	$scope.weapon_damage_type = 'personal';
 	
-	
+	const queryString = window.location.search;
+	const urlParams = new URLSearchParams(queryString);
+	var group_name = urlParams.get('group_name');
+	if (group_name == null) {
+		group_name = 'default';
+	}
+	var group_session = firebase.database().ref().child("sessions").child(group_name);
 	
 	// Die Roller
-	var dice_roller_ref = firebase.database().ref().child("dice_roller");
+	var dice_roller_ref = group_session.child("dice_roller");
 	$scope.dice_roller = $firebaseObject(dice_roller_ref);
 	var die_pool_ref = dice_roller_ref.child("die_pool");
 	$scope.die_pool = $firebaseObject(die_pool_ref);
@@ -5295,7 +5301,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	$scope.num_dice = $firebaseObject(num_dice_ref);
 	
 	// Logs
-	var remote_logs_ref = firebase.database().ref().child("remote_logs");
+	var remote_logs_ref = group_session.child("remote_logs");
 	// download the data into a local object
 	// var syncObject = $firebaseObject(ref);
 	// synchronize the object with a three-way data binding
@@ -5304,25 +5310,25 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	$scope.remote_logs = $firebaseArray(remote_logs_ref);
 	
 	// Characters
-	var characters_ref = firebase.database().ref().child("characters");
+	var characters_ref = group_session.child("characters");
 	$scope.characters_dict = $firebaseObject(characters_ref);
 	$scope.characters_array = $firebaseArray(characters_ref);
 	
 	// Vehicles
-	var vehicles_ref = firebase.database().ref().child("vehicles");
+	var vehicles_ref = group_session.child("vehicles");
 	$scope.vehicles_dict = $firebaseObject(vehicles_ref);
 	$scope.vehicles_array = $firebaseArray(vehicles_ref);
 	
 	
 	// Initiative
-	var initiative_order_ref = firebase.database().ref().child("initiative").child("initiative_order");
+	var initiative_order_ref = group_session.child("initiative").child("initiative_order");
 	$scope.init_order_array = $firebaseArray(initiative_order_ref);
 	
-	var initiative_turn_ref = firebase.database().ref().child("initiative");
+	var initiative_turn_ref = group_session.child("initiative");
 	$scope.initSyncObject = $firebaseObject(initiative_turn_ref);
 	
 	// Action Tracker
-	var action_tracker_ref = firebase.database().ref().child("action_tracker");
+	var action_tracker_ref = group_session.child("action_tracker");
 	$scope.action_tracker = $firebaseObject(action_tracker_ref);
 	// Force Powers
 	var force_powers_ref = action_tracker_ref.child("force_powers");
@@ -5344,7 +5350,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	});
 	
 	// Day
-	let day_ref = firebase.database().ref().child("day");
+	let day_ref = group_session.child("day");
 	$scope.day = $firebaseObject(day_ref);
 	
 	// Skill Data
@@ -5358,11 +5364,11 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	$scope.vehicle_info = $firebaseObject(vehicle_data_ref);
 	
 	// General Info
-	var general_info_ref = firebase.database().ref().child("general_info");
+	var general_info_ref = group_session.child("general_info");
 	$scope.general_info = $firebaseObject(general_info_ref);
 	
 	// Item Buyer
-	var item_buyer_ref = firebase.database().ref().child("item_buyer");
+	var item_buyer_ref = group_session.child("item_buyer");
 	$scope.item_buyer = $firebaseObject(item_buyer_ref);
 	var item_entries_ref = item_buyer_ref.child("item_entries");
 	$scope.item_entries = $firebaseArray(item_entries_ref);
