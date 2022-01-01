@@ -2165,9 +2165,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			} else {
 				hit_info.crit_made = true;
 				crit_boost = 0;
-				if (target.criticals) {
-					crit_boost += target.criticals.length * 10;
-				}
+				crit_boost += innateCritBoosts(target);
+				// TODO: LETHALBL and VICIOUS do not apply against vehicles
 				if (weapon.qualities && weapon.qualities['VICIOUS']) {
 					crit_boost += weapon.qualities['VICIOUS'] * 10;
 				}
@@ -2183,6 +2182,17 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		}
 
 		$scope.action_tracker.$save();
+	}
+	
+	function innateCritBoosts(target) {
+		let base_crit_boost = 0;
+		if (target.criticals) {
+			base_crit_boost += target.criticals.length * 10;
+		}
+		if (target.talents['DURA']) {
+			base_crit_boost -= target.talents['DURA'] * 10;
+		}
+		return base_crit_boost;
 	}
 	
 	// TODO: Investigate this. Can be consolidated?
@@ -2429,6 +2439,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		} else {
 			target.criticals = [critical];
 		}
+		
+		return critical;
 	}
 	
 	
@@ -2437,7 +2449,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		let crit_roll = Math.floor(Math.random() * 100) + 1; // Random number 1-100
 		crit_roll = crit_roll + crit_boost;
 		
-		$scope.giveCriticalFromNum(target, crit_roll);
+		let critical = $scope.giveCriticalFromNum(target, crit_roll);
 		
 		let log_message = `${crit_roll} rolled. ${target.name} suffers the following critical injury. ` +
 			`${critical.name}: ${critical.description}`;
@@ -2555,7 +2567,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 			let num_starting_minions = $scope.getNumActiveMinions(action_taker);
 			action_taker.wounds += 1;
 			
-			$scope.addLogEntry(`${spent_log} spent to inflict 1 strain (wound). (${action_taker.wounds}/${$scope.getMinionGroupWT(action_taker)} wounds).`);
+			$scope.addLogEntry(`${spent_log} spent to inflict 1 strain (wound). (${action_taker.wounds}/${$scope.getMinionGroupWT(action_taker)}) wounds).`);
 			
 			let num_new_minions = $scope.getNumActiveMinions(action_taker);
 			let num_minions_lost = num_starting_minions - num_new_minions;
@@ -2568,7 +2580,7 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		} else if (action_taker.char_type === 'Rival') {
 			action_taker.wounds += 1;
 			
-			$scope.addLogEntry(`${spent_log} spent to inflict 1 strain (wound). (${action_taker.wounds}/${action_taker.wound_threshold}.`);
+			$scope.addLogEntry(`${spent_log} spent to inflict 1 strain (wound). (${action_taker.wounds}/${action_taker.wound_threshold}).`);
 			
 			if (action_taker.wounds > action_taker.wound_threshold) {
 				$scope.addLogEntry(`${character.name} passes out.`);
@@ -3370,7 +3382,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	
 	$scope.upgradeAttackDifficultyDice = function(action_taker, target, attack_skill) {
 		let num_diff_upgrades = action_taker.temp_diff_upgrades;
-		if (target.talents['ADV']) {
+		// TODO: Check if the vehicle has a single occupant with adversary (or later pilot once there's role assignments)
+		if (target.target_type === "vehicle" && target.talents['ADV']) {
 			num_diff_upgrades += target.talents['ADV'];
 		}
 		if ($scope.isMeleeSkill(attack_skill) && target.defensive_stance) {
@@ -3535,6 +3548,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				// TODO: Move this to a 'go unconscious' function
 				character.prone = true;
 				character.aims = 0;
+				$scope.addLogEntry(`${character.name} suffered a critical injury from exceeding their wound threshold.`);
+				$scope.applyCritical(character, innateCritBoosts(character));
 			} else {
 				$scope.removeAims(character);
 			}
@@ -3551,6 +3566,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 				// TODO: Move this to a 'go unconscious' function
 				character.prone = true;
 				character.aims = 0;
+				$scope.addLogEntry(`${character.name} suffered a critical injury from exceeding their wound threshold.`);
+				$scope.applyCritical(character, innateCritBoosts(character));
 			} else {
 				$scope.removeAims(character);
 			}
@@ -4664,7 +4681,31 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 		new_char.armor = armor;
 		
 		$scope.$apply(function () {
-			$scope.characters_array.$add(new_char);
+			let previous_version_char = null;
+			for (i = 0; i < $scope.characters_array.length; i++) {
+				existing_char = $scope.characters_array[i];
+				if (existing_char.name == new_char.name) {
+					previous_version_char = existing_char;
+					break;
+				}
+			}
+			
+			if (previous_version_char == null) {
+				$scope.characters_array.$add(new_char);
+			} else {
+				// Array Fields need an if-statement to check if they exist
+				new_char.wounds = previous_version_char.wounds;
+				new_char.strain = previous_version_char.strain;
+				if (previous_version_char.criticals) {
+					new_char.criticals = previous_version_char.criticals;
+				}
+				new_char.stim_packs_used = previous_version_char.stim_packs_used;
+				new_char.ally_or_enemy = previous_version_char.ally_or_enemy;
+				new_char.vehicle = previous_version_char.vehicle;
+				let char_key = $scope.characters_array.$keyAt(previous_version_char);
+				$scope.characters_dict[char_key] = new_char;
+				$scope.characters_dict.$save();
+			}
 			$scope.debug = new_char;
 		});
 		
@@ -5242,6 +5283,8 @@ app.controller('myCtrl', function($scope, $firebaseObject, $firebaseArray) {
 	}
 	
 	$scope.weapon_damage_type = 'personal';
+	
+	
 	
 	// Die Roller
 	var dice_roller_ref = firebase.database().ref().child("dice_roller");
